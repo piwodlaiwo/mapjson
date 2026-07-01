@@ -41,9 +41,9 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
   const tmpFra    = `/tmp/pj_fra_${res}.topojson`;
   const tmpNor    = `/tmp/pj_nor_${res}.topojson`;
   const tmpExtra  = `/tmp/pj_extra_${res}.topojson`;
-  const tmpMAR    = `/tmp/pj_mar_${res}.topojson`;
-  const tmpESH    = `/tmp/pj_esh_${res}.topojson`;
-  const tmpMerged = `/tmp/pj_merged_${res}.topojson`;
+  const tmpMAR_ESH     = `/tmp/pj_marseh_${res}.topojson`;
+  const tmpMAR_ESH_OUT = `/tmp/pj_marseh_out_${res}.topojson`;
+  const tmpMerged      = `/tmp/pj_merged_${res}.topojson`;
 
   // Simplification intervals matched to Natural Earth resolution levels.
   // DIVA-GIS data is high-res so we simplify down to avoid over-detailed polygons in the
@@ -104,28 +104,22 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
     `-o format=topojson ${tmpExtra}`
   );
 
-  // 5. Morocco from DIVA-GIS — de jure boundary ends at ~27.67°N (does not include
-  //    Western Sahara territory). Simplify to match the target resolution.
+  // 5+6. Morocco + Western Sahara from DIVA-GIS — merged into ONE session before
+  //       simplification so mapshaper can recognise their shared boundary as a single
+  //       arc and simplify it consistently. Simplifying them separately causes coordinate
+  //       drift at the shared border, producing a visible gap on the Atlantic coast.
   await run(
-    `-i data/iso/MAR/adm0.topo.json ` +
+    `-i data/iso/MAR/adm0.topo.json data/iso/ESH/adm0.topo.json combine-files ` +
+    `-merge-layers ` +
     `-simplify interval=${interval} keep-shapes ` +
-    `-each "disputed=false; gid='504'; cont='Africa'; iso2='MA'" ` +
+    `-each "iso2 = ISO2; gid = String(+ISON > 0 ? ISON : 'x-' + ISO3); cont = 'Africa'; disputed = (ISO2 == 'EH')" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
-    `-o format=topojson ${tmpMAR}`
+    `-o format=topojson ${tmpMAR_ESH}`
   );
 
-  // 6. Western Sahara from DIVA-GIS — full de jure territory 20.77°N–27.68°N.
+  // 7. Merge all five parts into the final output.
   await run(
-    `-i data/iso/ESH/adm0.topo.json ` +
-    `-simplify interval=${interval} keep-shapes ` +
-    `-each "disputed=true; gid='732'; cont='Africa'; iso2='EH'" ` +
-    `-filter-fields gid,disputed,cont,iso2 ` +
-    `-o format=topojson ${tmpESH}`
-  );
-
-  // 7. Merge all six parts into the final output.
-  await run(
-    `-i ${tmpMain} ${tmpFra} ${tmpNor} ${tmpExtra} ${tmpMAR} ${tmpESH} combine-files ` +
+    `-i ${tmpMain} ${tmpFra} ${tmpNor} ${tmpExtra} ${tmpMAR_ESH} combine-files ` +
     `-merge-layers ` +
     `-o format=topojson ${outFile}`
   );
@@ -136,9 +130,8 @@ async function processAdmin1(res, inFile, outFile) {
   const simplifyInterval = { '110m': '50km', '50m': '20km', '10m': '5km' };
   const interval = simplifyInterval[res];
 
-  const tmpNE   = `/tmp/pj_adm1_ne_${res}.topojson`;
-  const tmpMAR1 = `/tmp/pj_adm1_mar_${res}.topojson`;
-  const tmpESH1 = `/tmp/pj_adm1_esh_${res}.topojson`;
+  const tmpNE      = `/tmp/pj_adm1_ne_${res}.topojson`;
+  const tmpMAR_ESH1 = `/tmp/pj_adm1_marseh_${res}.topojson`;
 
   // Natural Earth admin1 — exclude Morocco (replaced with DIVA-GIS below)
   await run(
@@ -149,26 +142,19 @@ async function processAdmin1(res, inFile, outFile) {
     `-o format=topojson ${tmpNE}`
   );
 
-  // Morocco admin1 from DIVA-GIS (correct de jure boundary)
+  // Morocco + Western Sahara admin1 from DIVA-GIS — merged in one session so shared
+  // boundaries simplify consistently (same reason as for adm0 above).
   await run(
-    `-i data/iso/MAR/adm1.topo.json ` +
+    `-i data/iso/MAR/adm1.topo.json data/iso/ESH/adm1.topo.json combine-files ` +
+    `-merge-layers ` +
     `-simplify interval=${interval} keep-shapes ` +
-    `-each "gid = 'MAR-' + String(ID_1); iso2 = 'MA'; name = NAME_1" ` +
+    `-each "iso2 = (ISO == 'MAR' ? 'MA' : 'EH'); gid = iso2 + '-' + String(ID_1); name = NAME_1" ` +
     `-filter-fields gid,iso2,name ` +
-    `-o format=topojson ${tmpMAR1}`
-  );
-
-  // Western Sahara admin1 from DIVA-GIS (4 provinces)
-  await run(
-    `-i data/iso/ESH/adm1.topo.json ` +
-    `-simplify interval=${interval} keep-shapes ` +
-    `-each "gid = 'ESH-' + String(ID_1); iso2 = 'EH'; name = NAME_1" ` +
-    `-filter-fields gid,iso2,name ` +
-    `-o format=topojson ${tmpESH1}`
+    `-o format=topojson ${tmpMAR_ESH1}`
   );
 
   await run(
-    `-i ${tmpNE} ${tmpMAR1} ${tmpESH1} combine-files ` +
+    `-i ${tmpNE} ${tmpMAR_ESH1} combine-files ` +
     `-merge-layers ` +
     `-o format=topojson ${outFile}`
   );

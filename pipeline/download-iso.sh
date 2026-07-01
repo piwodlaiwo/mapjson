@@ -44,4 +44,12 @@ done
 echo "=== ANT (source for Curaçao, Sint Maarten, Caribbean Netherlands) ==="
 fetch ANT 1
 
+# Morocco and Western Sahara — needed for the global pipeline (all detail levels) as well as
+# per-country high-res ISO overrides. Natural Earth combines them incorrectly (de facto vs de jure).
+echo "=== MAR + ESH (Morocco / Western Sahara — de jure boundary fix) ==="
+fetch MAR 0
+fetch MAR 1
+fetch ESH 0
+fetch ESH 1
+
 echo "Done. Run: npm run process-iso"

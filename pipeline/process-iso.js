@@ -14,8 +14,13 @@ const DATA_DIR     = path.join(ROOT, 'data/iso');
 const OUT_COUNTRIES = path.join(ROOT, 'processed/countries/iso');
 const OUT_ADMIN1    = path.join(ROOT, 'processed/admin1/iso');
 
-// All ISO3 codes with their own adm0 file in the repo
+// All ISO3 codes with their own adm0 file in the repo.
+// MAR + ESH are included here to populate per-country ISO override files (filter=MA/EH&detail=high).
+// The global low/medium/high pipeline in process.js also uses DIVA-GIS for these two to fix
+// the Natural Earth de-facto vs de-jure boundary issue.
 const ISO3_LIST = [
+  // Morocco and Western Sahara (de jure boundaries from DIVA-GIS)
+  'MAR','ESH',
   // European microstates + small territories
   'VAT','MCO','SMR','LIE','AND','MLT','GIB','IMN','JEY','GGY',
   // Middle East / Asia

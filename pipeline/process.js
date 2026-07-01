@@ -37,15 +37,27 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
   const excludeList = [...EXCLUDE_TYPES].map((t) => `TYPE.trim() == '${t}'`).join(' || ');
   const disputedList = [...DISPUTED_TYPES].map((t) => `TYPE.trim() == '${t}'`).join(' || ');
 
-  const tmpMain  = `/tmp/pj_main_${res}.topojson`;
-  const tmpFra   = `/tmp/pj_fra_${res}.topojson`;
-  const tmpNor   = `/tmp/pj_nor_${res}.topojson`;
-  const tmpExtra = `/tmp/pj_extra_${res}.topojson`;
+  const tmpMain   = `/tmp/pj_main_${res}.topojson`;
+  const tmpFra    = `/tmp/pj_fra_${res}.topojson`;
+  const tmpNor    = `/tmp/pj_nor_${res}.topojson`;
+  const tmpExtra  = `/tmp/pj_extra_${res}.topojson`;
+  const tmpMAR    = `/tmp/pj_mar_${res}.topojson`;
+  const tmpESH    = `/tmp/pj_esh_${res}.topojson`;
+  const tmpMerged = `/tmp/pj_merged_${res}.topojson`;
 
-  // 1. All countries except those replaced surgically via map_units
+  // Simplification intervals matched to Natural Earth resolution levels.
+  // DIVA-GIS data is high-res so we simplify down to avoid over-detailed polygons in the
+  // global low/medium files. The 10m (high) level keeps near-full DIVA-GIS resolution.
+  const simplifyInterval = { '110m': '50km', '50m': '20km', '10m': '5km' };
+  const interval = simplifyInterval[res];
+
+  // 1. All countries except those replaced surgically.
+  //    MAR (Morocco) and SAH (Western Sahara) are excluded here because Natural Earth
+  //    maps them using de facto control (Morocco's polygon extends to Mauritania). They
+  //    are re-added from DIVA-GIS below using the internationally recognised de jure boundary.
   await run(
     `-i ${inFile} ` +
-    `-filter "!(${excludeList}) && ADM0_A3.trim() != 'FRA' && ADM0_A3.trim() != 'NOR' && ADM0_A3.trim() != 'NLD' && ADM0_A3.trim() != 'NZL' && ADM0_A3.trim() != 'IOA'" ` +
+    `-filter "!(${excludeList}) && ADM0_A3.trim() != 'FRA' && ADM0_A3.trim() != 'NOR' && ADM0_A3.trim() != 'NLD' && ADM0_A3.trim() != 'NZL' && ADM0_A3.trim() != 'IOA' && ADM0_A3.trim() != 'MAR' && ADM0_A3.trim() != 'SAH'" ` +
     `-each "disputed = (${disputedList}); gid = String(+ISO_N3 > 0 ? ISO_N3 : 'x-' + ADM0_A3.trim()); cont = CONTINENT; iso2 = (ISO_A2 == '-99' ? null : ISO_A2)" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
     `-o format=topojson ${tmpMain}`
@@ -92,9 +104,28 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
     `-o format=topojson ${tmpExtra}`
   );
 
-  // 5. Merge all four into one topojson
+  // 5. Morocco from DIVA-GIS — de jure boundary ends at ~27.67°N (does not include
+  //    Western Sahara territory). Simplify to match the target resolution.
   await run(
-    `-i ${tmpMain} ${tmpFra} ${tmpNor} ${tmpExtra} combine-files ` +
+    `-i data/iso/MAR/adm0.topo.json ` +
+    `-simplify interval=${interval} keep-shapes ` +
+    `-each "disputed=false; gid='504'; cont='Africa'; iso2='MA'" ` +
+    `-filter-fields gid,disputed,cont,iso2 ` +
+    `-o format=topojson ${tmpMAR}`
+  );
+
+  // 6. Western Sahara from DIVA-GIS — full de jure territory 20.77°N–27.68°N.
+  await run(
+    `-i data/iso/ESH/adm0.topo.json ` +
+    `-simplify interval=${interval} keep-shapes ` +
+    `-each "disputed=true; gid='732'; cont='Africa'; iso2='EH'" ` +
+    `-filter-fields gid,disputed,cont,iso2 ` +
+    `-o format=topojson ${tmpESH}`
+  );
+
+  // 7. Merge all six parts into the final output.
+  await run(
+    `-i ${tmpMain} ${tmpFra} ${tmpNor} ${tmpExtra} ${tmpMAR} ${tmpESH} combine-files ` +
     `-merge-layers ` +
     `-o format=topojson ${outFile}`
   );
@@ -102,11 +133,43 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
 }
 
 async function processAdmin1(res, inFile, outFile) {
-  // admin1 fields are all lowercase; adm1_code is already 'ARG-1309' style
+  const simplifyInterval = { '110m': '50km', '50m': '20km', '10m': '5km' };
+  const interval = simplifyInterval[res];
+
+  const tmpNE   = `/tmp/pj_adm1_ne_${res}.topojson`;
+  const tmpMAR1 = `/tmp/pj_adm1_mar_${res}.topojson`;
+  const tmpESH1 = `/tmp/pj_adm1_esh_${res}.topojson`;
+
+  // Natural Earth admin1 — exclude Morocco (replaced with DIVA-GIS below)
   await run(
     `-i ${inFile} ` +
+    `-filter "iso_a2 != 'MA'" ` +
     `-each "gid = adm1_code; iso2 = iso_a2" ` +
     `-filter-fields gid,iso2,name ` +
+    `-o format=topojson ${tmpNE}`
+  );
+
+  // Morocco admin1 from DIVA-GIS (correct de jure boundary)
+  await run(
+    `-i data/iso/MAR/adm1.topo.json ` +
+    `-simplify interval=${interval} keep-shapes ` +
+    `-each "gid = 'MAR-' + String(ID_1); iso2 = 'MA'; name = NAME_1" ` +
+    `-filter-fields gid,iso2,name ` +
+    `-o format=topojson ${tmpMAR1}`
+  );
+
+  // Western Sahara admin1 from DIVA-GIS (4 provinces)
+  await run(
+    `-i data/iso/ESH/adm1.topo.json ` +
+    `-simplify interval=${interval} keep-shapes ` +
+    `-each "gid = 'ESH-' + String(ID_1); iso2 = 'EH'; name = NAME_1" ` +
+    `-filter-fields gid,iso2,name ` +
+    `-o format=topojson ${tmpESH1}`
+  );
+
+  await run(
+    `-i ${tmpNE} ${tmpMAR1} ${tmpESH1} combine-files ` +
+    `-merge-layers ` +
     `-o format=topojson ${outFile}`
   );
   console.log(`  ✓ ${outFile}`);

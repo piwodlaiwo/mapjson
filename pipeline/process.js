@@ -41,9 +41,11 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
   const tmpFra    = `/tmp/pj_fra_${res}.topojson`;
   const tmpNor    = `/tmp/pj_nor_${res}.topojson`;
   const tmpExtra  = `/tmp/pj_extra_${res}.topojson`;
-  const tmpMAR_ESH     = `/tmp/pj_marseh_${res}.topojson`;
-  const tmpMAR_ESH_OUT = `/tmp/pj_marseh_out_${res}.topojson`;
-  const tmpMerged      = `/tmp/pj_merged_${res}.topojson`;
+  const tmpMAR    = `/tmp/pj_mar_${res}.topojson`;
+  const tmpESH_S  = `/tmp/pj_esh_s_${res}.topojson`;
+  const tmpSAH2   = `/tmp/pj_sah2_${res}.topojson`;
+  const tmpESH    = `/tmp/pj_esh_${res}.topojson`;
+  const tmpMerged = `/tmp/pj_merged_${res}.topojson`;
 
   // Simplification intervals matched to Natural Earth resolution levels.
   // DIVA-GIS data is high-res so we simplify down to avoid over-detailed polygons in the
@@ -104,22 +106,55 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
     `-o format=topojson ${tmpExtra}`
   );
 
-  // 5+6. Morocco + Western Sahara from DIVA-GIS — merged into ONE session before
-  //       simplification so mapshaper can recognise their shared boundary as a single
-  //       arc and simplify it consistently. Simplifying them separately causes coordinate
-  //       drift at the shared border, producing a visible gap on the Atlantic coast.
+  // 5+6. Morocco and Western Sahara — clipped entirely within Natural Earth data so
+  //       borders with Algeria, Mauritania and the coastline remain consistent.
+  //       Mixing DIVA-GIS with Natural Earth creates coordinate mismatches at every
+  //       shared border with neighbouring countries, causing visible gaps.
+  //
+  //       Approach: clip Natural Earth Morocco (MAR) at the internationally recognised
+  //       boundary (~27.667°N). The portion above becomes Morocco; the portion below is
+  //       merged with the existing SAH (Polisario eastern strip) polygon to form the full
+  //       Western Sahara territory. The result is a clean horizontal de jure border.
+  const WS_LAT = 27.667;
+
+  // Morocco proper: Natural Earth MAR clipped above the de jure line
   await run(
-    `-i data/iso/MAR/adm0.topo.json data/iso/ESH/adm0.topo.json combine-files ` +
-    `-merge-layers ` +
-    `-simplify interval=${interval} keep-shapes ` +
-    `-each "iso2 = ISO2; gid = String(+ISON > 0 ? ISON : 'x-' + ISO3); cont = 'Africa'; disputed = (ISO2 == 'EH')" ` +
+    `-i ${inFile} -filter "ADM0_A3.trim() == 'MAR'" ` +
+    `-clip bbox=-180,${WS_LAT},180,90 ` +
+    `-each "disputed=false; gid='504'; cont='Africa'; iso2='MA'" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
-    `-o format=topojson ${tmpMAR_ESH}`
+    `-o format=topojson ${tmpMAR}`
   );
 
-  // 7. Merge all five parts into the final output.
+  // Western Sahara part 1: the coastal strip — Natural Earth MAR clipped below the line
   await run(
-    `-i ${tmpMain} ${tmpFra} ${tmpNor} ${tmpExtra} ${tmpMAR_ESH} combine-files ` +
+    `-i ${inFile} -filter "ADM0_A3.trim() == 'MAR'" ` +
+    `-clip bbox=-180,-90,180,${WS_LAT} ` +
+    `-each "disputed=true; gid='732'; cont='Africa'; iso2='EH'" ` +
+    `-filter-fields gid,disputed,cont,iso2 ` +
+    `-o format=topojson ${tmpESH_S}`
+  );
+
+  // Western Sahara part 2: Natural Earth SAH (Polisario-controlled eastern strip)
+  await run(
+    `-i ${inFile} -filter "ADM0_A3.trim() == 'SAH'" ` +
+    `-each "disputed=true; gid='732'; cont='Africa'; iso2='EH'" ` +
+    `-filter-fields gid,disputed,cont,iso2 ` +
+    `-o format=topojson ${tmpSAH2}`
+  );
+
+  // Merge both WS parts into one feature, dissolving the shared interior border
+  await run(
+    `-i ${tmpESH_S} ${tmpSAH2} combine-files -merge-layers ` +
+    `-dissolve ` +
+    `-each "disputed=true; gid='732'; cont='Africa'; iso2='EH'" ` +
+    `-filter-fields gid,disputed,cont,iso2 ` +
+    `-o format=topojson ${tmpESH}`
+  );
+
+  // 7. Merge all six parts into the final output.
+  await run(
+    `-i ${tmpMain} ${tmpFra} ${tmpNor} ${tmpExtra} ${tmpMAR} ${tmpESH} combine-files ` +
     `-merge-layers ` +
     `-o format=topojson ${outFile}`
   );
@@ -130,31 +165,32 @@ async function processAdmin1(res, inFile, outFile) {
   const simplifyInterval = { '110m': '50km', '50m': '20km', '10m': '5km' };
   const interval = simplifyInterval[res];
 
-  const tmpNE      = `/tmp/pj_adm1_ne_${res}.topojson`;
-  const tmpMAR_ESH1 = `/tmp/pj_adm1_marseh_${res}.topojson`;
+  // Natural Earth admin1 — include all countries. Morocco regions come from Natural Earth
+  // admin1 (consistent with the country boundary approach above). Western Sahara's 4
+  // provinces are added separately from the SAH/MAR split used at country level, but since
+  // Natural Earth admin1 doesn't have Western Sahara entries, we use DIVA-GIS adm1 for EH
+  // only (WS is a special case — no Natural Earth admin1 data exists for it at all).
+  const tmpNE   = `/tmp/pj_adm1_ne_${res}.topojson`;
+  const tmpESH1 = `/tmp/pj_adm1_esh_${res}.topojson`;
 
-  // Natural Earth admin1 — exclude Morocco (replaced with DIVA-GIS below)
   await run(
     `-i ${inFile} ` +
-    `-filter "iso_a2 != 'MA'" ` +
     `-each "gid = adm1_code; iso2 = iso_a2" ` +
     `-filter-fields gid,iso2,name ` +
     `-o format=topojson ${tmpNE}`
   );
 
-  // Morocco + Western Sahara admin1 from DIVA-GIS — merged in one session so shared
-  // boundaries simplify consistently (same reason as for adm0 above).
+  // Western Sahara admin1 from DIVA-GIS — no Natural Earth equivalent exists
   await run(
-    `-i data/iso/MAR/adm1.topo.json data/iso/ESH/adm1.topo.json combine-files ` +
-    `-merge-layers ` +
+    `-i data/iso/ESH/adm1.topo.json ` +
     `-simplify interval=${interval} keep-shapes ` +
-    `-each "iso2 = (ISO == 'MAR' ? 'MA' : 'EH'); gid = iso2 + '-' + String(ID_1); name = NAME_1" ` +
+    `-each "gid = 'ESH-' + String(ID_1); iso2 = 'EH'; name = NAME_1" ` +
     `-filter-fields gid,iso2,name ` +
-    `-o format=topojson ${tmpMAR_ESH1}`
+    `-o format=topojson ${tmpESH1}`
   );
 
   await run(
-    `-i ${tmpNE} ${tmpMAR_ESH1} combine-files ` +
+    `-i ${tmpNE} ${tmpESH1} combine-files ` +
     `-merge-layers ` +
     `-o format=topojson ${outFile}`
   );

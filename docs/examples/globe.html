@@ -74,7 +74,7 @@
     .map-wrap {
       margin-bottom: 2.5rem;
       border: 1px solid var(--border);
-      background: #08090f;
+      background: #1a2a3a;
       line-height: 0;
     }
     pre {
@@ -113,16 +113,16 @@
   <a class="back-link" href="index.html">← Examples</a>
 
   <header>
-    <div class="tag">coastlines · orthographic · graticule · interactive</div>
+    <div class="tag">countries · orthographic · graticule · interactive</div>
     <h1>Globe</h1>
-    <p>World coastlines rendered on an orthographic projection — the view from space. A 30° graticule gives the globe structure. Drag to rotate.</p>
+    <p>World countries rendered on an orthographic projection — the view from space. Land in sage green, ocean in slate blue, 30° graticule in white. Drag to rotate.</p>
   </header>
 
   <div class="map-wrap" id="map"></div>
 
   <section>
     <h2>API Call</h2>
-    <pre>https://api.mapjson.com/v1/geo?layer=coastlines&amp;detail=medium</pre>
+    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;detail=low</pre>
   </section>
 
   <section>
@@ -133,7 +133,7 @@
   &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
   &lt;script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"&gt;&lt;/script&gt;
   &lt;style&gt;
-    body { background: #08090f; margin: 0; }
+    body { background: #1a2a3a; margin: 0; }
     svg { width: 100%; display: block; }
   &lt;/style&gt;
 &lt;/head&gt;
@@ -156,7 +156,7 @@
     svg.append("circle")
       .attr("cx", width / 2).attr("cy", height / 2)
       .attr("r", projection.scale())
-      .attr("fill", "#0d1b2a");
+      .attr("fill", "#3a6a8a");
 
     // Graticule
     const graticulePath = svg.append("path")
@@ -164,22 +164,22 @@
       .attr("fill", "none")
       .attr("stroke", "white")
       .attr("stroke-width", 0.3)
-      .attr("stroke-opacity", 0.35)
+      .attr("stroke-opacity", 0.3)
       .attr("d", path);
 
-    // Coastlines
-    let coastlinePath;
+    // Countries (land)
+    let landPath;
 
-    const url = "https://api.mapjson.com/v1/geo?layer=coastlines&detail=medium";
+    const url = "https://api.mapjson.com/v1/geo?layer=countries&detail=low";
 
     d3.json(url).then(topo =&gt; {
-      const coastlines = topojson.feature(topo, topo.objects.geo);
+      const countries = topojson.feature(topo, topo.objects.geo);
 
-      coastlinePath = svg.append("path")
-        .datum(coastlines)
-        .attr("fill", "none")
-        .attr("stroke", "white")
-        .attr("stroke-width", 0.6)
+      landPath = svg.append("path")
+        .datum(countries)
+        .attr("fill", "#8a9e7a")
+        .attr("stroke", "#3a6a8a")
+        .attr("stroke-width", 0.4)
         .attr("d", path);
     });
 
@@ -190,7 +190,7 @@
       .attr("fill", "none")
       .attr("stroke", "white")
       .attr("stroke-width", 0.5)
-      .attr("stroke-opacity", 0.4);
+      .attr("stroke-opacity", 0.3);
 
     // Drag to rotate
     let lambda = 0, phi = -20;
@@ -200,7 +200,7 @@
       phi = Math.max(-90, Math.min(90, phi - event.dy * 0.4));
       projection.rotate([lambda, phi]);
       graticulePath.attr("d", path);
-      if (coastlinePath) coastlinePath.attr("d", path);
+      if (landPath) landPath.attr("d", path);
     })).style("cursor", "grab");
   &lt;/script&gt;
 &lt;/body&gt;
@@ -215,7 +215,7 @@
   const width = 800, height = 800;
   const svg = d3.select("#map").append("svg")
     .attr("viewBox", `0 0 ${width} ${height}`)
-    .style("background", "#08090f");
+    .style("background", "#1a2a3a");
 
   const projection = d3.geoOrthographic()
     .scale(width / 2 - 20)
@@ -229,26 +229,26 @@
   svg.append("circle")
     .attr("cx", width / 2).attr("cy", height / 2)
     .attr("r", projection.scale())
-    .attr("fill", "#0d1b2a");
+    .attr("fill", "#3a6a8a");
 
   const graticulePath = svg.append("path")
     .datum(graticule)
     .attr("fill", "none")
     .attr("stroke", "white")
     .attr("stroke-width", 0.3)
-    .attr("stroke-opacity", 0.35)
+    .attr("stroke-opacity", 0.3)
     .attr("d", path);
 
-  let coastlinePath;
+  let landPath;
 
-  d3.json("https://mapjson.mapjson.workers.dev/v1/geo?layer=coastlines&detail=medium").then(topo => {
-    const coastlines = topojson.feature(topo, topo.objects.geo);
+  d3.json("https://mapjson.mapjson.workers.dev/v1/geo?layer=countries&detail=low").then(topo => {
+    const countries = topojson.feature(topo, topo.objects.geo);
 
-    coastlinePath = svg.append("path")
-      .datum(coastlines)
-      .attr("fill", "none")
-      .attr("stroke", "white")
-      .attr("stroke-width", 0.6)
+    landPath = svg.append("path")
+      .datum(countries)
+      .attr("fill", "#8a9e7a")
+      .attr("stroke", "#3a6a8a")
+      .attr("stroke-width", 0.4)
       .attr("d", path);
   });
 
@@ -258,7 +258,7 @@
     .attr("fill", "none")
     .attr("stroke", "white")
     .attr("stroke-width", 0.5)
-    .attr("stroke-opacity", 0.4);
+    .attr("stroke-opacity", 0.3);
 
   let lambda = 0, phi = -20;
 
@@ -267,7 +267,7 @@
     phi = Math.max(-90, Math.min(90, phi - event.dy * 0.4));
     projection.rotate([lambda, phi]);
     graticulePath.attr("d", path);
-    if (coastlinePath) coastlinePath.attr("d", path);
+    if (landPath) landPath.attr("d", path);
   })).style("cursor", "grab");
 </script>
 </body>

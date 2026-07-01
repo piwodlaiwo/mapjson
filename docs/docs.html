@@ -358,7 +358,6 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
               <span class="opt default-val">low</span>
               <span class="opt">medium</span>
               <span class="opt">high</span>
-              <span class="opt">ultra</span>
             </div>
           </td>
           <td>Geometry resolution. See <em>Detail Levels</em> below.</td>
@@ -443,20 +442,14 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
         </tr>
         <tr>
           <td><code>high</code></td>
-          <td>10m (Natural Earth)</td>
+          <td>10m (Natural Earth) or DIVA-GIS for small countries</td>
           <td>Country and regional maps</td>
           <td>~2 MB</td>
-        </tr>
-        <tr>
-          <td><code>ultra</code></td>
-          <td>OSM / GADM</td>
-          <td>Small countries (Andorra, Monaco, Singapore)</td>
-          <td>varies</td>
         </tr>
       </tbody>
     </table>
     <div class="note">
-      <code>ultra</code> is not yet available — currently falls back to <code>high</code>.
+      When <code>filter</code> is an ISO alpha-2 country code and <code>detail=high</code>, the API automatically serves a higher-resolution file for ~60 small countries and territories (Monaco, Aruba, Singapore, Martinique, etc.) that are too small for Natural Earth 10m. No change to your API call is needed.
     </div>
   </section>
 

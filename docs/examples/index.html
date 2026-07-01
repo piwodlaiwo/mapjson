@@ -208,11 +208,21 @@
     </a>
 
     <a class="card" href="africa.html">
-      <div class="card-tag">countries · subregions · capitals · hover · multiple layers</div>
+      <div class="card-tag">countries · subregions · capitals · hover</div>
       <div class="card-title">Africa</div>
-      <div class="card-desc">Countries colored by subregion — Northern, Eastern, Western, Middle, and Southern Africa. Capital cities overlaid from a second API call to the capitals layer. Hover any country for its name.</div>
+      <div class="card-desc">Countries colored by subregion — Northern, Eastern, Western, Middle, and Southern Africa. Capital cities plotted from <code>capitalLat</code> and <code>capitalLng</code> properties. Labels use a force simulation to avoid overlapping.</div>
       <div class="card-footer">
-        <span class="card-url">layer=capitals · properties=subregion</span>
+        <span class="card-url">properties=subregion,capitalLat,capitalLng</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="card" href="aruba.html">
+      <div class="card-tag">countries · high detail · iso filter</div>
+      <div class="card-title">Aruba</div>
+      <div class="card-desc">Aruba is 180 km² — invisible at standard resolutions. When <code>filter</code> is an ISO country code and <code>detail=high</code>, the API automatically serves a high-resolution file for small countries and territories.</div>
+      <div class="card-footer">
+        <span class="card-url">filter=AW · detail=high</span>
         <span class="card-arrow">→</span>
       </div>
     </a>

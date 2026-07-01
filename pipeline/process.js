@@ -197,6 +197,19 @@ async function processAdmin1(res, inFile, outFile) {
   console.log(`  ✓ ${outFile}`);
 }
 
+async function processAdmin2(inFile, outFile) {
+  // Natural Earth admin2 is US-only (3,224 counties). CODE_LOCAL is the 5-digit FIPS code
+  // which joins directly to Census/BLS data. We simplify to keep file size reasonable.
+  await run(
+    `-i ${inFile} ` +
+    `-simplify interval=2km keep-shapes ` +
+    `-each "gid = CODE_LOCAL; iso2 = ISO_A2; name = NAME_EN || NAME" ` +
+    `-filter-fields gid,iso2,name ` +
+    `-o format=topojson ${outFile}`
+  );
+  console.log(`  ✓ ${outFile}`);
+}
+
 async function processPhysical(layer, inFile, outFile) {
   // Coastlines have no name fields — only lakes/rivers do
   const nameCmd = layer === 'coastlines'
@@ -266,6 +279,18 @@ async function main() {
     const outFile = `processed/admin1/${detailMap[res]}.topojson`;
     if (!fs.existsSync(inFile)) { console.warn(`  skipping ${inFile} (not found)`); continue; }
     await processAdmin1(res, inFile, outFile);
+  }
+
+  console.log('Processing admin-2 districts...');
+  {
+    const inFile = `data/10m/ne_10m_admin_2_counties_lakes.shp`;
+    const outFile = `processed/districts/high.topojson`;
+    if (!fs.existsSync(inFile)) {
+      console.warn(`  skipping ${inFile} (not found — run download.sh)`);
+    } else {
+      fs.mkdirSync('processed/districts', { recursive: true });
+      await processAdmin2(inFile, outFile);
+    }
   }
 
   for (const layer of ['lakes', 'rivers', 'coastlines']) {

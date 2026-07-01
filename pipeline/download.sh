@@ -47,6 +47,9 @@ fetch "https://naturalearth.s3.amazonaws.com/110m_physical/ne_110m_coastline.zip
 fetch "https://naturalearth.s3.amazonaws.com/50m_physical/ne_50m_coastline.zip"   "data/50m/coastlines.zip"
 fetch "https://naturalearth.s3.amazonaws.com/10m_physical/ne_10m_coastline.zip"   "data/10m/coastlines.zip"
 
+echo "=== Cultural — Admin-2 counties/districts ==="
+fetch "https://naturalearth.s3.amazonaws.com/10m_cultural/ne_10m_admin_2_counties_lakes.zip" "data/10m/admin2.zip"
+
 echo "=== Cultural — Populated places (capitals + cities) ==="
 fetch "https://naturalearth.s3.amazonaws.com/10m_cultural/ne_10m_populated_places.zip" "data/10m/populated_places.zip"
 

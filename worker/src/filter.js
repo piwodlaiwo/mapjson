@@ -17,16 +17,15 @@ export function filterFeatures(topo, objectKey, params) {
   obj.geometries = obj.geometries.filter((g) => {
     const p = g.properties || {};
 
-    // Filter for country-level layers
     if (layer === 'countries' || layer === 'regions') {
       if (filter === 'world') return true;
-
       const continentName = CONTINENT_MAP[filter];
-      if (continentName) {
-        return p.cont === continentName;
-      }
+      if (continentName) return p.cont === continentName;
+      return p.iso2 === filter.toUpperCase();
+    }
 
-      // ISO alpha-2 country code — both layers store iso2 in the base topojson
+    if (layer === 'districts') {
+      if (filter === 'world') return true;
       return p.iso2 === filter.toUpperCase();
     }
 

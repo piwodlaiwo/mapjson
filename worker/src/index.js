@@ -69,8 +69,11 @@ async function handleGeo(request, env) {
   }
 
   // Global topojson files (standard path)
+  // districts is always served from high.topojson — NE only has 10m admin2 data
   const r2Key = layer === 'countries' || layer === 'regions'
     ? `${r2Layer}/${fileDetail}.topojson`
+    : layer === 'districts'
+    ? 'districts/high.topojson'
     : `physical/${layer}/${fileDetail}.topojson`;
 
   const obj = await env.GEO_BUCKET.get(r2Key);

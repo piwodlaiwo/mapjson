@@ -1,4 +1,4 @@
-const VALID_LAYERS = new Set(['countries', 'regions', 'lakes', 'rivers', 'coastlines']);
+const VALID_LAYERS = new Set(['countries', 'regions', 'districts', 'lakes', 'rivers', 'coastlines']);
 const VALID_FILTERS = new Set(['world', 'europe', 'asia', 'africa', 'north-america', 'south-america', 'oceania', 'antarctica']);
 const VALID_DETAIL = new Set(['low', 'medium', 'high', 'ultra']);
 const VALID_FORMAT = new Set(['topojson', 'geojson']);

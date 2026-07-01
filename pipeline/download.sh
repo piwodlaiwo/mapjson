@@ -18,9 +18,14 @@ fetch() {
 }
 
 echo "=== Cultural — Countries ==="
-fetch "https://naturalearth.s3.amazonaws.com/110m_cultural/ne_110m_admin_0_countries.zip" "data/110m/countries.zip"
-fetch "https://naturalearth.s3.amazonaws.com/50m_cultural/ne_50m_admin_0_countries.zip"  "data/50m/countries.zip"
-fetch "https://naturalearth.s3.amazonaws.com/10m_cultural/ne_10m_admin_0_countries.zip"  "data/10m/countries.zip"
+fetch "https://naturalearth.s3.amazonaws.com/110m_cultural/ne_110m_admin_0_countries.zip"  "data/110m/countries.zip"
+fetch "https://naturalearth.s3.amazonaws.com/50m_cultural/ne_50m_admin_0_countries.zip"    "data/50m/countries.zip"
+fetch "https://naturalearth.s3.amazonaws.com/10m_cultural/ne_10m_admin_0_countries.zip"    "data/10m/countries.zip"
+
+echo "=== Cultural — Map units (for overseas territory splits) ==="
+fetch "https://naturalearth.s3.amazonaws.com/110m_cultural/ne_110m_admin_0_map_units.zip"  "data/110m/map_units.zip"
+fetch "https://naturalearth.s3.amazonaws.com/50m_cultural/ne_50m_admin_0_map_units.zip"    "data/50m/map_units.zip"
+fetch "https://naturalearth.s3.amazonaws.com/10m_cultural/ne_10m_admin_0_map_units.zip"    "data/10m/map_units.zip"
 
 echo "=== Cultural — Admin-1 subdivisions ==="
 fetch "https://naturalearth.s3.amazonaws.com/110m_cultural/ne_110m_admin_1_states_provinces.zip" "data/110m/admin1.zip"

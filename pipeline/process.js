@@ -33,16 +33,54 @@ async function run(cmdStr) {
   });
 }
 
-async function processCountries(res, inFile, outFile) {
-  // TYPE has trailing spaces in the .dbf — use .trim() in all comparisons
+async function processCountries(res, inFile, mapUnitsFile, outFile) {
   const excludeList = [...EXCLUDE_TYPES].map((t) => `TYPE.trim() == '${t}'`).join(' || ');
   const disputedList = [...DISPUTED_TYPES].map((t) => `TYPE.trim() == '${t}'`).join(' || ');
 
+  const tmpMain = `/tmp/pj_main_${res}.topojson`;
+  const tmpFra  = `/tmp/pj_fra_${res}.topojson`;
+  const tmpNor  = `/tmp/pj_nor_${res}.topojson`;
+
+  // 1. All countries except France and Norway — handled separately via map_units
   await run(
     `-i ${inFile} ` +
-    `-filter "!(${excludeList})" ` +
-    `-each "disputed = (${disputedList}); gid = (ADM0_A3 == 'FRA' ? 250 : ADM0_A3 == 'NOR' ? 578 : (+ISO_N3 > 0 ? ISO_N3 : 'x-' + ADM0_A3)); cont = CONTINENT; iso2 = (ADM0_A3 == 'FRA' ? 'FR' : ADM0_A3 == 'NOR' ? 'NO' : (ISO_A2 == '-99' ? null : ISO_A2))" ` +
+    `-filter "!(${excludeList}) && ADM0_A3.trim() != 'FRA' && ADM0_A3.trim() != 'NOR'" ` +
+    `-each "disputed = (${disputedList}); gid = String(+ISO_N3 > 0 ? ISO_N3 : 'x-' + ADM0_A3.trim()); cont = CONTINENT; iso2 = (ISO_A2 == '-99' ? null : ISO_A2)" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
+    `-o format=topojson ${tmpMain}`
+  );
+
+  // 2. France — split into metropolitan France + overseas departments from map_units.
+  //    map_units uses ISO 3166-2 subdivision codes (FR-973 etc.) — patch to ISO 3166-1 (GF, GP…).
+  //    Réunion's CONTINENT is 'Seven seas' in NE data — patch to Africa.
+  await run(
+    `-i ${mapUnitsFile} ` +
+    `-filter "ADM0_A3.trim() == 'FRA'" ` +
+    `-each "disputed = (TYPE.trim() == 'Disputed'); ` +
+           `gid = String(SU_A3.trim() == 'FXX' ? 250 : +ISO_N3); ` +
+           `cont = (SU_A3.trim() == 'REU' || SU_A3.trim() == 'MYT' ? 'Africa' : CONTINENT); ` +
+           `iso2 = (SU_A3.trim() == 'FXX' ? 'FR' : SU_A3.trim() == 'GUF' ? 'GF' : SU_A3.trim() == 'GLP' ? 'GP' : SU_A3.trim() == 'MTQ' ? 'MQ' : SU_A3.trim() == 'REU' ? 'RE' : SU_A3.trim() == 'MYT' ? 'YT' : null)" ` +
+    `-filter-fields gid,disputed,cont,iso2 ` +
+    `-o format=topojson ${tmpFra}`
+  );
+
+  // 3. Norway — split into Norway proper + Svalbard (+ Jan Mayen at 50m/10m).
+  //    Svalbard and Jan Mayen share ISO code SJ / 744.
+  await run(
+    `-i ${mapUnitsFile} ` +
+    `-filter "ADM0_A3.trim() == 'NOR'" ` +
+    `-each "disputed = false; ` +
+           `gid = String(SU_A3.trim() == 'NOR' ? 578 : 744); ` +
+           `cont = 'Europe'; ` +
+           `iso2 = (SU_A3.trim() == 'NOR' ? 'NO' : 'SJ')" ` +
+    `-filter-fields gid,disputed,cont,iso2 ` +
+    `-o format=topojson ${tmpNor}`
+  );
+
+  // 4. Merge all three into one topojson
+  await run(
+    `-i ${tmpMain} ${tmpFra} ${tmpNor} combine-files ` +
+    `-merge-layers ` +
     `-o format=topojson ${outFile}`
   );
   console.log(`  ✓ ${outFile}`);
@@ -60,10 +98,15 @@ async function processAdmin1(res, inFile, outFile) {
 }
 
 async function processPhysical(layer, inFile, outFile) {
+  // Coastlines have no name fields — only lakes/rivers do
+  const nameCmd = layer === 'coastlines'
+    ? ''
+    : `-each "name = (name_en || name)" `;
+  const fields = layer === 'coastlines' ? 'featurecla' : 'featurecla,name';
   await run(
     `-i ${inFile} ` +
-    `-each "name = (name_en || name)" ` +
-    `-filter-fields featurecla,name ` +
+    nameCmd +
+    `-filter-fields ${fields} ` +
     `-o format=topojson ${outFile}`
   );
   console.log(`  ✓ ${outFile}`);
@@ -77,6 +120,11 @@ async function main() {
       '110m': 'ne_110m_admin_0_countries',
       '50m': 'ne_50m_admin_0_countries',
       '10m': 'ne_10m_admin_0_countries',
+    },
+    mapUnits: {
+      '110m': 'ne_110m_admin_0_map_units',
+      '50m': 'ne_50m_admin_0_map_units',
+      '10m': 'ne_10m_admin_0_map_units',
     },
     admin1: {
       '110m': 'ne_110m_admin_1_states_provinces',
@@ -105,9 +153,11 @@ async function main() {
   console.log('Processing countries...');
   for (const res of resolutions) {
     const inFile = `data/${res}/${shpName.countries[res]}.shp`;
+    const mapUnitsFile = `data/${res}/${shpName.mapUnits[res]}.shp`;
     const outFile = `processed/countries/${detailMap[res]}.topojson`;
     if (!fs.existsSync(inFile)) { console.warn(`  skipping ${inFile} (not found)`); continue; }
-    await processCountries(res, inFile, outFile);
+    if (!fs.existsSync(mapUnitsFile)) { console.warn(`  skipping ${mapUnitsFile} (not found — run download.sh)`); continue; }
+    await processCountries(res, inFile, mapUnitsFile, outFile);
   }
 
   console.log('Processing admin-1 subdivisions...');

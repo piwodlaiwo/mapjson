@@ -8,6 +8,7 @@ let propsCache = null;
 
 const DETAIL_TO_FILE = { low: 'low', medium: 'medium', high: 'high', ultra: 'high' };
 
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -40,10 +41,34 @@ async function handleGeo(request, env) {
 
   const { layer, filter, detail, format, properties } = result.params;
 
-  // Geometry layers — fetch topojson from R2
   const fileDetail = DETAIL_TO_FILE[detail];
-  // 'regions' maps to the admin1/ folder in R2 (internal naming)
   const r2Layer = layer === 'regions' ? 'admin1' : layer;
+
+  // For ISO2 filter + high detail, try a per-country high-res file before the global 10m file.
+  // These cover small countries/territories that are too small for Natural Earth 10m.
+  const ISO2_RE = /^[A-Z]{2}$/;
+  if (ISO2_RE.test(filter) && fileDetail === 'high' && (layer === 'countries' || layer === 'regions')) {
+    const isoObj = await env.GEO_BUCKET.get(`${r2Layer}/iso/${filter}.topojson`);
+    if (isoObj) {
+      const topo = await isoObj.json();
+      const objectKey = Object.keys(topo.objects)[0];
+      if (layer === 'countries') {
+        const props = await getProps(env.GEO_BUCKET);
+        mergeProperties(topo, objectKey, props, properties);
+      }
+      if (objectKey !== 'geo') {
+        topo.objects.geo = topo.objects[objectKey];
+        delete topo.objects[objectKey];
+      }
+      if (format === 'geojson') {
+        return json(feature(topo, topo.objects.geo), 200, { 'Cache-Control': 'public, max-age=3600' });
+      }
+      return json(topo, 200, { 'Cache-Control': 'public, max-age=3600' });
+    }
+    // No per-country file — fall through to global 10m handling below
+  }
+
+  // Global topojson files (standard path)
   const r2Key = layer === 'countries' || layer === 'regions'
     ? `${r2Layer}/${fileDetail}.topojson`
     : `physical/${layer}/${fileDetail}.topojson`;
@@ -54,7 +79,6 @@ async function handleGeo(request, env) {
   const topo = await obj.json();
   const objectKey = Object.keys(topo.objects)[0];
 
-  // Filter features by continent or country
   filterFeatures(topo, objectKey, { filter, layer });
 
   // Merge properties for countries layer only (regions embed name in base topojson)

@@ -4,9 +4,12 @@
   "description": "Data pipeline for mapjson.com — processes Natural Earth shapefiles into topojson for the API",
   "scripts": {
     "download": "bash pipeline/download.sh",
+    "download-iso": "bash pipeline/download-iso.sh",
     "process": "node pipeline/process.js",
+    "process-iso": "node pipeline/process-iso.js",
     "build-props": "node pipeline/build-properties.js",
     "pipeline": "npm run download && npm run process && npm run build-props",
+    "pipeline-iso": "npm run download-iso && npm run process-iso && npm run upload",
     "upload": "node pipeline/upload.js"
   },
   "dependencies": {

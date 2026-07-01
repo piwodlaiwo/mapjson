@@ -37,14 +37,15 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
   const excludeList = [...EXCLUDE_TYPES].map((t) => `TYPE.trim() == '${t}'`).join(' || ');
   const disputedList = [...DISPUTED_TYPES].map((t) => `TYPE.trim() == '${t}'`).join(' || ');
 
-  const tmpMain = `/tmp/pj_main_${res}.topojson`;
-  const tmpFra  = `/tmp/pj_fra_${res}.topojson`;
-  const tmpNor  = `/tmp/pj_nor_${res}.topojson`;
+  const tmpMain  = `/tmp/pj_main_${res}.topojson`;
+  const tmpFra   = `/tmp/pj_fra_${res}.topojson`;
+  const tmpNor   = `/tmp/pj_nor_${res}.topojson`;
+  const tmpExtra = `/tmp/pj_extra_${res}.topojson`;
 
-  // 1. All countries except France and Norway — handled separately via map_units
+  // 1. All countries except those replaced surgically via map_units
   await run(
     `-i ${inFile} ` +
-    `-filter "!(${excludeList}) && ADM0_A3.trim() != 'FRA' && ADM0_A3.trim() != 'NOR'" ` +
+    `-filter "!(${excludeList}) && ADM0_A3.trim() != 'FRA' && ADM0_A3.trim() != 'NOR' && ADM0_A3.trim() != 'NLD' && ADM0_A3.trim() != 'NZL' && ADM0_A3.trim() != 'IOA'" ` +
     `-each "disputed = (${disputedList}); gid = String(+ISO_N3 > 0 ? ISO_N3 : 'x-' + ADM0_A3.trim()); cont = CONTINENT; iso2 = (ISO_A2 == '-99' ? null : ISO_A2)" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
     `-o format=topojson ${tmpMain}`
@@ -77,9 +78,23 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
     `-o format=topojson ${tmpNor}`
   );
 
-  // 4. Merge all three into one topojson
+  // 4. NLD, NZL, IOA — ISO_N3 and ISO_A2 are already correct in map_units except for
+  //    Netherlands proper at 10m (SU_A3=NLX has ISO_A2=-99, ISO_N3=-99) — patch it.
+  //    IOA (Indian Ocean Territories of Australia) splits into CX + CC with no parent feature.
   await run(
-    `-i ${tmpMain} ${tmpFra} ${tmpNor} combine-files ` +
+    `-i ${mapUnitsFile} ` +
+    `-filter "ADM0_A3.trim() == 'NLD' || ADM0_A3.trim() == 'NZL' || ADM0_A3.trim() == 'IOA'" ` +
+    `-each "disputed = false; ` +
+           `gid = String(SU_A3.trim() == 'NLX' ? 528 : (+ISO_N3 > 0 ? ISO_N3 : 'x-' + SU_A3.trim())); ` +
+           `cont = CONTINENT; ` +
+           `iso2 = (SU_A3.trim() == 'NLX' ? 'NL' : (ISO_A2 == '-99' ? null : ISO_A2))" ` +
+    `-filter-fields gid,disputed,cont,iso2 ` +
+    `-o format=topojson ${tmpExtra}`
+  );
+
+  // 5. Merge all four into one topojson
+  await run(
+    `-i ${tmpMain} ${tmpFra} ${tmpNor} ${tmpExtra} combine-files ` +
     `-merge-layers ` +
     `-o format=topojson ${outFile}`
   );

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>GeoAtlas — Pipeline Validation</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f4efe8; font-family: 'IBM Plex Mono', monospace; }
+    h1 { font-family: 'Playfair Display', serif; font-style: italic; font-size: 2rem; padding: 1.5rem 2rem 0.5rem; }
+    p.sub { font-size: 0.7rem; letter-spacing: 0.22em; padding: 0 2rem 1.5rem; color: #666; text-transform: uppercase; }
+    .controls { padding: 0 2rem 1rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+    select, label { font-family: inherit; font-size: 0.75rem; }
+    select { padding: 0.3rem 0.5rem; border: 1px solid #2c2317; background: #fff; }
+    svg { display: block; }
+    #map { padding: 0 2rem; }
+    #log { padding: 1rem 2rem; font-size: 0.7rem; color: #555; }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@1&family=IBM+Plex+Mono:wght@300&display=swap" rel="stylesheet">
+</head>
+<body>
+  <h1>Pipeline Validation</h1>
+  <p class="sub">Designed with D3.js — tests processed/ topojson files directly</p>
+
+  <div class="controls">
+    <label>Layer:
+      <select id="layer">
+        <option value="countries">countries</option>
+        <option value="admin1">admin1</option>
+      </select>
+    </label>
+    <label>Detail:
+      <select id="detail">
+        <option value="low">low (110m)</option>
+        <option value="medium">medium (50m)</option>
+        <option value="high">high (10m)</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="disputed"> Show disputed territories</label>
+  </div>
+
+  <div id="map"></div>
+  <div id="log"></div>
+
+  <script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js"></script>
+  <script src="https://unpkg.com/topojson@3.0.2/dist/topojson.js"></script>
+  <script>
+    const INK = '#2c2317', BG = '#f4efe8';
+    const W = Math.min(960, window.innerWidth - 32);
+
+    let svg = null;
+
+    function log(msg) {
+      document.getElementById('log').textContent = msg;
+    }
+
+    async function draw() {
+      const layer = document.getElementById('layer').value;
+      const detail = document.getElementById('detail').value;
+      const showDisputed = document.getElementById('disputed').checked;
+
+      // Load from local processed/ directory (open this file via a local server)
+      const path = `../../processed/${layer === 'countries' ? 'countries' : 'admin1'}/${detail}.topojson`;
+      log(`Loading ${path}...`);
+
+      let topo;
+      try {
+        topo = await d3.json(path);
+      } catch (e) {
+        log(`Error: ${e.message} — run pipeline first, then serve with: npx serve .`);
+        return;
+      }
+
+      const key = Object.keys(topo.objects)[0];
+      let geom = topojson.feature(topo, topo.objects[key]);
+
+      if (!showDisputed) {
+        geom = { ...geom, features: geom.features.filter(f => !f.properties?.disputed) };
+      }
+
+      log(`${geom.features.length} features loaded — layer=${layer} detail=${detail}`);
+
+      document.getElementById('map').innerHTML = '';
+      svg = d3.select('#map').append('svg');
+
+      const projection = d3.geoNaturalEarth1();
+      const pathFn = d3.geoPath().projection(projection);
+
+      projection.fitWidth(W - 4, geom);
+      const [[x0, y0], [x1, y1]] = pathFn.bounds(geom);
+      const [ptx, pty] = projection.translate();
+      projection.translate([ptx - x0 + 2, pty - y0 + 2]);
+
+      const H = Math.ceil(y1 - y0) + 4;
+      svg.attr('width', W).attr('height', H);
+
+      svg.append('line').attr('x1', 0).attr('x2', W).attr('y1', 1).attr('y2', 1)
+        .attr('stroke', INK).attr('stroke-width', 1.5);
+
+      const g = svg.append('g');
+
+      g.selectAll('path')
+        .data(geom.features)
+        .join('path')
+        .attr('d', pathFn)
+        .attr('fill', d => d.properties?.disputed ? '#e8d5c4' : BG)
+        .attr('stroke', INK)
+        .attr('stroke-width', 0.4)
+        .attr('stroke-opacity', 0.6)
+        .append('title')
+        .text(d => {
+          const p = d.properties || {};
+          return p.gid || p.name || '—';
+        });
+
+      // Outer boundary
+      const mesh = topojson.mesh(topo, topo.objects[key], (a, b) => a === b);
+      svg.append('path').datum(mesh)
+        .attr('d', pathFn)
+        .attr('fill', 'none')
+        .attr('stroke', INK)
+        .attr('stroke-width', 1.5)
+        .attr('stroke-linejoin', 'round');
+    }
+
+    document.getElementById('layer').addEventListener('change', draw);
+    document.getElementById('detail').addEventListener('change', draw);
+    document.getElementById('disputed').addEventListener('change', draw);
+
+    draw();
+  </script>
+</body>
+</html>

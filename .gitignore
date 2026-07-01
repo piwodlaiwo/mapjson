@@ -1,0 +1,6 @@
+node_modules/
+data/
+processed/
+.wrangler/
+worker/node_modules/
+.DS_Store

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Examples — mapjson</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #2c2317;
+      --bg: #f4efe8;
+      --accent: #b22222;
+      --muted: #7a6f64;
+      --border: #d8d0c5;
+      --code-bg: #eae5de;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 300;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+
+    header {
+      border-bottom: 1.5px solid var(--ink);
+      padding: 3rem 0 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .site-link {
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .site-link:hover { color: var(--ink); }
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 2.5rem;
+      font-weight: 400;
+      margin-top: 0.75rem;
+      line-height: 1;
+    }
+    header p {
+      color: var(--muted);
+      margin-top: 0.5rem;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .card {
+      background: var(--bg);
+      padding: 1.75rem 1.5rem 1.5rem;
+      text-decoration: none;
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      border-top: 3px solid transparent;
+      transition: background 0.1s;
+    }
+    .card:hover { background: var(--code-bg); border-top-color: var(--accent); }
+    .card-tag {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      font-weight: 400;
+      margin-bottom: 0.6rem;
+    }
+    .card-desc {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.65;
+      flex: 1;
+    }
+    .card-footer {
+      margin-top: 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11px;
+    }
+    .card-url { color: var(--muted); }
+    .card-arrow { color: var(--accent); font-size: 14px; }
+
+    .card.wide { grid-column: 1 / -1; }
+
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+      .card.wide { grid-column: auto; }
+    }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 48px;
+    }
+    .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink); text-decoration: none; letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="../index.html">mapjson</a>
+  <div class="nav-links">
+    <a href="../docs.html">Docs</a>
+    <a href="index.html">Examples</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <header>
+    <a href="../docs.html" class="site-link">← API Reference</a>
+    <h1>Examples</h1>
+    <p>D3.js maps built with the mapjson API</p>
+  </header>
+
+  <div class="grid">
+
+    <a class="card" href="world.html">
+      <div class="card-tag">countries · low detail</div>
+      <div class="card-title">World Countries</div>
+      <div class="card-desc">The minimal mapjson call — no parameters needed. Returns 110m world countries as geometry-only topojson. The fastest starting point for any world map.</div>
+      <div class="card-footer">
+        <span class="card-url">GET /v1/geo</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="card" href="europe.html">
+      <div class="card-tag">countries · medium detail · filter · properties</div>
+      <div class="card-title">Europe with Hover</div>
+      <div class="card-desc">Filtered to European countries at medium resolution with country names as properties. Hover to inspect each country.</div>
+      <div class="card-footer">
+        <span class="card-url">filter=europe &amp; properties=name</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="card" href="usa-states.html">
+      <div class="card-tag">regions · medium detail · filter</div>
+      <div class="card-title">USA States</div>
+      <div class="card-desc">US administrative regions using the regions layer filtered to a single country. AlbersUsa projection for clean continental rendering.</div>
+      <div class="card-footer">
+        <span class="card-url">layer=regions &amp; filter=US</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="card" href="disputed.html">
+      <div class="card-tag">countries · disputed territories</div>
+      <div class="card-title">Disputed Territories</div>
+      <div class="card-desc">World countries including disputed and partially-recognized territories — Kosovo, Western Sahara, Palestine, and others — highlighted separately.</div>
+      <div class="card-footer">
+        <span class="card-url">disputed=true</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="card wide" href="physical.html">
+      <div class="card-tag">countries · rivers · lakes · multiple layers</div>
+      <div class="card-title">Physical Features</div>
+      <div class="card-desc">Three API calls composed into one map — countries as the base layer, overlaid with rivers and lakes. Shows how to build up a richer world map from independent layers.</div>
+      <div class="card-footer">
+        <span class="card-url">layer=rivers · layer=lakes</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+  </div>
+
+</div>
+</body>
+</html>

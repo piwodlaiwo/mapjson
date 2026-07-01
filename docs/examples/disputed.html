@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Disputed Territories — mapjson examples</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #2c2317;
+      --bg: #f4efe8;
+      --accent: #b22222;
+      --muted: #7a6f64;
+      --border: #d8d0c5;
+      --code-bg: #eae5de;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 300;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link {
+      display: inline-block;
+      padding: 2.5rem 0 0;
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .back-link:hover { color: var(--ink); }
+    header {
+      border-bottom: 1.5px solid var(--ink);
+      padding: 1rem 0 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    header .tag {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 2.25rem;
+      font-weight: 400;
+      line-height: 1.1;
+    }
+    header p { color: var(--muted); margin-top: 0.6rem; font-size: 12px; max-width: 640px; line-height: 1.7; }
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    section { margin-bottom: 2.5rem; }
+    .map-wrap {
+      margin-bottom: 2.5rem;
+      border: 1px solid var(--border);
+      background: #a8c4d8;
+      line-height: 0;
+    }
+    .legend {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+    .legend-swatch { width: 14px; height: 14px; border: 1px solid var(--border); flex-shrink: 0; }
+    pre {
+      background: var(--code-bg);
+      border-left: 3px solid var(--ink);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.65;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .tooltip {
+      position: fixed;
+      background: var(--ink);
+      color: var(--bg);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 300;
+      padding: 0.3rem 0.6rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <a class="back-link" href="index.html">← Examples</a>
+
+  <header>
+    <div class="tag">countries · disputed territories · europe &amp; middle east</div>
+    <h1>Disputed Territories</h1>
+    <p>All territories are always included — disputed and partially-recognized ones carry a <code>disputed: true</code> property, making it easy to style them independently. This view is centered on Europe and the Middle East, where disputed territories are most dense.</p>
+  </header>
+
+  <div class="map-wrap" id="map"></div>
+  <div class="tooltip" id="tooltip"></div>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-swatch" style="background: #d9d0be;"></div>
+      <span>sovereign countries</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background: #e07840;"></div>
+      <span>disputed / partially recognized</span>
+    </div>
+  </div>
+
+  <section>
+    <h2>API Call</h2>
+    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;properties=name</pre>
+  </section>
+
+  <section>
+    <h2>Code</h2>
+    <pre>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"&gt;&lt;/script&gt;
+  &lt;style&gt;
+    svg { width: 100%; display: block; background: #a8c4d8; }
+    #tooltip {
+      position: fixed; background: #000; color: #fff;
+      font-size: 12px; padding: 4px 8px; pointer-events: none; opacity: 0;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id="map"&gt;&lt;/div&gt;
+  &lt;div id="tooltip"&gt;&lt;/div&gt;
+  &lt;script&gt;
+    const svg = d3.select("#map").append("svg").attr("viewBox", "0 0 960 560");
+    const projection = d3.geoMercator().center([30, 42]).scale(680).translate([480, 280]);
+    const path = d3.geoPath().projection(projection);
+    const tooltip = d3.select("#tooltip");
+
+    d3.json("https://api.mapjson.com/v1/geo?layer=countries&detail=medium&properties=name").then(topo =&gt; {
+      const features = topojson.feature(topo, topo.objects.geo).features;
+
+      svg.append("g")
+        .selectAll("path")
+        .data(features.filter(d =&gt; !d.properties.disputed))
+        .join("path").attr("d", path).attr("fill", "#ddd8cc").attr("stroke", "#f0ece6").attr("stroke-width", 0.5);
+
+      svg.append("g")
+        .selectAll("path")
+        .data(features.filter(d =&gt; d.properties.disputed))
+        .join("path").attr("d", path)
+        .attr("fill", "#e07840").attr("stroke", "#c05820").attr("stroke-width", 1)
+        .style("cursor", "pointer")
+        .on("mouseover", function(event, d) {
+          d3.select(this).attr("fill", "#c05820");
+          tooltip.style("opacity", 1).text(d.properties.name || "disputed territory");
+        })
+        .on("mousemove", function(event) {
+          tooltip.style("left", event.clientX + 12 + "px").style("top", event.clientY - 8 + "px");
+        })
+        .on("mouseout", function() { d3.select(this).attr("fill", "#e07840"); tooltip.style("opacity", 0); });
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script>
+  const svg = d3.select("#map").append("svg").attr("viewBox", "0 0 960 560");
+  const projection = d3.geoMercator().center([30, 42]).scale(680).translate([480, 280]);
+  const path = d3.geoPath().projection(projection);
+  const tooltip = d3.select("#tooltip");
+
+  d3.json("https://mapjson.mapjson.workers.dev/v1/geo?layer=countries&detail=medium&properties=name").then(topo => {
+    const features = topojson.feature(topo, topo.objects.geo).features;
+
+    svg.append("g")
+      .selectAll("path")
+      .data(features.filter(d => !d.properties.disputed))
+      .join("path")
+      .attr("d", path)
+      .attr("fill", "#ddd8cc")
+      .attr("stroke", "#f0ece6")
+      .attr("stroke-width", 0.5);
+
+    svg.append("g")
+      .selectAll("path")
+      .data(features.filter(d => d.properties.disputed))
+      .join("path")
+      .attr("d", path)
+      .attr("fill", "#e07840")
+      .attr("stroke", "#c05820")
+      .attr("stroke-width", 1)
+      .style("cursor", "pointer")
+      .on("mouseover", function(event, d) {
+        d3.select(this).attr("fill", "#c05820");
+        tooltip.style("opacity", 1).text(d.properties.name || "disputed territory");
+      })
+      .on("mousemove", function(event) {
+        tooltip.style("left", (event.clientX + 12) + "px").style("top", (event.clientY - 8) + "px");
+      })
+      .on("mouseout", function() {
+        d3.select(this).attr("fill", "#e07840");
+        tooltip.style("opacity", 0);
+      });
+  });
+</script>
+</body>
+</html>

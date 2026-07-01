@@ -1,0 +1,10 @@
+name = "mapjson"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+workers_dev = true
+
+[[r2_buckets]]
+binding = "GEO_BUCKET"
+bucket_name = "mapjson"
+
+# KV not needed — properties.json is served from R2 and cached in memory

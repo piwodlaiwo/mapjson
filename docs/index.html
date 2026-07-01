@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>mapjson — TopoJSON API for Geographic Map Data</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A hosted API returning TopoJSON and GeoJSON for countries, regions, and geographic features. Filter by continent or country, choose resolution, select properties.">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #2c2317;
+      --bg: #f4efe8;
+      --muted: #7a6f64;
+      --border: #d8d0c5;
+      --code-bg: #eae5de;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 300;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 48px;
+    }
+    .nav-brand {
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 400;
+      font-size: 14px;
+      color: var(--ink);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+    }
+    .nav-links { display: flex; gap: 2rem; align-items: center; }
+    .nav-links a {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .nav-links a:hover { color: var(--ink); }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 5rem 2rem 3rem;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .hero-eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+    }
+    .hero h1 {
+      font-family: 'IBM Plex Mono', monospace;
+      font-style: normal;
+      font-weight: 300;
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      line-height: 1.15;
+      margin-bottom: 1.5rem;
+    }
+    .hero p {
+      font-size: 13px;
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.8;
+      margin-bottom: 2rem;
+    }
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn {
+      display: inline-block;
+      padding: 0.55rem 1.25rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 300;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-decoration: none;
+      border: 1px solid var(--ink);
+      color: var(--ink);
+      background: transparent;
+    }
+    .btn:hover { background: var(--ink); color: var(--bg); }
+    .btn-ghost { border-color: var(--border); color: var(--muted); }
+    .btn-ghost:hover { background: transparent; border-color: var(--ink); color: var(--ink); }
+
+    /* ── Map ── */
+    .map-section {
+      background: #18303f;
+      position: relative;
+      line-height: 0;
+    }
+    .map-section svg { width: 100%; display: block; cursor: grab; }
+    .map-section svg:active { cursor: grabbing; }
+    #map-tooltip {
+      position: fixed;
+      background: rgba(24, 48, 63, 0.92);
+      color: #e8e0d4;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 300;
+      padding: 0.3rem 0.7rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      white-space: nowrap;
+      z-index: 50;
+    }
+
+    /* ── Quick Start ── */
+    .quickstart {
+      padding: 5rem 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+    @media (max-width: 640px) { .quickstart { grid-template-columns: 1fr; gap: 2rem; } }
+    .quickstart-text h2 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 600;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .quickstart-text p { color: var(--muted); line-height: 1.8; margin-bottom: 1.5rem; }
+    pre {
+      background: var(--code-bg);
+      border-left: 3px solid var(--ink);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.7;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    /* ── Features ── */
+    .features {
+      border-top: 1px solid var(--border);
+      padding: 4rem 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3rem;
+    }
+    @media (max-width: 640px) { .features { grid-template-columns: 1fr; gap: 2rem; } }
+    .feature-label {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    .feature h3 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .feature p { color: var(--muted); font-size: 12px; line-height: 1.75; }
+    .feature code {
+      background: var(--code-bg);
+      padding: 0.1em 0.35em;
+      font-size: 11px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 900px;
+      margin: 0 auto;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--ink); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="index.html">mapjson</a>
+  <div class="nav-links">
+    <a href="docs.html">Docs</a>
+    <a href="examples/index.html">Examples</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Free &amp; open · CORS enabled · TopoJSON + GeoJSON</div>
+  <h1>TopoJSON API for<br>Geographic Map Data</h1>
+  <p>A hosted API returning country, region, and physical map data in a single call. Filter by continent or country, choose resolution, and select only the properties you need.</p>
+  <div class="hero-actions">
+    <a class="btn" href="docs.html">View Docs</a>
+    <a class="btn btn-ghost" href="examples/index.html">Examples</a>
+  </div>
+</div>
+
+<div class="map-section">
+  <div id="map"></div>
+</div>
+<div id="map-tooltip"></div>
+
+<div class="quickstart">
+  <div class="quickstart-text">
+    <h2>One call, any map</h2>
+    <p>Pass a URL to <code>d3.json()</code> and get back a topojson topology ready to render. No API key, no account, no rate limits.</p>
+    <a class="btn btn-ghost" href="examples/index.html">See all examples →</a>
+  </div>
+  <pre><span style="color:#7a6f64">&lt;!-- include d3 + topojson --&gt;</span>
+&lt;script src="cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+&lt;script src="cdn.jsdelivr.net/npm/topojson-client@3/..."&gt;&lt;/script&gt;
+
+&lt;script&gt;
+const svg = d3.select("#map").append("svg")
+  .attr("viewBox", "0 0 960 500");
+const path = d3.geoPath()
+  .projection(d3.geoNaturalEarth1());
+
+d3.json("https://api.mapjson.com/v1/geo")
+  .then(topo =&gt; {
+    svg.selectAll("path")
+      .data(topojson.feature(
+        topo, topo.objects.geo).features)
+      .join("path")
+      .attr("d", path)
+      .attr("fill", "#d9d0be");
+  });
+&lt;/script&gt;</pre>
+</div>
+
+<div class="features" style="border-top: 1px solid var(--border); margin-top: 0;">
+  <div class="feature">
+    <div class="feature-label">Filter</div>
+    <h3>Continent or country</h3>
+    <p>Use <code>filter=europe</code> for a continent or <code>filter=US</code> with <code>layer=regions</code> to get a country's administrative divisions.</p>
+  </div>
+  <div class="feature">
+    <div class="feature-label">Detail</div>
+    <h3>Three resolutions</h3>
+    <p><code>detail=low</code> for fast world overviews, <code>medium</code> for continent maps, <code>high</code> for country and regional detail.</p>
+  </div>
+  <div class="feature">
+    <div class="feature-label">Properties</div>
+    <h3>Only what you need</h3>
+    <p>Omit <code>properties</code> for geometry-only output. Add <code>properties=name,iso2,capital</code> to get exactly the fields you need and nothing more.</p>
+  </div>
+</div>
+
+<footer>
+  <span>mapjson.com</span>
+  <div style="display:flex; gap:1.5rem;">
+    <a href="docs.html">Docs</a>
+    <a href="examples/index.html">Examples</a>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script>
+  const width = 960, height = 500;
+  const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${width} ${height}`);
+  const tooltip = d3.select("#map-tooltip");
+
+  const projection = d3.geoEqualEarth().scale(160).translate([width / 2, height / 2 + 20]);
+  const path = d3.geoPath().projection(projection);
+
+  const g = svg.append("g");
+
+  // Ocean
+  g.append("path")
+    .datum({ type: "Sphere" })
+    .attr("d", path)
+    .attr("fill", "#22485e");
+
+  // Graticule
+  g.append("path")
+    .datum(d3.geoGraticule()())
+    .attr("d", path)
+    .attr("fill", "none")
+    .attr("stroke", "#2e5870")
+    .attr("stroke-width", 0.5);
+
+  // Countries
+  d3.json("https://mapjson.mapjson.workers.dev/v1/geo?properties=name").then(topo => {
+    g.append("g")
+      .selectAll("path")
+      .data(topojson.feature(topo, topo.objects.geo).features)
+      .join("path")
+      .attr("d", path)
+      .attr("fill", "#c8b888")
+      .attr("stroke", "#3a5e70")
+      .attr("stroke-width", 0.4)
+      .style("cursor", "pointer")
+      .on("mouseover", function(event, d) {
+        d3.select(this).attr("fill", "#e8ce78");
+        if (d.properties.name) {
+          tooltip.style("opacity", 1).text(d.properties.name);
+        }
+      })
+      .on("mousemove", function(event) {
+        tooltip
+          .style("left", (event.clientX + 14) + "px")
+          .style("top", (event.clientY - 10) + "px");
+      })
+      .on("mouseout", function() {
+        d3.select(this).attr("fill", "#c8b888");
+        tooltip.style("opacity", 0);
+      });
+  });
+
+  // Zoom + pan
+  const zoom = d3.zoom()
+    .scaleExtent([1, 12])
+    .on("zoom", (event) => {
+      g.attr("transform", event.transform);
+    });
+
+  svg.call(zoom);
+</script>
+</body>
+</html>

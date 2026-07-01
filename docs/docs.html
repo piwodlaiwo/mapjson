@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>mapjson — API Reference</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #2c2317;
+      --bg: #f4efe8;
+      --accent: #b22222;
+      --muted: #7a6f64;
+      --border: #d8d0c5;
+      --code-bg: #eae5de;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 300;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    /* ── Layout ── */
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1.5px solid var(--ink);
+      padding: 3rem 0 1.5rem;
+      margin-bottom: 3rem;
+    }
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 3rem;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      line-height: 1;
+    }
+    header .tagline {
+      margin-top: 0.5rem;
+      color: var(--muted);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+    header .base-url {
+      margin-top: 1.25rem;
+      display: inline-block;
+      background: var(--ink);
+      color: var(--bg);
+      padding: 0.4rem 0.75rem;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Sections ── */
+    section { margin-bottom: 3.5rem; }
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 600;
+      font-size: 1.25rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    h3 {
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 1.75rem 0 0.75rem;
+    }
+
+    /* ── Endpoint block ── */
+    .endpoint {
+      background: var(--ink);
+      color: var(--bg);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2rem;
+      line-height: 1.9;
+    }
+    .endpoint .method { color: #f4a261; margin-right: 0.75rem; }
+    .endpoint .path { color: #fff; }
+    .endpoint .param { color: #a8d8a8; }
+    .endpoint .value { color: #f4c87a; }
+    .endpoint .sep { color: var(--muted); }
+
+    /* ── Parameter table ── */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 0.5rem; }
+    th {
+      text-align: left;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 0.75rem 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 0.6rem 0.75rem 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    td:first-child { white-space: nowrap; }
+    .param-name { font-weight: 400; }
+    .required { color: var(--accent); font-size: 10px; vertical-align: super; }
+    .default { color: var(--muted); font-size: 11px; }
+    .options { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.35rem; }
+    .opt {
+      background: var(--code-bg);
+      padding: 0.1rem 0.4rem;
+      font-size: 11px;
+      border: 1px solid var(--border);
+    }
+    .opt.default-val { border-color: var(--ink); background: var(--ink); color: var(--bg); }
+
+    /* ── Code blocks ── */
+    pre {
+      background: var(--code-bg);
+      border-left: 3px solid var(--ink);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      margin: 0.75rem 0;
+      font-size: 12px;
+      line-height: 1.65;
+    }
+    code { font-family: 'IBM Plex Mono', monospace; }
+
+    /* ── Examples ── */
+    .example { margin-bottom: 2rem; }
+    .example-label {
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+
+    /* ── Properties grid ── */
+    .props-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem 2rem;
+    }
+    .prop-row { display: flex; gap: 0.75rem; align-items: baseline; padding: 0.3rem 0; border-bottom: 1px solid var(--border); }
+    .prop-key { font-weight: 400; white-space: nowrap; min-width: 110px; }
+    .prop-desc { color: var(--muted); font-size: 11px; }
+
+    /* ── Layers grid ── */
+    .layers-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+    .layer-cell {
+      background: var(--bg);
+      padding: 0.75rem;
+    }
+    .layer-name { font-weight: 400; font-size: 13px; }
+    .layer-type {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+    .layer-desc { font-size: 11px; color: var(--muted); margin-top: 0.35rem; line-height: 1.5; }
+
+    /* ── Detail table ── */
+    .detail-table { width: 100%; border-collapse: collapse; }
+    .detail-table td, .detail-table th { padding: 0.5rem 0.75rem 0.5rem 0; border-bottom: 1px solid var(--border); }
+
+    /* ── Note ── */
+    .note {
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1rem;
+      background: var(--code-bg);
+      font-size: 12px;
+      color: var(--muted);
+      margin: 1rem 0;
+    }
+
+    /* ── Response sample ── */
+    .response-tabs { display: flex; gap: 1px; margin-bottom: 0; }
+    .tab { padding: 0.4rem 0.75rem; background: var(--border); font-size: 11px; cursor: default; }
+    .tab.active { background: var(--ink); color: var(--bg); }
+
+    /* ── ISO reference table ── */
+    details { margin-top: 1.5rem; }
+    summary {
+      cursor: pointer;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0.6rem 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      list-style: none;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: '↓'; font-size: 13px; font-weight: 300; }
+    details[open] summary::after { content: '↑'; }
+    details[open] summary { border-bottom: none; }
+    .iso-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .iso-table th {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0.5rem 0.75rem 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    .iso-table td {
+      padding: 0.35rem 0.75rem 0.35rem 0;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      white-space: nowrap;
+    }
+    .iso-table td:last-child { white-space: normal; width: 100%; }
+
+    @media (max-width: 600px) {
+      .props-grid { grid-template-columns: 1fr; }
+      .layers-grid { grid-template-columns: 1fr 1fr; }
+    }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 48px;
+    }
+    .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink); text-decoration: none; letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="index.html">mapjson</a>
+  <div class="nav-links">
+    <a href="docs.html">Docs</a>
+    <a href="examples/index.html">Examples</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <header>
+    <h1>mapjson</h1>
+    <p class="tagline">Geographic map data as a single API call</p>
+    <div class="base-url">https://api.mapjson.com</div>
+  </header>
+
+  <!-- ── Overview ── -->
+  <section>
+    <h2>Overview</h2>
+    <p>mapjson returns topojson (or geojson) for any geographic layer in a single AJAX call. The shortest possible call returns 110m world countries with no attached properties — the most common use case for a world map.</p>
+    <pre><code>// Minimal call — 110m world countries, no properties
+d3.json("https://api.mapjson.com/v1/geo").then(topo => {
+  const countries = topojson.feature(topo, topo.objects.geo);
+  // draw your map
+});
+
+// With filtering and properties
+d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=medium&properties=name,iso2")
+  .then(topo => { /* ... */ });</code></pre>
+  </section>
+
+  <!-- ── Endpoint ── -->
+  <section>
+    <h2>Endpoint</h2>
+    <div class="endpoint">
+      <span class="method">GET</span><span class="path">/v1/geo</span><br>
+      &nbsp;&nbsp;<span class="param">?layer</span><span class="sep">=</span><span class="value">countries</span><br>
+      &nbsp;&nbsp;<span class="param">&amp;filter</span><span class="sep">=</span><span class="value">world</span><br>
+      &nbsp;&nbsp;<span class="param">&amp;detail</span><span class="sep">=</span><span class="value">low</span><br>
+      &nbsp;&nbsp;<span class="param">&amp;properties</span><span class="sep">=</span><span class="value">name,iso2,capital</span><br>
+      &nbsp;&nbsp;<span class="param">&amp;format</span><span class="sep">=</span><span class="value">topojson</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Parameter</th>
+          <th>Default</th>
+          <th>Options</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="param-name">layer</code></td>
+          <td><code class="default">countries</code></td>
+          <td>
+            <div class="options">
+              <span class="opt default-val">countries</span>
+              <span class="opt">regions</span>
+              <span class="opt">lakes</span>
+              <span class="opt">rivers</span>
+              <span class="opt">coastlines</span>
+            </div>
+          </td>
+          <td>Which geographic layer to return. All layers return polygon or line geometry. See <em>Layers</em> below.</td>
+        </tr>
+        <tr>
+          <td><code class="param-name">filter</code></td>
+          <td><code class="default">world</code></td>
+          <td>
+            <div class="options">
+              <span class="opt default-val">world</span>
+              <span class="opt">europe</span>
+              <span class="opt">asia</span>
+              <span class="opt">africa</span>
+              <span class="opt">north-america</span>
+              <span class="opt">south-america</span>
+              <span class="opt">oceania</span>
+              <span class="opt">antarctica</span>
+              <span class="opt">{ISO2}</span>
+            </div>
+          </td>
+          <td>Filters output to a continent or a specific country (ISO alpha-2 code, e.g. <code>FR</code>). Use <code>{ISO2}</code> with <code>layer=regions</code> to get the administrative regions of one country.</td>
+        </tr>
+        <tr>
+          <td><code class="param-name">detail</code></td>
+          <td><code class="default">low</code></td>
+          <td>
+            <div class="options">
+              <span class="opt default-val">low</span>
+              <span class="opt">medium</span>
+              <span class="opt">high</span>
+              <span class="opt">ultra</span>
+            </div>
+          </td>
+          <td>Geometry resolution. See <em>Detail Levels</em> below.</td>
+        </tr>
+        <tr>
+          <td><code class="param-name">properties</code></td>
+          <td><code class="default">none</code></td>
+          <td><code>name, nameOfficial, iso2, iso3, isoNum, continent, subregion, capital, capitalLat, capitalLng</code></td>
+          <td>Comma-separated list of properties to attach to each feature. Omit entirely for geometry-only output (smallest response). Only applies to <code>countries</code> and <code>regions</code> layers.</td>
+        </tr>
+        <tr>
+          <td><code class="param-name">format</code></td>
+          <td><code class="default">topojson</code></td>
+          <td>
+            <div class="options">
+              <span class="opt default-val">topojson</span>
+              <span class="opt">geojson</span>
+            </div>
+          </td>
+          <td>Output format. Topojson is smaller and faster to render. Geojson is more compatible with other tools.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── Layers ── -->
+  <section>
+    <h2>Layers</h2>
+    <div class="layers-grid">
+      <div class="layer-cell">
+        <div class="layer-name">countries</div>
+        <div class="layer-type">polygon</div>
+        <div class="layer-desc">Sovereign countries and territories. All territories included — disputed ones carry a <code>disputed: true</code> property. Supports <code>filter</code>, <code>detail</code>, <code>properties</code>.</div>
+      </div>
+      <div class="layer-cell">
+        <div class="layer-name">regions</div>
+        <div class="layer-type">polygon</div>
+        <div class="layer-desc">First-level administrative divisions — US states, French departments, German Länder, Polish voivodeships, etc. Use <code>filter=US</code> to get one country's regions.</div>
+      </div>
+      <div class="layer-cell">
+        <div class="layer-name">lakes</div>
+        <div class="layer-type">polygon</div>
+        <div class="layer-desc">Major lakes and inland water bodies. Supports <code>detail</code>.</div>
+      </div>
+      <div class="layer-cell">
+        <div class="layer-name">rivers</div>
+        <div class="layer-type">line</div>
+        <div class="layer-desc">Rivers and lake centerlines. Supports <code>detail</code>.</div>
+      </div>
+      <div class="layer-cell">
+        <div class="layer-name">coastlines</div>
+        <div class="layer-type">line</div>
+        <div class="layer-desc">World coastlines. Supports <code>detail</code>.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Detail Levels ── -->
+  <section>
+    <h2>Detail Levels</h2>
+    <table class="detail-table">
+      <thead>
+        <tr>
+          <th>Value</th>
+          <th>Source resolution</th>
+          <th>Best for</th>
+          <th>Typical file size</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>low</code></td>
+          <td>110m (Natural Earth)</td>
+          <td>World maps, small insets, thumbnails</td>
+          <td>~100 KB</td>
+        </tr>
+        <tr>
+          <td><code>medium</code></td>
+          <td>50m (Natural Earth)</td>
+          <td>Continent-level maps</td>
+          <td>~300 KB</td>
+        </tr>
+        <tr>
+          <td><code>high</code></td>
+          <td>10m (Natural Earth)</td>
+          <td>Country and regional maps</td>
+          <td>~2 MB</td>
+        </tr>
+        <tr>
+          <td><code>ultra</code></td>
+          <td>OSM / GADM</td>
+          <td>Small countries (Andorra, Monaco, Singapore)</td>
+          <td>varies</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note">
+      <code>ultra</code> is not yet available — currently falls back to <code>high</code>.
+    </div>
+  </section>
+
+  <!-- ── Properties ── -->
+  <section>
+    <h2>Properties</h2>
+    <p style="margin-bottom:1rem;">Available on <code>countries</code> and <code>regions</code> layers. No properties are returned by default — pass <code>?properties=name,iso2</code> to request specific fields. This keeps the default response as small as possible.</p>
+    <div class="props-grid">
+      <div>
+        <div class="prop-row"><span class="prop-key">name</span><span class="prop-desc">Short English name (e.g. "France")</span></div>
+        <div class="prop-row"><span class="prop-key">nameOfficial</span><span class="prop-desc">Formal name (e.g. "French Republic")</span></div>
+        <div class="prop-row"><span class="prop-key">iso2</span><span class="prop-desc">ISO 3166-1 alpha-2 (e.g. "FR")</span></div>
+        <div class="prop-row"><span class="prop-key">iso3</span><span class="prop-desc">ISO 3166-1 alpha-3 (e.g. "FRA")</span></div>
+        <div class="prop-row"><span class="prop-key">isoNum</span><span class="prop-desc">ISO 3166-1 numeric (e.g. "250")</span></div>
+      </div>
+      <div>
+        <div class="prop-row"><span class="prop-key">continent</span><span class="prop-desc">Continent name (e.g. "Europe")</span></div>
+        <div class="prop-row"><span class="prop-key">subregion</span><span class="prop-desc">Subregion (e.g. "Western Europe")</span></div>
+        <div class="prop-row"><span class="prop-key">capital</span><span class="prop-desc">Capital city name (e.g. "Paris")</span></div>
+        <div class="prop-row"><span class="prop-key">capitalLat</span><span class="prop-desc">Capital latitude</span></div>
+        <div class="prop-row"><span class="prop-key">capitalLng</span><span class="prop-desc">Capital longitude</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Examples ── -->
+  <section>
+    <h2>Examples</h2>
+
+    <div class="example">
+      <div class="example-label">Minimal — world countries, 110m, no properties</div>
+      <pre><code>https://api.mapjson.com/v1/geo</code></pre>
+    </div>
+
+    <div class="example">
+      <div class="example-label">Europe countries with name and ISO code</div>
+      <pre><code>https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=medium&properties=name,iso2</code></pre>
+    </div>
+
+    <div class="example">
+      <div class="example-label">France administrative regions (departments), high detail</div>
+      <pre><code>https://api.mapjson.com/v1/geo?layer=regions&filter=FR&detail=high</code></pre>
+    </div>
+
+    <div class="example">
+      <div class="example-label">USA states, medium detail</div>
+      <pre><code>https://api.mapjson.com/v1/geo?layer=regions&filter=US&detail=medium</code></pre>
+    </div>
+
+    <div class="example">
+      <div class="example-label">Poland voivodeships, high detail</div>
+      <pre><code>https://api.mapjson.com/v1/geo?layer=regions&filter=PL&detail=high</code></pre>
+    </div>
+
+    <div class="example">
+      <div class="example-label">World lakes, medium detail, as GeoJSON</div>
+      <pre><code>https://api.mapjson.com/v1/geo?layer=lakes&detail=medium&format=geojson</code></pre>
+    </div>
+  </section>
+
+  <!-- ── Response ── -->
+  <section>
+    <h2>Response</h2>
+    <p style="margin-bottom:1rem;">The default response is a topojson <code>Topology</code> object. The feature collection is always at <code>topo.objects.geo</code> regardless of which layer you requested. All responses include <code>Access-Control-Allow-Origin: *</code>.</p>
+    <div class="response-tabs">
+      <div class="tab active">topojson</div>
+    </div>
+    <pre><code>{
+  "type": "Topology",
+  "objects": {
+    "geo": {
+      "type": "GeometryCollection",
+      "geometries": [
+        {
+          "type": "Polygon",
+          "arcs": [[0, 1, 2]],
+          "properties": {
+            "name": "France",
+            "iso2": "FR",
+            "iso3": "FRA",
+            "isoNum": "250",
+            "continent": "Europe",
+            "capital": "Paris",
+            "capitalLat": 48.8566,
+            "capitalLng": 2.3515
+          }
+        }
+        // ...
+      ]
+    }
+  },
+  "arcs": [ ... ],
+  "bbox": [-180, -90, 180, 90]
+}</code></pre>
+    <p style="margin-top:1rem; color:var(--muted); font-size:12px;">When no <code>properties</code> parameter is given, each feature's <code>properties</code> object is empty (<code>{}</code>).</p>
+  </section>
+
+  <!-- ── ISO Reference ── -->
+  <section>
+    <h2>Country Codes</h2>
+    <p style="margin-bottom:1rem;">Use these ISO alpha-2 codes with the <code>filter</code> parameter (e.g. <code>filter=DE</code>) to retrieve a specific country.</p>
+    <details>
+      <summary>235 countries and territories</summary>
+      <p style="font-size:11px; color:var(--muted); padding: 0.75rem 0 0.5rem;">* Informal code — not officially assigned by ISO 3166-1.</p>
+      <table class="iso-table">
+        <thead>
+          <tr>
+            <th>ISO2</th>
+            <th>ISO3</th>
+            <th>Name</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>AF</td><td>AFG</td><td>Afghanistan</td></tr>
+          <tr><td>AX</td><td>ALA</td><td>Åland</td></tr>
+          <tr><td>AL</td><td>ALB</td><td>Albania</td></tr>
+          <tr><td>DZ</td><td>DZA</td><td>Algeria</td></tr>
+          <tr><td>AS</td><td>ASM</td><td>American Samoa</td></tr>
+          <tr><td>AD</td><td>AND</td><td>Andorra</td></tr>
+          <tr><td>AO</td><td>AGO</td><td>Angola</td></tr>
+          <tr><td>AI</td><td>AIA</td><td>Anguilla</td></tr>
+          <tr><td>AQ</td><td>ATA</td><td>Antarctica</td></tr>
+          <tr><td>AG</td><td>ATG</td><td>Antigua and Barb.</td></tr>
+          <tr><td>AR</td><td>ARG</td><td>Argentina</td></tr>
+          <tr><td>AM</td><td>ARM</td><td>Armenia</td></tr>
+          <tr><td>AW</td><td>ABW</td><td>Aruba</td></tr>
+          <tr><td>AT</td><td>AUT</td><td>Austria</td></tr>
+          <tr><td>AZ</td><td>AZE</td><td>Azerbaijan</td></tr>
+          <tr><td>BS</td><td>BHS</td><td>Bahamas</td></tr>
+          <tr><td>BH</td><td>BHR</td><td>Bahrain</td></tr>
+          <tr><td>BD</td><td>BGD</td><td>Bangladesh</td></tr>
+          <tr><td>BB</td><td>BRB</td><td>Barbados</td></tr>
+          <tr><td>BY</td><td>BLR</td><td>Belarus</td></tr>
+          <tr><td>BE</td><td>BEL</td><td>Belgium</td></tr>
+          <tr><td>BZ</td><td>BLZ</td><td>Belize</td></tr>
+          <tr><td>BJ</td><td>BEN</td><td>Benin</td></tr>
+          <tr><td>BM</td><td>BMU</td><td>Bermuda</td></tr>
+          <tr><td>BT</td><td>BTN</td><td>Bhutan</td></tr>
+          <tr><td>BO</td><td>BOL</td><td>Bolivia</td></tr>
+          <tr><td>BA</td><td>BIH</td><td>Bosnia and Herz.</td></tr>
+          <tr><td>BW</td><td>BWA</td><td>Botswana</td></tr>
+          <tr><td>IO</td><td>IOT</td><td>Br. Indian Ocean Ter.</td></tr>
+          <tr><td>BR</td><td>BRA</td><td>Brazil</td></tr>
+          <tr><td>VG</td><td>VGB</td><td>British Virgin Is.</td></tr>
+          <tr><td>BN</td><td>BRN</td><td>Brunei</td></tr>
+          <tr><td>BG</td><td>BGR</td><td>Bulgaria</td></tr>
+          <tr><td>BF</td><td>BFA</td><td>Burkina Faso</td></tr>
+          <tr><td>BI</td><td>BDI</td><td>Burundi</td></tr>
+          <tr><td>CV</td><td>CPV</td><td>Cabo Verde</td></tr>
+          <tr><td>KH</td><td>KHM</td><td>Cambodia</td></tr>
+          <tr><td>CM</td><td>CMR</td><td>Cameroon</td></tr>
+          <tr><td>CA</td><td>CAN</td><td>Canada</td></tr>
+          <tr><td>KY</td><td>CYM</td><td>Cayman Is.</td></tr>
+          <tr><td>CF</td><td>CAF</td><td>Central African Rep.</td></tr>
+          <tr><td>TD</td><td>TCD</td><td>Chad</td></tr>
+          <tr><td>CL</td><td>CHL</td><td>Chile</td></tr>
+          <tr><td>CN</td><td>CHN</td><td>China</td></tr>
+          <tr><td>CO</td><td>COL</td><td>Colombia</td></tr>
+          <tr><td>KM</td><td>COM</td><td>Comoros</td></tr>
+          <tr><td>CG</td><td>COG</td><td>Congo</td></tr>
+          <tr><td>CK</td><td>COK</td><td>Cook Is.</td></tr>
+          <tr><td>CR</td><td>CRI</td><td>Costa Rica</td></tr>
+          <tr><td>CI</td><td>CIV</td><td>Côte d'Ivoire</td></tr>
+          <tr><td>HR</td><td>HRV</td><td>Croatia</td></tr>
+          <tr><td>CU</td><td>CUB</td><td>Cuba</td></tr>
+          <tr><td>CW</td><td>CUW</td><td>Curaçao</td></tr>
+          <tr><td>CY</td><td>CYP</td><td>Cyprus</td></tr>
+          <tr><td>CZ</td><td>CZE</td><td>Czechia</td></tr>
+          <tr><td>CD</td><td>COD</td><td>Dem. Rep. Congo</td></tr>
+          <tr><td>DK</td><td>DNK</td><td>Denmark</td></tr>
+          <tr><td>DJ</td><td>DJI</td><td>Djibouti</td></tr>
+          <tr><td>DM</td><td>DMA</td><td>Dominica</td></tr>
+          <tr><td>DO</td><td>DOM</td><td>Dominican Rep.</td></tr>
+          <tr><td>EC</td><td>ECU</td><td>Ecuador</td></tr>
+          <tr><td>EG</td><td>EGY</td><td>Egypt</td></tr>
+          <tr><td>SV</td><td>SLV</td><td>El Salvador</td></tr>
+          <tr><td>GQ</td><td>GNQ</td><td>Eq. Guinea</td></tr>
+          <tr><td>ER</td><td>ERI</td><td>Eritrea</td></tr>
+          <tr><td>EE</td><td>EST</td><td>Estonia</td></tr>
+          <tr><td>SZ</td><td>SWZ</td><td>eSwatini</td></tr>
+          <tr><td>ET</td><td>ETH</td><td>Ethiopia</td></tr>
+          <tr><td>FO</td><td>FRO</td><td>Faeroe Is.</td></tr>
+          <tr><td>FK</td><td>FLK</td><td>Falkland Is.</td></tr>
+          <tr><td>FJ</td><td>FJI</td><td>Fiji</td></tr>
+          <tr><td>FI</td><td>FIN</td><td>Finland</td></tr>
+          <tr><td>PF</td><td>PYF</td><td>Fr. Polynesia</td></tr>
+          <tr><td>TF</td><td>ATF</td><td>Fr. S. Antarctic Lands</td></tr>
+          <tr><td>GA</td><td>GAB</td><td>Gabon</td></tr>
+          <tr><td>GM</td><td>GMB</td><td>Gambia</td></tr>
+          <tr><td>GE</td><td>GEO</td><td>Georgia</td></tr>
+          <tr><td>DE</td><td>DEU</td><td>Germany</td></tr>
+          <tr><td>GH</td><td>GHA</td><td>Ghana</td></tr>
+          <tr><td>GI</td><td>GIB</td><td>Gibraltar</td></tr>
+          <tr><td>GR</td><td>GRC</td><td>Greece</td></tr>
+          <tr><td>GL</td><td>GRL</td><td>Greenland</td></tr>
+          <tr><td>GD</td><td>GRD</td><td>Grenada</td></tr>
+          <tr><td>GU</td><td>GUM</td><td>Guam</td></tr>
+          <tr><td>GT</td><td>GTM</td><td>Guatemala</td></tr>
+          <tr><td>GG</td><td>GGY</td><td>Guernsey</td></tr>
+          <tr><td>GN</td><td>GIN</td><td>Guinea</td></tr>
+          <tr><td>GW</td><td>GNB</td><td>Guinea-Bissau</td></tr>
+          <tr><td>GY</td><td>GUY</td><td>Guyana</td></tr>
+          <tr><td>HT</td><td>HTI</td><td>Haiti</td></tr>
+          <tr><td>HM</td><td>HMD</td><td>Heard I. and McDonald Is.</td></tr>
+          <tr><td>HN</td><td>HND</td><td>Honduras</td></tr>
+          <tr><td>HK</td><td>HKG</td><td>Hong Kong</td></tr>
+          <tr><td>HU</td><td>HUN</td><td>Hungary</td></tr>
+          <tr><td>IS</td><td>ISL</td><td>Iceland</td></tr>
+          <tr><td>IN</td><td>IND</td><td>India</td></tr>
+          <tr><td>ID</td><td>IDN</td><td>Indonesia</td></tr>
+          <tr><td>IR</td><td>IRN</td><td>Iran</td></tr>
+          <tr><td>IQ</td><td>IRQ</td><td>Iraq</td></tr>
+          <tr><td>IE</td><td>IRL</td><td>Ireland</td></tr>
+          <tr><td>IM</td><td>IMN</td><td>Isle of Man</td></tr>
+          <tr><td>IL</td><td>ISR</td><td>Israel</td></tr>
+          <tr><td>IT</td><td>ITA</td><td>Italy</td></tr>
+          <tr><td>JM</td><td>JAM</td><td>Jamaica</td></tr>
+          <tr><td>JP</td><td>JPN</td><td>Japan</td></tr>
+          <tr><td>JE</td><td>JEY</td><td>Jersey</td></tr>
+          <tr><td>JO</td><td>JOR</td><td>Jordan</td></tr>
+          <tr><td>KZ</td><td>KAZ</td><td>Kazakhstan</td></tr>
+          <tr><td>KE</td><td>KEN</td><td>Kenya</td></tr>
+          <tr><td>KI</td><td>KIR</td><td>Kiribati</td></tr>
+          <tr><td>XK</td><td>XKX</td><td>Kosovo *</td></tr>
+          <tr><td>KW</td><td>KWT</td><td>Kuwait</td></tr>
+          <tr><td>KG</td><td>KGZ</td><td>Kyrgyzstan</td></tr>
+          <tr><td>LA</td><td>LAO</td><td>Laos</td></tr>
+          <tr><td>LV</td><td>LVA</td><td>Latvia</td></tr>
+          <tr><td>LB</td><td>LBN</td><td>Lebanon</td></tr>
+          <tr><td>LS</td><td>LSO</td><td>Lesotho</td></tr>
+          <tr><td>LR</td><td>LBR</td><td>Liberia</td></tr>
+          <tr><td>LY</td><td>LBY</td><td>Libya</td></tr>
+          <tr><td>LI</td><td>LIE</td><td>Liechtenstein</td></tr>
+          <tr><td>LT</td><td>LTU</td><td>Lithuania</td></tr>
+          <tr><td>LU</td><td>LUX</td><td>Luxembourg</td></tr>
+          <tr><td>MO</td><td>MAC</td><td>Macao</td></tr>
+          <tr><td>MG</td><td>MDG</td><td>Madagascar</td></tr>
+          <tr><td>MW</td><td>MWI</td><td>Malawi</td></tr>
+          <tr><td>MY</td><td>MYS</td><td>Malaysia</td></tr>
+          <tr><td>MV</td><td>MDV</td><td>Maldives</td></tr>
+          <tr><td>ML</td><td>MLI</td><td>Mali</td></tr>
+          <tr><td>MT</td><td>MLT</td><td>Malta</td></tr>
+          <tr><td>MH</td><td>MHL</td><td>Marshall Is.</td></tr>
+          <tr><td>MR</td><td>MRT</td><td>Mauritania</td></tr>
+          <tr><td>MU</td><td>MUS</td><td>Mauritius</td></tr>
+          <tr><td>MX</td><td>MEX</td><td>Mexico</td></tr>
+          <tr><td>FM</td><td>FSM</td><td>Micronesia</td></tr>
+          <tr><td>MD</td><td>MDA</td><td>Moldova</td></tr>
+          <tr><td>MC</td><td>MCO</td><td>Monaco</td></tr>
+          <tr><td>MN</td><td>MNG</td><td>Mongolia</td></tr>
+          <tr><td>ME</td><td>MNE</td><td>Montenegro</td></tr>
+          <tr><td>MS</td><td>MSR</td><td>Montserrat</td></tr>
+          <tr><td>MA</td><td>MAR</td><td>Morocco</td></tr>
+          <tr><td>MZ</td><td>MOZ</td><td>Mozambique</td></tr>
+          <tr><td>MM</td><td>MMR</td><td>Myanmar</td></tr>
+          <tr><td>MP</td><td>MNP</td><td>N. Mariana Is.</td></tr>
+          <tr><td>NA</td><td>NAM</td><td>Namibia</td></tr>
+          <tr><td>NR</td><td>NRU</td><td>Nauru</td></tr>
+          <tr><td>NP</td><td>NPL</td><td>Nepal</td></tr>
+          <tr><td>NL</td><td>NLD</td><td>Netherlands</td></tr>
+          <tr><td>NC</td><td>NCL</td><td>New Caledonia</td></tr>
+          <tr><td>NZ</td><td>NZL</td><td>New Zealand</td></tr>
+          <tr><td>NI</td><td>NIC</td><td>Nicaragua</td></tr>
+          <tr><td>NE</td><td>NER</td><td>Niger</td></tr>
+          <tr><td>NG</td><td>NGA</td><td>Nigeria</td></tr>
+          <tr><td>NU</td><td>NIU</td><td>Niue</td></tr>
+          <tr><td>NF</td><td>NFK</td><td>Norfolk Island</td></tr>
+          <tr><td>KP</td><td>PRK</td><td>North Korea</td></tr>
+          <tr><td>MK</td><td>MKD</td><td>North Macedonia</td></tr>
+          <tr><td>OM</td><td>OMN</td><td>Oman</td></tr>
+          <tr><td>PK</td><td>PAK</td><td>Pakistan</td></tr>
+          <tr><td>PW</td><td>PLW</td><td>Palau</td></tr>
+          <tr><td>PS</td><td>PSE</td><td>Palestine</td></tr>
+          <tr><td>PA</td><td>PAN</td><td>Panama</td></tr>
+          <tr><td>PG</td><td>PNG</td><td>Papua New Guinea</td></tr>
+          <tr><td>PY</td><td>PRY</td><td>Paraguay</td></tr>
+          <tr><td>PE</td><td>PER</td><td>Peru</td></tr>
+          <tr><td>PH</td><td>PHL</td><td>Philippines</td></tr>
+          <tr><td>PN</td><td>PCN</td><td>Pitcairn Is.</td></tr>
+          <tr><td>PL</td><td>POL</td><td>Poland</td></tr>
+          <tr><td>PT</td><td>PRT</td><td>Portugal</td></tr>
+          <tr><td>PR</td><td>PRI</td><td>Puerto Rico</td></tr>
+          <tr><td>QA</td><td>QAT</td><td>Qatar</td></tr>
+          <tr><td>RO</td><td>ROU</td><td>Romania</td></tr>
+          <tr><td>RU</td><td>RUS</td><td>Russia</td></tr>
+          <tr><td>RW</td><td>RWA</td><td>Rwanda</td></tr>
+          <tr><td>GS</td><td>SGS</td><td>S. Geo. and the Is.</td></tr>
+          <tr><td>SS</td><td>SSD</td><td>S. Sudan</td></tr>
+          <tr><td>SH</td><td>SHN</td><td>Saint Helena</td></tr>
+          <tr><td>LC</td><td>LCA</td><td>Saint Lucia</td></tr>
+          <tr><td>WS</td><td>WSM</td><td>Samoa</td></tr>
+          <tr><td>SM</td><td>SMR</td><td>San Marino</td></tr>
+          <tr><td>ST</td><td>STP</td><td>São Tomé and Principe</td></tr>
+          <tr><td>SA</td><td>SAU</td><td>Saudi Arabia</td></tr>
+          <tr><td>SN</td><td>SEN</td><td>Senegal</td></tr>
+          <tr><td>RS</td><td>SRB</td><td>Serbia</td></tr>
+          <tr><td>SC</td><td>SYC</td><td>Seychelles</td></tr>
+          <tr><td>SL</td><td>SLE</td><td>Sierra Leone</td></tr>
+          <tr><td>SG</td><td>SGP</td><td>Singapore</td></tr>
+          <tr><td>SX</td><td>SXM</td><td>Sint Maarten</td></tr>
+          <tr><td>SK</td><td>SVK</td><td>Slovakia</td></tr>
+          <tr><td>SI</td><td>SVN</td><td>Slovenia</td></tr>
+          <tr><td>SB</td><td>SLB</td><td>Solomon Is.</td></tr>
+          <tr><td>SO</td><td>SOM</td><td>Somalia</td></tr>
+          <tr><td>ZA</td><td>ZAF</td><td>South Africa</td></tr>
+          <tr><td>KR</td><td>KOR</td><td>South Korea</td></tr>
+          <tr><td>ES</td><td>ESP</td><td>Spain</td></tr>
+          <tr><td>LK</td><td>LKA</td><td>Sri Lanka</td></tr>
+          <tr><td>BL</td><td>BLM</td><td>St-Barthélemy</td></tr>
+          <tr><td>MF</td><td>MAF</td><td>St-Martin</td></tr>
+          <tr><td>KN</td><td>KNA</td><td>St. Kitts and Nevis</td></tr>
+          <tr><td>PM</td><td>SPM</td><td>St. Pierre and Miquelon</td></tr>
+          <tr><td>VC</td><td>VCT</td><td>St. Vin. and Gren.</td></tr>
+          <tr><td>SD</td><td>SDN</td><td>Sudan</td></tr>
+          <tr><td>SR</td><td>SUR</td><td>Suriname</td></tr>
+          <tr><td>SE</td><td>SWE</td><td>Sweden</td></tr>
+          <tr><td>CH</td><td>CHE</td><td>Switzerland</td></tr>
+          <tr><td>SY</td><td>SYR</td><td>Syria</td></tr>
+          <tr><td>CN-TW</td><td>TWN</td><td>Taiwan</td></tr>
+          <tr><td>TJ</td><td>TJK</td><td>Tajikistan</td></tr>
+          <tr><td>TZ</td><td>TZA</td><td>Tanzania</td></tr>
+          <tr><td>TH</td><td>THA</td><td>Thailand</td></tr>
+          <tr><td>TL</td><td>TLS</td><td>Timor-Leste</td></tr>
+          <tr><td>TG</td><td>TGO</td><td>Togo</td></tr>
+          <tr><td>TO</td><td>TON</td><td>Tonga</td></tr>
+          <tr><td>TT</td><td>TTO</td><td>Trinidad and Tobago</td></tr>
+          <tr><td>TN</td><td>TUN</td><td>Tunisia</td></tr>
+          <tr><td>TR</td><td>TUR</td><td>Turkey</td></tr>
+          <tr><td>TM</td><td>TKM</td><td>Turkmenistan</td></tr>
+          <tr><td>TC</td><td>TCA</td><td>Turks and Caicos Is.</td></tr>
+          <tr><td>TV</td><td>TUV</td><td>Tuvalu</td></tr>
+          <tr><td>UM</td><td>UMI</td><td>U.S. Minor Outlying Is.</td></tr>
+          <tr><td>VI</td><td>VIR</td><td>U.S. Virgin Is.</td></tr>
+          <tr><td>UG</td><td>UGA</td><td>Uganda</td></tr>
+          <tr><td>UA</td><td>UKR</td><td>Ukraine</td></tr>
+          <tr><td>AE</td><td>ARE</td><td>United Arab Emirates</td></tr>
+          <tr><td>GB</td><td>GBR</td><td>United Kingdom</td></tr>
+          <tr><td>US</td><td>USA</td><td>United States of America</td></tr>
+          <tr><td>UY</td><td>URY</td><td>Uruguay</td></tr>
+          <tr><td>UZ</td><td>UZB</td><td>Uzbekistan</td></tr>
+          <tr><td>VU</td><td>VUT</td><td>Vanuatu</td></tr>
+          <tr><td>VA</td><td>VAT</td><td>Vatican</td></tr>
+          <tr><td>VE</td><td>VEN</td><td>Venezuela</td></tr>
+          <tr><td>VN</td><td>VNM</td><td>Vietnam</td></tr>
+          <tr><td>EH</td><td>ESH</td><td>W. Sahara</td></tr>
+          <tr><td>WF</td><td>WLF</td><td>Wallis and Futuna Is.</td></tr>
+          <tr><td>YE</td><td>YEM</td><td>Yemen</td></tr>
+          <tr><td>ZM</td><td>ZMB</td><td>Zambia</td></tr>
+          <tr><td>ZW</td><td>ZWE</td><td>Zimbabwe</td></tr>
+        </tbody>
+      </table>
+    </details>
+  </section>
+
+</div>
+</body>
+</html>

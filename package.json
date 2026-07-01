@@ -1,0 +1,16 @@
+{
+  "name": "mapjson-pipeline",
+  "version": "1.0.0",
+  "description": "Data pipeline for mapjson.com — processes Natural Earth shapefiles into topojson for the API",
+  "scripts": {
+    "download": "bash pipeline/download.sh",
+    "process": "node pipeline/process.js",
+    "build-props": "node pipeline/build-properties.js",
+    "pipeline": "npm run download && npm run process && npm run build-props",
+    "upload": "node pipeline/upload.js"
+  },
+  "dependencies": {
+    "mapshaper": "^0.6.79",
+    "shapefile": "^0.6.6"
+  }
+}

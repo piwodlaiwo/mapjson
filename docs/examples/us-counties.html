@@ -128,9 +128,9 @@
   <a class="back-link" href="index.html">← Examples</a>
 
   <header>
-    <div class="tag">districts · choropleth · external data · census</div>
-    <h1>US Counties by Population</h1>
-    <p>All 3,143 continental US counties colored by total population — fetched from the US Census Bureau ACS 5-year estimates and joined to county geometry from the <code>districts</code> layer by 5-digit FIPS code. State borders are drawn using <code>topojson.mesh</code> directly from the county topology. Hover any county to see its name and population.</p>
+    <div class="tag">districts · choropleth · external data · cdc</div>
+    <h1>US Counties — Depression Rates</h1>
+    <p>All continental US counties colored by depression prevalence — crude percentage of adults reporting ever being diagnosed with depression, from the CDC PLACES 2023 dataset. County geometry comes from the <code>districts</code> layer; rates are fetched directly from the CDC's Socrata API and joined by 5-digit FIPS code. State borders are drawn using <code>topojson.mesh</code>. Hover any county to see its name and rate.</p>
   </header>
 
   <div class="map-wrap" id="map"></div>
@@ -140,7 +140,7 @@
     <h2>API Calls</h2>
     <pre>https://api.mapjson.com/v1/geo?layer=districts&amp;filter=US
 
-https://api.census.gov/data/2022/acs/acs5?get=NAME,B01003_001E&amp;for=county:*&amp;in=state:*</pre>
+https://data.cdc.gov/resource/swc5-untb.json?measureid=DEPRESSION&amp;year=2023&amp;datavaluetypeid=CrdPrv&amp;$limit=4000&amp;$select=locationid,data_value</pre>
   </section>
 
   <section>
@@ -165,16 +165,15 @@ https://api.census.gov/data/2022/acs/acs5?get=NAME,B01003_001E&amp;for=county:*&
     const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${WIDTH} ${HEIGHT}`);
     const tooltip = d3.select("#tooltip");
 
-    const CENSUS = "https://api.census.gov/data/2022/acs/acs5?get=NAME,B01003_001E&for=county:*&in=state:*";
-    const GEO    = "https://api.mapjson.com/v1/geo?layer=districts&filter=US";
+    const CDC = "https://data.cdc.gov/resource/swc5-untb.json?measureid=DEPRESSION&year=2023&datavaluetypeid=CrdPrv&$limit=4000&$select=locationid,data_value";
+    const GEO = "https://api.mapjson.com/v1/geo?layer=districts&filter=US";
 
-    Promise.all([d3.json(GEO), d3.json(CENSUS)]).then(([topo, rows]) => {
+    Promise.all([d3.json(GEO), d3.json(CDC)]).then(([topo, cdcRows]) => {
 
-      // Build FIPS → population lookup (skip header row)
-      const pop = new Map();
-      for (let i = 1; i &lt; rows.length; i++) {
-        const [, count, state, county] = rows[i];
-        pop.set(state + county, +count);
+      // Build FIPS → depression rate lookup
+      const rate = new Map();
+      for (const row of cdcRows) {
+        rate.set(row.locationid, +row.data_value);
       }
 
       const all = topojson.feature(topo, topo.objects.geo);
@@ -191,8 +190,8 @@ https://api.census.gov/data/2022/acs/acs5?get=NAME,B01003_001E&amp;for=county:*&
         .fitExtent([[20, 20], [WIDTH - 20, HEIGHT - 20]], continental);
       const path = d3.geoPath().projection(projection);
 
-      const maxPop = d3.max([...pop.values()]);
-      const color  = d3.scaleSequential(d3.interpolateReds).domain([0, Math.sqrt(maxPop)]);
+      const [minRate, maxRate] = d3.extent([...rate.values()]);
+      const color = d3.scaleSequential(d3.interpolatePurples).domain([minRate, maxRate]);
 
       // County fills
       svg.append("g").selectAll("path")
@@ -200,16 +199,16 @@ https://api.census.gov/data/2022/acs/acs5?get=NAME,B01003_001E&amp;for=county:*&
         .join("path")
         .attr("d", path)
         .attr("fill", d =&gt; {
-          const p = pop.get(d.properties.gid);
-          return p ? color(Math.sqrt(p)) : "#ddd";
+          const r = rate.get(d.properties.gid);
+          return r != null ? color(r) : "#ddd";
         })
         .attr("stroke", "white")
         .attr("stroke-width", 0.2)
         .on("mouseover", function(event, d) {
           d3.select(this).raise().attr("stroke", "#333").attr("stroke-width", 1);
-          const p = pop.get(d.properties.gid);
+          const r = rate.get(d.properties.gid);
           tooltip.style("opacity", 1)
-            .text(d.properties.name + (p ? "  —  " + d3.format(",d")(p) + " people" : ""));
+            .text(d.properties.name + (r != null ? "  —  " + r.toFixed(1) + "% depression" : ""));
         })
         .on("mousemove", event =&gt; {
           tooltip.style("left", event.clientX + 12 + "px")
@@ -240,8 +239,6 @@ https://api.census.gov/data/2022/acs/acs5?get=NAME,B01003_001E&amp;for=county:*&
 
 </div>
 
-<div class="tooltip" id="tooltip"></div>
-
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <script>
@@ -251,14 +248,13 @@ https://api.census.gov/data/2022/acs/acs5?get=NAME,B01003_001E&amp;for=county:*&
     .style("background", "#f7f4f0");
   const tooltip = d3.select("#tooltip");
 
-  const CENSUS = "https://api.census.gov/data/2022/acs/acs5?get=NAME,B01003_001E&for=county:*&in=state:*";
-  const GEO    = "https://mapjson.mapjson.workers.dev/v1/geo?layer=districts&filter=US";
+  const CDC = "https://data.cdc.gov/resource/swc5-untb.json?measureid=DEPRESSION&year=2023&datavaluetypeid=CrdPrv&$limit=4000&$select=locationid,data_value";
+  const GEO = "https://mapjson.mapjson.workers.dev/v1/geo?layer=districts&filter=US";
 
-  Promise.all([d3.json(GEO), d3.json(CENSUS)]).then(([topo, rows]) => {
-    const pop = new Map();
-    for (let i = 1; i < rows.length; i++) {
-      const [, count, state, county] = rows[i];
-      pop.set(state + county, +count);
+  Promise.all([d3.json(GEO), d3.json(CDC)]).then(([topo, cdcRows]) => {
+    const rate = new Map();
+    for (const row of cdcRows) {
+      rate.set(row.locationid, +row.data_value);
     }
 
     const all = topojson.feature(topo, topo.objects.geo);
@@ -274,24 +270,24 @@ https://api.census.gov/data/2022/acs/acs5?get=NAME,B01003_001E&amp;for=county:*&
       .fitExtent([[20, 20], [WIDTH - 20, HEIGHT - 20]], continental);
     const path = d3.geoPath().projection(projection);
 
-    const maxPop = d3.max([...pop.values()]);
-    const color  = d3.scaleSequential(d3.interpolateReds).domain([0, Math.sqrt(maxPop)]);
+    const [minRate, maxRate] = d3.extent([...rate.values()]);
+    const color = d3.scaleSequential(d3.interpolatePurples).domain([minRate, maxRate]);
 
     svg.append("g").selectAll("path")
       .data(features)
       .join("path")
       .attr("d", path)
       .attr("fill", d => {
-        const p = pop.get(d.properties.gid);
-        return p ? color(Math.sqrt(p)) : "#ddd";
+        const r = rate.get(d.properties.gid);
+        return r != null ? color(r) : "#ddd";
       })
       .attr("stroke", "white")
       .attr("stroke-width", 0.2)
       .on("mouseover", function(event, d) {
         d3.select(this).raise().attr("stroke", "#333").attr("stroke-width", 1);
-        const p = pop.get(d.properties.gid);
+        const r = rate.get(d.properties.gid);
         tooltip.style("opacity", 1)
-          .text(d.properties.name + (p ? "  —  " + d3.format(",d")(p) + " people" : ""));
+          .text(d.properties.name + (r != null ? "  —  " + r.toFixed(1) + "% depression" : ""));
       })
       .on("mousemove", event => {
         tooltip.style("left", event.clientX + 12 + "px")

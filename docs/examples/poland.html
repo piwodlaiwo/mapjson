@@ -115,14 +115,14 @@
   <header>
     <div class="tag">regions · high detail · filter · properties · labels</div>
     <h1>Poland Voivodeships</h1>
-    <p>Poland's 16 first-level administrative divisions at high detail. The <code>filter=PL</code> parameter limits the response to Polish voivodeships — Polish regions only exist in the 10m dataset, so <code>detail=high</code> is required. Regions are colored with a sequential blue scale and labeled directly on the map using SVG text placed at each polygon's centroid.</p>
+    <p>Poland's 16 first-level administrative divisions at high detail. The <code>filter=Poland</code> parameter limits the response to Polish voivodeships — Polish regions only exist in the 10m dataset, so <code>detail=high</code> is required. Regions are colored with a sequential blue scale and labeled directly on the map using SVG text placed at each polygon's centroid.</p>
   </header>
 
   <div class="map-wrap" id="map"></div>
 
   <section>
     <h2>API Call</h2>
-    <pre>https://api.mapjson.com/v1/geo?layer=regions&amp;filter=PL&amp;detail=high&amp;properties=name</pre>
+    <pre>https://api.mapjson.com/v1/geo?layer=regions&amp;filter=Poland&amp;detail=high&amp;properties=name</pre>
   </section>
 
   <section>
@@ -142,7 +142,7 @@
     const width = 960, height = 640;
     const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${width} ${height}`);
 
-    const url = "https://api.mapjson.com/v1/geo?layer=regions&filter=PL&detail=high&properties=name";
+    const url = "https://api.mapjson.com/v1/geo?layer=regions&filter=Poland&detail=high&properties=name";
 
     d3.json(url).then(topo =&gt; {
       const regions = topojson.feature(topo, topo.objects.geo);
@@ -190,7 +190,7 @@
   const width = 960, height = 640;
   const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${width} ${height}`);
 
-  d3.json("https://mapjson.mapjson.workers.dev/v1/geo?layer=regions&filter=PL&detail=high&properties=name").then(topo => {
+  d3.json("https://mapjson.mapjson.workers.dev/v1/geo?layer=regions&filter=Poland&detail=high&properties=name").then(topo => {
     const regions = topojson.feature(topo, topo.objects.geo);
     const n = regions.features.length;
     const projection = d3.geoMercator().fitSize([width, height], regions);

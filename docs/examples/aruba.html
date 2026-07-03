@@ -115,14 +115,14 @@
   <header>
     <div class="tag">countries · high detail · iso filter</div>
     <h1>Aruba</h1>
-    <p>Aruba is 180 km² — invisible at Natural Earth's standard resolutions. With <code>filter=AW</code> and <code>detail=high</code>, the API automatically serves a high-resolution country file sourced from DIVA-GIS rather than the global 10m dataset. The projection auto-fits to the returned geometry using <code>fitExtent</code>.</p>
+    <p>Aruba is 180 km² — invisible at Natural Earth's standard resolutions. With <code>filter=Aruba</code> and <code>detail=high</code>, the API automatically serves a high-resolution country file sourced from DIVA-GIS rather than the global 10m dataset. The projection auto-fits to the returned geometry using <code>fitExtent</code>.</p>
   </header>
 
   <div class="map-wrap" id="map"></div>
 
   <section>
     <h2>API Call</h2>
-    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;filter=AW&amp;detail=high</pre>
+    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;filter=Aruba&amp;detail=high</pre>
   </section>
 
   <section>
@@ -142,7 +142,7 @@
     const width = 960, height = 560;
     const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${width} ${height}`);
 
-    const url = "https://api.mapjson.com/v1/geo?layer=countries&filter=AW&detail=high";
+    const url = "https://api.mapjson.com/v1/geo?layer=countries&filter=Aruba&detail=high";
 
     d3.json(url).then(topo =&gt; {
       const country = topojson.feature(topo, topo.objects.geo);
@@ -174,7 +174,7 @@
     .attr("viewBox", `0 0 ${width} ${height}`)
     .style("background", "#7ab4cc");
 
-  d3.json("https://mapjson.mapjson.workers.dev/v1/geo?layer=countries&filter=AW&detail=high").then(topo => {
+  d3.json("https://mapjson.mapjson.workers.dev/v1/geo?layer=countries&filter=Aruba&detail=high").then(topo => {
     const country = topojson.feature(topo, topo.objects.geo);
     const projection = d3.geoMercator()
       .fitExtent([[80, 60], [width - 80, height - 60]], country);

@@ -35,11 +35,35 @@ async function getProps(bucket) {
   return propsCache;
 }
 
+const CONTINENT_SLUGS = new Set(['world', 'europe', 'asia', 'africa', 'north-america', 'south-america', 'oceania', 'antarctica']);
+const ISO2_RE_LOCAL   = /^[A-Z]{2}$/;
+
+// Resolve a country name (e.g. "Poland") to its ISO alpha-2 code using properties.json.
+// Returns the iso2 string if found, or null if the name is unknown.
+async function resolveNameToIso2(name, bucket) {
+  const props = await getProps(bucket);
+  const lower = name.toLowerCase();
+  for (const entry of Object.values(props)) {
+    if (entry.name?.toLowerCase() === lower || entry.nameOfficial?.toLowerCase() === lower) {
+      return entry.iso2;
+    }
+  }
+  return null;
+}
+
 async function handleGeo(request, env) {
   const result = parseAndValidate(request.url);
   if (!result.ok) return error(result.errors.join('; '));
 
-  const { layer, filter, detail, format, properties } = result.params;
+  let { layer, filter, detail, format, properties } = result.params;
+
+  // Resolve country name → ISO2 before any further logic so the rest of the
+  // pipeline always works with a continent slug or ISO2 code.
+  if (!CONTINENT_SLUGS.has(filter) && !ISO2_RE_LOCAL.test(filter)) {
+    const iso2 = await resolveNameToIso2(filter, env.GEO_BUCKET);
+    if (!iso2) return error(`Unknown country name '${filter}' — use a continent slug, ISO alpha-2 code, or country name`, 400);
+    filter = iso2;
+  }
 
   const fileDetail = DETAIL_TO_FILE[detail];
   const r2Layer = layer === 'regions' ? 'admin1' : layer;

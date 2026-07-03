@@ -347,9 +347,10 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
               <span class="opt">oceania</span>
               <span class="opt">antarctica</span>
               <span class="opt">{ISO2}</span>
+              <span class="opt">{name}</span>
             </div>
           </td>
-          <td>Filters output to a continent or a specific country (ISO alpha-2 code, e.g. <code>FR</code>). Use <code>{ISO2}</code> with <code>layer=regions</code> to get one country's regions, or with <code>layer=districts</code> to get its counties/districts.</td>
+          <td>Filters output to a continent or a specific country. Accepts an ISO alpha-2 code (<code>FR</code>) or a full country name (<code>France</code>) — both work identically. Use with <code>layer=regions</code> to get one country's regions, or with <code>layer=districts</code> to get its counties/districts.</td>
         </tr>
         <tr>
           <td><code class="param-name">detail</code></td>

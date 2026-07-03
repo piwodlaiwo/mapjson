@@ -13,6 +13,7 @@
 const path = require('path');
 const fs = require('fs');
 const mapshaper = require('mapshaper');
+const shapefile = require('shapefile');
 
 // In the Natural Earth admin_0_countries DBF:
 //   TYPE  (uppercase, with trailing spaces) — distinguishes country types
@@ -199,17 +200,53 @@ async function processAdmin1(res, inFile, outFile) {
   console.log(`  ✓ ${outFile}`);
 }
 
-async function processAdmin2(inFile, outFile) {
+// Builds a lookup from 2-digit FIPS state number → ISO 3166-2 (e.g. '53' → 'US-WA').
+// The admin2 counties shapefile carries ISO_3166_2 as 'US-53' (FIPS-based),
+// while the admin1 file carries iso_3166_2 as 'US-WA' (letter-based).
+// We use the admin1 DBF to bridge between the two.
+async function buildStateFipsToGid(admin1DbfFile) {
+  const src = await shapefile.openDbf(admin1DbfFile, { encoding: 'utf-8' });
+  const lookup = {};
+  let result;
+  while (!(result = await src.read()).done) {
+    const r = result.value;
+    const a2  = (r.iso_a2     || '').replace(/\0/g, '').trim();
+    const fips = (r.fips      || '').replace(/\0/g, '').trim();
+    const gid  = (r.iso_3166_2 || '').replace(/\0/g, '').trim();
+    if (a2 === 'US' && fips && gid && gid !== '-99') {
+      // fips is like 'US53' — extract the numeric part used in county ISO_3166_2 ('US-53')
+      lookup[fips.replace('US', '')] = gid;
+    }
+  }
+  return lookup;
+}
+
+async function processAdmin2(inFile, admin1DbfFile, outFile) {
   // Natural Earth admin2 is US-only (3,224 counties). CODE_LOCAL is the 5-digit FIPS code
   // which joins directly to Census/BLS data. We simplify to keep file size reasonable.
-  // parent_gid: state-level ISO 3166-2 from NE field (e.g. US-CA) — joins to regions layer gid.
+  // parent_gid: state ISO 3166-2 (US-WA, US-CA…) — joins directly to regions layer gid.
+  const tmp = outFile.replace('.topojson', '_tmp.topojson');
+
   await run(
     `-i ${inFile} ` +
     `-simplify interval=2km keep-shapes ` +
-    `-each "gid = CODE_LOCAL; parent_gid = iso_3166_2; iso2 = ISO_A2; name = NAME_EN || NAME" ` +
-    `-filter-fields gid,parent_gid,iso2,name ` +
-    `-o format=topojson ${outFile}`
+    `-each "gid = CODE_LOCAL; state_iso = ISO_3166_2; iso2 = ISO_A2; name = NAME_EN || NAME" ` +
+    `-filter-fields gid,state_iso,iso2,name ` +
+    `-o format=topojson ${tmp}`
   );
+
+  // Patch parent_gid using the FIPS → ISO3166-2 lookup from admin1
+  const fipsToGid = await buildStateFipsToGid(admin1DbfFile);
+  const topo = JSON.parse(fs.readFileSync(tmp, 'utf8'));
+  const key  = Object.keys(topo.objects)[0];
+  for (const g of topo.objects[key].geometries) {
+    const p = g.properties;
+    const stateFips = (p.state_iso || '').replace('US-', '');
+    p.parent_gid = fipsToGid[stateFips] || null;
+    delete p.state_iso;
+  }
+  fs.writeFileSync(outFile, JSON.stringify(topo));
+  fs.unlinkSync(tmp);
   console.log(`  ✓ ${outFile}`);
 }
 
@@ -286,13 +323,14 @@ async function main() {
 
   console.log('Processing admin-2 districts...');
   {
-    const inFile = `data/10m/ne_10m_admin_2_counties_lakes.shp`;
-    const outFile = `processed/districts/high.topojson`;
+    const inFile      = `data/10m/ne_10m_admin_2_counties_lakes.shp`;
+    const admin1Dbf   = `data/10m/ne_10m_admin_1_states_provinces.dbf`;
+    const outFile     = `processed/districts/high.topojson`;
     if (!fs.existsSync(inFile)) {
       console.warn(`  skipping ${inFile} (not found — run download.sh)`);
     } else {
       fs.mkdirSync('processed/districts', { recursive: true });
-      await processAdmin2(inFile, outFile);
+      await processAdmin2(inFile, admin1Dbf, outFile);
     }
   }
 

@@ -325,6 +325,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
             <div class="options">
               <span class="opt default-val">countries</span>
               <span class="opt">regions</span>
+              <span class="opt">districts</span>
               <span class="opt">lakes</span>
               <span class="opt">rivers</span>
               <span class="opt">coastlines</span>
@@ -348,7 +349,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
               <span class="opt">{ISO2}</span>
             </div>
           </td>
-          <td>Filters output to a continent or a specific country (ISO alpha-2 code, e.g. <code>FR</code>). Use <code>{ISO2}</code> with <code>layer=regions</code> to get the administrative regions of one country.</td>
+          <td>Filters output to a continent or a specific country (ISO alpha-2 code, e.g. <code>FR</code>). Use <code>{ISO2}</code> with <code>layer=regions</code> to get one country's regions, or with <code>layer=districts</code> to get its counties/districts.</td>
         </tr>
         <tr>
           <td><code class="param-name">detail</code></td>
@@ -396,6 +397,11 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
         <div class="layer-name">regions</div>
         <div class="layer-type">polygon</div>
         <div class="layer-desc">First-level administrative divisions — US states, French departments, German Länder, Polish voivodeships, etc. Use <code>filter=US</code> to get one country's regions.</div>
+      </div>
+      <div class="layer-cell">
+        <div class="layer-name">districts</div>
+        <div class="layer-type">polygon</div>
+        <div class="layer-desc">Second-level administrative divisions — US counties, with 5-digit FIPS codes as <code>gid</code> for easy data joins. Currently covers the US; use <code>filter=US</code>. The <code>detail</code> parameter is ignored — districts always return at high resolution.</div>
       </div>
       <div class="layer-cell">
         <div class="layer-name">lakes</div>

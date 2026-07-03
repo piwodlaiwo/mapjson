@@ -177,6 +177,16 @@
       </div>
     </a>
 
+    <a class="card" href="france.html">
+      <div class="card-tag">countries · geojson format · bbox validation</div>
+      <div class="card-title">France (GeoJSON)</div>
+      <div class="card-desc">Uses <code>format=geojson</code> to get a FeatureCollection directly — no topojson-client needed. Computes the bounding box client-side to confirm the response contains metropolitan France only, not the overseas departments.</div>
+      <div class="card-footer">
+        <span class="card-url">filter=FR · format=geojson</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
     <a class="card" href="usa-states.html">
       <div class="card-tag">regions · medium detail · filter</div>
       <div class="card-title">USA States</div>
@@ -233,6 +243,16 @@
       <div class="card-desc">Aruba is 180 km² — invisible at standard resolutions. When <code>filter</code> is an ISO country code and <code>detail=high</code>, the API automatically serves a high-resolution file for small countries and territories.</div>
       <div class="card-footer">
         <span class="card-url">filter=AW · detail=high</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="card" href="martinique.html">
+      <div class="card-tag">countries · high detail · country name filter · geojson</div>
+      <div class="card-title">Martinique</div>
+      <div class="card-desc">A French Caribbean territory filtered by full country name — <code>filter=Martinique</code> is resolved to ISO code MQ server-side. At <code>detail=high</code> the 10m dataset resolves the island clearly.</div>
+      <div class="card-footer">
+        <span class="card-url">filter=Martinique · detail=high</span>
         <span class="card-arrow">→</span>
       </div>
     </a>

@@ -26,6 +26,12 @@ export function parseAndValidate(url) {
   if (!VALID_FILTERS.has(filter) && !ISO2_RE.test(filter) && !NAME_RE.test(filter)) {
     errors.push(`filter must be a continent slug (e.g. europe), ISO alpha-2 code (e.g. FR), or country name (e.g. France)`);
   }
+  if (layer === 'regions' && filter === 'world') {
+    errors.push(`regions layer requires a filter — use a continent slug (e.g. filter=europe) or country code (e.g. filter=US)`);
+  }
+  if (layer === 'districts' && (filter === 'world' || VALID_FILTERS.has(filter))) {
+    errors.push(`districts layer requires a country filter — use an ISO alpha-2 code or country name (e.g. filter=US)`);
+  }
   if (!VALID_DETAIL.has(detail)) {
     errors.push(`detail must be one of: low, medium, high, ultra`);
   }

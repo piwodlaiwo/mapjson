@@ -61,7 +61,7 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
   await run(
     `-i ${inFile} ` +
     `-filter "!(${excludeList}) && ADM0_A3.trim() != 'FRA' && ADM0_A3.trim() != 'NOR' && ADM0_A3.trim() != 'NLD' && ADM0_A3.trim() != 'NZL' && ADM0_A3.trim() != 'IOA' && ADM0_A3.trim() != 'MAR' && ADM0_A3.trim() != 'SAH'" ` +
-    `-each "disputed = (${disputedList}); iso2 = (ISO_A2 == '-99' ? null : ISO_A2); gid = iso2 || ('x-' + ADM0_A3.trim()); cont = CONTINENT" ` +
+    `-each "disputed = (${disputedList}); iso2 = (ADM0_A3.trim() == 'KOS' ? 'XK' : ISO_A2 == '-99' ? null : ISO_A2); gid = iso2 || ('x-' + ADM0_A3.trim()); cont = CONTINENT" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
     `-o format=topojson ${tmpMain}`
   );

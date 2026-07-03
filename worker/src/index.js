@@ -51,6 +51,20 @@ async function resolveNameToIso2(name, bucket) {
   return null;
 }
 
+async function handleCatalog(request, env) {
+  const q = new URL(request.url).searchParams;
+  const layer = q.get('layer') || 'countries';
+  if (!['countries', 'regions', 'districts'].includes(layer)) {
+    return error(`layer must be one of: countries, regions, districts`);
+  }
+  const obj = await env.GEO_BUCKET.get(`catalog/${layer}.json`);
+  if (!obj) return error(`No catalog for layer='${layer}'`, 404);
+  return new Response(await obj.text(), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', ...CORS, 'Cache-Control': 'public, max-age=86400' },
+  });
+}
+
 async function handleGeo(request, env) {
   const result = parseAndValidate(request.url);
   if (!result.ok) return error(result.errors.join('; '));
@@ -139,6 +153,13 @@ export default {
 
     if (url.pathname === '/v1/geo') {
       return handleGeo(request, env).catch((err) => {
+        console.error(err);
+        return error('Internal server error', 500);
+      });
+    }
+
+    if (url.pathname === '/v1/catalog') {
+      return handleCatalog(request, env).catch((err) => {
         console.error(err);
         return error('Internal server error', 500);
       });

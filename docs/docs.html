@@ -554,6 +554,52 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
     <p style="margin-top:1rem; color:var(--muted); font-size:12px;">When no <code>properties</code> parameter is given, each feature's <code>properties</code> object is empty (<code>{}</code>).</p>
   </section>
 
+  <!-- ── Identifiers ── -->
+  <section>
+    <h2>Identifiers</h2>
+    <p style="margin-bottom:1.5rem;">Every feature returned by the API has a stable <code>gid</code> property — a string key you can use to join map geometry to your own data. <code>gid</code> values are always present in the response, regardless of the <code>properties</code> parameter.</p>
+
+    <div class="param-grid" style="margin-bottom:1.5rem;">
+      <div class="param-row">
+        <div class="param-name">countries</div>
+        <div class="param-desc">ISO alpha-2 code — <code>US</code>, <code>FR</code>, <code>DE</code>. Matches the <code>filter</code> parameter values and the same codes used by virtually every external dataset.</div>
+      </div>
+      <div class="param-row">
+        <div class="param-name">regions</div>
+        <div class="param-desc">ISO 3166-2 subdivision code — <code>US-CA</code>, <code>DE-BY</code>, <code>FR-IDF</code>. Where Natural Earth does not carry an official ISO 3166-2 code, the HASC code is used instead (e.g. <code>US.CA</code>). The catalog endpoint flags which source applies.</div>
+      </div>
+      <div class="param-row">
+        <div class="param-name">districts</div>
+        <div class="param-desc">5-digit FIPS code for US counties — <code>06037</code> (Los Angeles), <code>36061</code> (Manhattan). The first two digits are the state FIPS, which maps directly to the state's ISO 3166-2 via the catalog.</div>
+      </div>
+    </div>
+
+    <h3 style="font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; margin-bottom:0.75rem; margin-top:1.5rem;">Hierarchy</h3>
+    <p style="margin-bottom:1rem;">Features below the country level carry a <code>parent_gid</code> property that links upward through the hierarchy. You can traverse the full tree without downloading extra geometry.</p>
+    <pre style="margin-bottom:1.5rem;">district  06037  (Los Angeles County)
+  └─ region   US-CA  (California)
+       └─ country  US  (United States)</pre>
+    <p style="font-size:12px; color:var(--muted);">The <code>parent_gid</code> of a region is always a country ISO alpha-2. The <code>parent_gid</code> of a district is always the state's ISO 3166-2.</p>
+
+    <h3 style="font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; margin-bottom:0.75rem; margin-top:1.5rem;">Catalog endpoint</h3>
+    <p style="margin-bottom:0.75rem;">The catalog lists every <code>gid</code> in a layer with its name, parent, and all known external codes — useful for building lookup tables or crosswalks without downloading geometry.</p>
+    <pre>GET /v1/catalog?layer=countries
+GET /v1/catalog?layer=regions
+GET /v1/catalog?layer=districts</pre>
+    <p style="margin-top:0.75rem; font-size:12px; color:var(--muted);">Returns a JSON array. Example entry for a region:</p>
+    <pre style="margin-top:0.5rem;">{
+  "gid":        "US-CA",
+  "name":       "California",
+  "layer":      "regions",
+  "parent_gid": "US",
+  "iso2":       "US",
+  "gid_source": "iso3166-2"
+}</pre>
+
+    <h3 style="font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; margin-bottom:0.75rem; margin-top:1.5rem;">Joining to external data</h3>
+    <p style="font-size:12px; color:var(--muted); line-height:1.7;">The <code>gid</code> is chosen to match codes your data already uses. Census, CDC, BLS, and most US federal sources use 5-digit FIPS for counties — join on <code>gid</code> directly. For countries, ISO alpha-2 is the most widely used identifier in web APIs and statistical databases. For states and international regions, ISO 3166-2 is used by Eurostat, NUTS crosswalks, and most administrative data sources. Where a dataset uses a different code system, use the catalog to build a translation table.</p>
+  </section>
+
   <!-- ── ISO Reference ── -->
   <section>
     <h2>Country Codes</h2>

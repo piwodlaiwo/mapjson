@@ -24,17 +24,19 @@ export function mergeProperties(topo, objectKey, lookup, requestedProps) {
     const isDisputed = p.disputed === true;
     const entry = lookup[p.gid] || null;
 
+    // gid is always present — it is the stable join key for every feature
+    const base = { gid: p.gid };
+    if (isDisputed) base.disputed = true;
+
     if (wantedKeys.length === 0) {
-      g.properties = isDisputed ? { disputed: true } : {};
+      g.properties = base;
       continue;
     }
 
-    const merged = {};
+    const merged = { ...base };
     for (const k of wantedKeys) {
       merged[k] = entry ? (entry[k] ?? null) : null;
     }
-    if (isDisputed) merged.disputed = true;
-
     g.properties = merged;
   }
 }

@@ -60,7 +60,7 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
   await run(
     `-i ${inFile} ` +
     `-filter "!(${excludeList}) && ADM0_A3.trim() != 'FRA' && ADM0_A3.trim() != 'NOR' && ADM0_A3.trim() != 'NLD' && ADM0_A3.trim() != 'NZL' && ADM0_A3.trim() != 'IOA' && ADM0_A3.trim() != 'MAR' && ADM0_A3.trim() != 'SAH'" ` +
-    `-each "disputed = (${disputedList}); gid = String(+ISO_N3 > 0 ? ISO_N3 : 'x-' + ADM0_A3.trim()); cont = CONTINENT; iso2 = (ISO_A2 == '-99' ? null : ISO_A2)" ` +
+    `-each "disputed = (${disputedList}); iso2 = (ISO_A2 == '-99' ? null : ISO_A2); gid = iso2 || ('x-' + ADM0_A3.trim()); cont = CONTINENT" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
     `-o format=topojson ${tmpMain}`
   );
@@ -72,9 +72,9 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
     `-i ${mapUnitsFile} ` +
     `-filter "ADM0_A3.trim() == 'FRA'" ` +
     `-each "disputed = (TYPE.trim() == 'Disputed'); ` +
-           `gid = String(SU_A3.trim() == 'FXX' ? 250 : +ISO_N3); ` +
-           `cont = (SU_A3.trim() == 'REU' || SU_A3.trim() == 'MYT' ? 'Africa' : CONTINENT); ` +
-           `iso2 = (SU_A3.trim() == 'FXX' ? 'FR' : SU_A3.trim() == 'GUF' ? 'GF' : SU_A3.trim() == 'GLP' ? 'GP' : SU_A3.trim() == 'MTQ' ? 'MQ' : SU_A3.trim() == 'REU' ? 'RE' : SU_A3.trim() == 'MYT' ? 'YT' : null)" ` +
+           `iso2 = (SU_A3.trim() == 'FXX' ? 'FR' : SU_A3.trim() == 'GUF' ? 'GF' : SU_A3.trim() == 'GLP' ? 'GP' : SU_A3.trim() == 'MTQ' ? 'MQ' : SU_A3.trim() == 'REU' ? 'RE' : SU_A3.trim() == 'MYT' ? 'YT' : null); ` +
+           `gid = iso2; ` +
+           `cont = (SU_A3.trim() == 'REU' || SU_A3.trim() == 'MYT' ? 'Africa' : CONTINENT)" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
     `-o format=topojson ${tmpFra}`
   );
@@ -85,9 +85,9 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
     `-i ${mapUnitsFile} ` +
     `-filter "ADM0_A3.trim() == 'NOR'" ` +
     `-each "disputed = false; ` +
-           `gid = String(SU_A3.trim() == 'NOR' ? 578 : 744); ` +
-           `cont = 'Europe'; ` +
-           `iso2 = (SU_A3.trim() == 'NOR' ? 'NO' : 'SJ')" ` +
+           `iso2 = (SU_A3.trim() == 'NOR' ? 'NO' : 'SJ'); ` +
+           `gid = iso2; ` +
+           `cont = 'Europe'" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
     `-o format=topojson ${tmpNor}`
   );
@@ -99,9 +99,9 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
     `-i ${mapUnitsFile} ` +
     `-filter "ADM0_A3.trim() == 'NLD' || ADM0_A3.trim() == 'NZL' || ADM0_A3.trim() == 'IOA'" ` +
     `-each "disputed = false; ` +
-           `gid = String(SU_A3.trim() == 'NLX' ? 528 : (+ISO_N3 > 0 ? ISO_N3 : 'x-' + SU_A3.trim())); ` +
-           `cont = CONTINENT; ` +
-           `iso2 = (SU_A3.trim() == 'NLX' ? 'NL' : (ISO_A2 == '-99' ? null : ISO_A2))" ` +
+           `iso2 = (SU_A3.trim() == 'NLX' ? 'NL' : (ISO_A2 == '-99' ? null : ISO_A2)); ` +
+           `gid = iso2 || ('x-' + SU_A3.trim()); ` +
+           `cont = CONTINENT" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
     `-o format=topojson ${tmpExtra}`
   );
@@ -121,7 +121,7 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
   await run(
     `-i ${inFile} -filter "ADM0_A3.trim() == 'MAR'" ` +
     `-clip bbox=-180,${WS_LAT},180,90 ` +
-    `-each "disputed=false; gid='504'; cont='Africa'; iso2='MA'" ` +
+    `-each "disputed=false; iso2='MA'; gid='MA'; cont='Africa'" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
     `-o format=topojson ${tmpMAR}`
   );
@@ -130,7 +130,7 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
   await run(
     `-i ${inFile} -filter "ADM0_A3.trim() == 'MAR'" ` +
     `-clip bbox=-180,-90,180,${WS_LAT} ` +
-    `-each "disputed=true; gid='732'; cont='Africa'; iso2='EH'" ` +
+    `-each "disputed=true; iso2='EH'; gid='EH'; cont='Africa'" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
     `-o format=topojson ${tmpESH_S}`
   );
@@ -138,7 +138,7 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
   // Western Sahara part 2: Natural Earth SAH (Polisario-controlled eastern strip)
   await run(
     `-i ${inFile} -filter "ADM0_A3.trim() == 'SAH'" ` +
-    `-each "disputed=true; gid='732'; cont='Africa'; iso2='EH'" ` +
+    `-each "disputed=true; iso2='EH'; gid='EH'; cont='Africa'" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
     `-o format=topojson ${tmpSAH2}`
   );
@@ -147,7 +147,7 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
   await run(
     `-i ${tmpESH_S} ${tmpSAH2} combine-files -merge-layers ` +
     `-dissolve ` +
-    `-each "disputed=true; gid='732'; cont='Africa'; iso2='EH'" ` +
+    `-each "disputed=true; iso2='EH'; gid='EH'; cont='Africa'" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
     `-o format=topojson ${tmpESH}`
   );
@@ -173,10 +173,12 @@ async function processAdmin1(res, inFile, outFile) {
   const tmpNE   = `/tmp/pj_adm1_ne_${res}.topojson`;
   const tmpESH1 = `/tmp/pj_adm1_esh_${res}.topojson`;
 
+  // gid: ISO 3166-2 (e.g. US-CA) where available in NE data; fall back to HASC (e.g. US.CA).
+  // parent_gid: ISO alpha-2 country code — joins directly to countries layer gid.
   await run(
     `-i ${inFile} ` +
-    `-each "gid = adm1_code; iso2 = iso_a2" ` +
-    `-filter-fields gid,iso2,name ` +
+    `-each "gid = (iso_3166_2 && iso_3166_2 !== '-99') ? iso_3166_2 : hasc_1; parent_gid = iso_a2; iso2 = iso_a2" ` +
+    `-filter-fields gid,parent_gid,iso2,name ` +
     `-o format=topojson ${tmpNE}`
   );
 
@@ -184,8 +186,8 @@ async function processAdmin1(res, inFile, outFile) {
   await run(
     `-i data/iso/ESH/adm1.topo.json ` +
     `-simplify interval=${interval} keep-shapes ` +
-    `-each "gid = 'ESH-' + String(ID_1); iso2 = 'EH'; name = NAME_1" ` +
-    `-filter-fields gid,iso2,name ` +
+    `-each "gid = 'EH-' + String(ID_1); parent_gid = 'EH'; iso2 = 'EH'; name = NAME_1" ` +
+    `-filter-fields gid,parent_gid,iso2,name ` +
     `-o format=topojson ${tmpESH1}`
   );
 
@@ -200,11 +202,12 @@ async function processAdmin1(res, inFile, outFile) {
 async function processAdmin2(inFile, outFile) {
   // Natural Earth admin2 is US-only (3,224 counties). CODE_LOCAL is the 5-digit FIPS code
   // which joins directly to Census/BLS data. We simplify to keep file size reasonable.
+  // parent_gid: state-level ISO 3166-2 from NE field (e.g. US-CA) — joins to regions layer gid.
   await run(
     `-i ${inFile} ` +
     `-simplify interval=2km keep-shapes ` +
-    `-each "gid = CODE_LOCAL; iso2 = ISO_A2; name = NAME_EN || NAME" ` +
-    `-filter-fields gid,iso2,name ` +
+    `-each "gid = CODE_LOCAL; parent_gid = iso_3166_2; iso2 = ISO_A2; name = NAME_EN || NAME" ` +
+    `-filter-fields gid,parent_gid,iso2,name ` +
     `-o format=topojson ${outFile}`
   );
   console.log(`  ✓ ${outFile}`);

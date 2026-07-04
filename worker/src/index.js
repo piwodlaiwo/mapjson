@@ -1,6 +1,7 @@
 import { parseAndValidate } from './validate.js';
 import { filterFeatures } from './filter.js';
 import { mergeProperties } from './merge-props.js';
+import { pruneArcs } from './prune-arcs.js';
 import { feature } from 'topojson-client';
 
 // Cache properties.json in memory for the lifetime of the Worker instance
@@ -126,6 +127,12 @@ async function handleGeo(request, env) {
   if (layer === 'countries') {
     const props = await getProps(env.GEO_BUCKET);
     mergeProperties(topo, objectKey, props, properties);
+  }
+
+  // For topojson responses, remove arcs that are no longer referenced by any
+  // remaining feature — this is what makes single-country topojson smaller than GeoJSON.
+  if (format !== 'geojson') {
+    pruneArcs(topo, objectKey);
   }
 
   // Normalize object key to "geo" so clients always use topo.objects.geo

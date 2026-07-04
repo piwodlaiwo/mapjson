@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Poland — Variant 3: Earthy / Vintage</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --ink: #2c2317; --bg: #f4efe8; --muted: #7a6f64; --border: #d8d0c5; }
+    body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Mono', monospace; font-weight: 300; font-size: 13px; }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 48px;
+    }
+    .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink); text-decoration: none; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 4rem; }
+    .back-link { display: inline-block; padding: 2rem 0 0; font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; }
+    header { border-bottom: 1.5px solid var(--ink); padding: 1rem 0 1.25rem; margin-bottom: 2rem; }
+    header .tag { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; }
+    header h1 { font-family: 'Playfair Display', serif; font-style: italic; font-size: 2rem; font-weight: 400; }
+    header p { color: var(--muted); font-size: 11px; margin-top: 0.4rem; }
+    .variants { display: flex; gap: 1rem; margin-top: 0.75rem; flex-wrap: wrap; }
+    .variants a { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); text-decoration: none; border: 1px solid var(--border); padding: 0.3rem 0.6rem; }
+    .variants a.active { color: var(--ink); border-color: var(--ink); }
+    .variants a:hover { color: var(--ink); }
+    .map-wrap { border: 1px solid var(--border); line-height: 0; }
+  </style>
+</head>
+<body>
+<nav>
+  <a class="nav-brand" href="../index.html">mapjson</a>
+  <div class="nav-links">
+    <a href="../docs.html">Docs</a>
+    <a href="index.html">Examples</a>
+  </div>
+</nav>
+<div class="page">
+  <a class="back-link" href="poland.html">← Poland</a>
+  <header>
+    <div class="tag">color exploration</div>
+    <h1>Variant 3 — Earthy / Vintage</h1>
+    <p>Muted terracottas, sage greens, dusty blues and warm wheat tones — old atlas style.</p>
+    <div class="variants">
+      <a href="poland-v1-distinct.html">1 · Distinct</a>
+      <a href="poland-v2-gradient.html">2 · Gradient</a>
+      <a href="poland-v3-earthy.html" class="active">3 · Earthy</a>
+      <a href="poland-v4-polish.html">4 · Polish flag</a>
+    </div>
+  </header>
+  <div class="map-wrap" id="map"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script>
+  const palette = [
+    '#c17b52', '#8fad88', '#d4b483', '#7a9cbf', '#c2956c',
+    '#b5c9a1', '#d49a6a', '#6e9ab8', '#c4a06a', '#9bbfaa',
+    '#bf8c5a', '#7aadbe', '#d4aa80', '#8ab89e', '#b87a4a', '#a8c0b0'
+  ];
+
+  const width = 960, height = 640;
+  const svg = d3.select("#map").append("svg")
+    .attr("viewBox", `0 0 ${width} ${height}`)
+    .style("background", "#ede8de");
+
+  d3.json("https://mapjson.mapjson.workers.dev/v1/geo?layer=regions&filter=PL&detail=high&properties=name").then(topo => {
+    const regions = topojson.feature(topo, topo.objects.geo);
+    const projection = d3.geoMercator().fitSize([width, height], regions);
+    const path = d3.geoPath().projection(projection);
+
+    svg.append("g")
+      .selectAll("path")
+      .data(regions.features)
+      .join("path")
+      .attr("d", path)
+      .attr("fill", (d, i) => palette[i % palette.length])
+      .attr("stroke", "#d8cfc0")
+      .attr("stroke-width", 1.5);
+
+    svg.append("g")
+      .attr("pointer-events", "none")
+      .selectAll("text")
+      .data(regions.features)
+      .join("text")
+      .attr("transform", d => `translate(${path.centroid(d)})`)
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "central")
+      .style("font-family", "IBM Plex Mono, monospace")
+      .style("font-size", "9px")
+      .style("font-weight", "400")
+      .style("fill", "#2c2317")
+      .style("stroke", "rgba(237,232,222,0.9)")
+      .style("stroke-width", "3px")
+      .style("paint-order", "stroke fill")
+      .text(d => d.properties.name || "");
+  });
+</script>
+</body>
+</html>

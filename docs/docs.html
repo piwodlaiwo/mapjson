@@ -613,9 +613,9 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
     <h3 style="font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; margin-bottom:0.75rem; margin-top:1.5rem;">Catalog endpoint</h3>
     <p style="margin-bottom:0.75rem;">The catalog lists every <code>gid</code> in a layer with its name, parent, and all known external codes — useful for building lookup tables or crosswalks without downloading geometry.</p>
     <pre>GET /v1/catalog?layer=countries
-GET /v1/catalog?layer=regions&amp;country=PL
-GET /v1/catalog?layer=districts&amp;country=US</pre>
-    <p style="margin-top:0.5rem; font-size:12px; color:var(--muted);"><code>country</code> is required for <code>regions</code> and <code>districts</code> — pass an ISO alpha-2 code. Omitting it returns an error. The <code>countries</code> layer ignores <code>country</code> and always returns all countries.</p>
+GET /v1/catalog?layer=regions&amp;filter=PL
+GET /v1/catalog?layer=districts&amp;filter=US</pre>
+    <p style="margin-top:0.5rem; font-size:12px; color:var(--muted);"><code>filter</code> is required for <code>regions</code> and <code>districts</code> — pass an ISO alpha-2 code, the same value you would use with the <code>/v1/geo</code> endpoint. Omitting it returns an error. The <code>countries</code> layer ignores <code>filter</code> and always returns all countries.</p>
     <p style="margin-top:0.75rem; font-size:12px; color:var(--muted);">Returns a JSON array. Example entry for a region:</p>
     <pre style="margin-top:0.5rem;">{
   "gid":        "US-CA",

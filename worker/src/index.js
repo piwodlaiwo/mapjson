@@ -54,20 +54,20 @@ async function resolveNameToIso2(name, bucket) {
 
 async function handleCatalog(request, env) {
   const q = new URL(request.url).searchParams;
-  const layer   = q.get('layer')   || 'countries';
-  const country = q.get('country') ? q.get('country').toUpperCase() : null;
+  const layer  = q.get('layer')  || 'countries';
+  const filter = q.get('filter') ? q.get('filter').toUpperCase() : null;
 
   if (!['countries', 'regions', 'districts'].includes(layer)) {
     return error(`layer must be one of: countries, regions, districts`);
   }
-  if ((layer === 'regions' || layer === 'districts') && !country) {
-    return error(`${layer} catalog requires a country filter — add ?country=PL (ISO alpha-2 code)`);
+  if ((layer === 'regions' || layer === 'districts') && !filter) {
+    return error(`${layer} catalog requires a country filter — add ?filter=PL (ISO alpha-2 code)`);
   }
 
   const obj = await env.GEO_BUCKET.get(`catalog/${layer}.json`);
   if (!obj) return error(`No catalog for layer='${layer}'`, 404);
 
-  if (!country) {
+  if (!filter) {
     return new Response(await obj.text(), {
       status: 200,
       headers: { 'Content-Type': 'application/json', ...CORS, 'Cache-Control': 'public, max-age=86400' },
@@ -78,8 +78,8 @@ async function handleCatalog(request, env) {
   // regions: parent_gid is the country ISO2 (e.g. PL)
   // districts: iso2 is the country ISO2; parent_gid is the region (e.g. US-AL)
   const filtered = layer === 'regions'
-    ? all.filter(e => e.parent_gid === country)
-    : all.filter(e => e.iso2 === country);
+    ? all.filter(e => e.parent_gid === filter)
+    : all.filter(e => e.iso2 === filter);
 
   return new Response(JSON.stringify(filtered), {
     status: 200,

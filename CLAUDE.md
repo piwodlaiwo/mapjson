@@ -77,6 +77,16 @@ GET https://api.mapjson.com/v1/geo
 - Country names in `filter` are resolved to ISO2 in the worker (`filter=Poland` = `filter=PL`)
 - `properties` are merged from `properties.json` in R2 at request time
 
+## Adding a new country property
+
+When adding a new opt-in property to `properties.json` (e.g. `areaKm2`), three places must ALL be updated or the property silently disappears:
+
+1. **`pipeline/build-properties.js`** — compute and store the value in `props[key]`
+2. **`worker/src/merge-props.js`** — add the key to `ALL_PROP_KEYS` (the allowlist that gates what `mergeProperties` returns)
+3. **`docs/docs.html`** — add a row to the Properties section so users know it exists
+
+Missing step 2 means the API silently ignores the property even though it's in properties.json.
+
 ## Example pages
 
 - Example code blocks must be **full standalone HTML** starting with `<!DOCTYPE html>` — not partial snippets

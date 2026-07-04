@@ -98,8 +98,7 @@ function buildDistricts() {
       layer:      'districts',
       parent_gid: p.parent_gid || null,
       iso2:       p.iso2       || null,
-      state_fips: p.gid.slice(0, 2),
-      fips:       p.gid,
+      gid_source: 'fips',
     });
   }
 

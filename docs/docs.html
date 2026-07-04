@@ -551,6 +551,36 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
   "arcs": [ ... ]
 }</code></pre>
     <p style="margin-top:1rem; color:var(--muted); font-size:12px;">When no <code>properties</code> parameter is given, each feature's <code>properties</code> object is empty (<code>{}</code>).</p>
+
+    <h3 style="margin-top:2rem; margin-bottom:0.75rem; font-size:14px; letter-spacing:0.05em; text-transform:uppercase; color:var(--muted);">Format size comparison</h3>
+    <p style="margin-bottom:1rem;">Filtered topojson responses have unreferenced arcs pruned, making them significantly smaller than the equivalent geojson. Shared border arcs are deduplicated in topojson; geojson re-emits full floating-point coordinates for every feature independently.</p>
+    <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:0.5rem;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border); color:var(--muted); text-align:left;">
+          <th style="padding:6px 12px 6px 0; font-weight:600;">Request</th>
+          <th style="padding:6px 12px; font-weight:600; text-align:right;">topojson</th>
+          <th style="padding:6px 0 6px 12px; font-weight:600; text-align:right;">geojson</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:8px 12px 8px 0;"><code>filter=FR&amp;detail=low</code></td>
+          <td style="padding:8px 12px; text-align:right;">765 B</td>
+          <td style="padding:8px 0 8px 12px; text-align:right; color:var(--muted);">2.3 KB</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:8px 12px 8px 0;"><code>filter=DE&amp;detail=high</code></td>
+          <td style="padding:8px 12px; text-align:right;">27 KB</td>
+          <td style="padding:8px 0 8px 12px; text-align:right; color:var(--muted);">114 KB</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px 8px 0;"><code>filter=world&amp;detail=low</code></td>
+          <td style="padding:8px 12px; text-align:right;">91 KB</td>
+          <td style="padding:8px 0 8px 12px; text-align:right; color:var(--muted);">426 KB</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="color:var(--muted); font-size:12px;">Sizes are uncompressed. gzip compression narrows the gap somewhat; topojson still wins for all request types.</p>
   </section>
 
   <!-- ── Identifiers ── -->

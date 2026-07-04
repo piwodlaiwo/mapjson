@@ -128,9 +128,9 @@
   <a class="back-link" href="index.html">← Examples</a>
 
   <header>
-    <div class="tag">countries · world · areaKm2 · choropleth · Equal Earth</div>
+    <div class="tag">countries · world · areakm2 · choropleth · Equal Earth</div>
     <h1>Country Area</h1>
-    <p>World countries colored by land area using the <code>areaKm2</code> property — an opt-in field computed from 10m Natural Earth geometry. A logarithmic color scale handles the range from Vatican City (0.44 km²) to Russia (17M km²). Hover to see each country's area. <code>areaKm2</code> is most useful as a denominator: divide any count by area to get a per-km² density.</p>
+    <p>World countries colored by land area using the <code>areakm2</code> property — an opt-in field computed from 10m Natural Earth geometry. A logarithmic color scale handles the range from Vatican City (0.44 km²) to Russia (17M km²). Hover to see each country's area. <code>areakm2</code> is most useful as a denominator: divide any count by area to get a per-km² density.</p>
   </header>
 
   <div class="map-wrap" id="map-wrap">
@@ -139,7 +139,7 @@
 
   <section>
     <h2>API Call</h2>
-    <pre>https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=low&properties=name,areaKm2</pre>
+    <pre>https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=low&properties=name,areakm2</pre>
   </section>
 
   <section>
@@ -176,7 +176,7 @@
   &lt;div class="tooltip" id="tooltip"&gt;&lt;/div&gt;
   &lt;svg id="map"&gt;&lt;/svg&gt;
   &lt;script&gt;
-    const url = "https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=low&properties=name,areaKm2";
+    const url = "https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=low&properties=name,areakm2";
 
     const width = 960, height = 500;
     const tooltip = document.getElementById("tooltip");
@@ -205,9 +205,9 @@
         .join("path")
         .attr("class", "country")
         .attr("d", path)
-        .attr("fill", d =&gt; d.properties.areaKm2 ? color(d.properties.areaKm2) : "#3a4a52")
+        .attr("fill", d =&gt; d.properties.areakm2 ? color(d.properties.areakm2) : "#3a4a52")
         .on("mousemove", function(event, d) {
-          const area = d.properties.areaKm2;
+          const area = d.properties.areakm2;
           tooltip.style.left = (event.clientX + 12) + "px";
           tooltip.style.top  = (event.clientY - 10) + "px";
           tooltip.style.opacity = 1;
@@ -227,7 +227,7 @@
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <script>
-  const url = "https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=low&properties=name,areaKm2";
+  const url = "https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=low&properties=name,areakm2";
 
   const width = 960, height = 500;
   const wrap = document.getElementById("map-wrap");
@@ -259,12 +259,12 @@
       .data(geojson.features)
       .join("path")
       .attr("class", "country")
-      .attr("fill", d => d.properties.areaKm2 ? color(d.properties.areaKm2) : "#3a4a52")
+      .attr("fill", d => d.properties.areakm2 ? color(d.properties.areakm2) : "#3a4a52")
       .attr("stroke", "#2e4a5a")
       .attr("stroke-width", 0.3)
       .attr("d", path)
       .on("mousemove", function(event, d) {
-        const area = d.properties.areaKm2;
+        const area = d.properties.areakm2;
         const rect = wrap.getBoundingClientRect();
         tooltip.style.left = (event.clientX - rect.left + 12) + "px";
         tooltip.style.top  = (event.clientY - rect.top  - 10) + "px";

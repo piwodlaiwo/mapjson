@@ -79,7 +79,7 @@ GET https://api.mapjson.com/v1/geo
 
 ## Adding a new country property
 
-When adding a new opt-in property to `properties.json` (e.g. `areaKm2`), three places must ALL be updated or the property silently disappears:
+When adding a new opt-in property to `properties.json` (e.g. `areakm2`), three places must ALL be updated or the property silently disappears:
 
 1. **`pipeline/build-properties.js`** — compute and store the value in `props[key]`
 2. **`worker/src/merge-props.js`** — add the key to `ALL_PROP_KEYS` (the allowlist that gates what `mergeProperties` returns)

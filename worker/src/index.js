@@ -75,11 +75,14 @@ async function handleCatalog(request, env) {
   }
 
   const all = await obj.json();
-  // regions: parent_gid is the country ISO2 (e.g. PL)
-  // districts: iso2 is the country ISO2; parent_gid is the region (e.g. US-AL)
+  // regions:   parent_gid is the country ISO2 (e.g. PL)
+  // districts: filter by parent_gid when given a region code (US-MA),
+  //            or by iso2 when given a country code (US)
   const filtered = layer === 'regions'
     ? all.filter(e => e.parent_gid === filter)
-    : all.filter(e => e.iso2 === filter);
+    : filter.includes('-')
+      ? all.filter(e => e.parent_gid === filter)
+      : all.filter(e => e.iso2 === filter);
 
   return new Response(JSON.stringify(filtered), {
     status: 200,
@@ -93,11 +96,11 @@ async function handleGeo(request, env) {
 
   let { layer, filter, detail, format, properties } = result.params;
 
-  // Resolve country name → ISO2 before any further logic so the rest of the
-  // pipeline always works with a continent slug or ISO2 code.
-  if (!CONTINENT_SLUGS.has(filter) && !ISO2_RE_LOCAL.test(filter)) {
+  // Resolve country name → ISO2. Region codes (US-MA) pass through as-is.
+  const ISO3166_2_RE_LOCAL = /^[A-Z]{2}-[A-Z0-9]+$/;
+  if (!CONTINENT_SLUGS.has(filter) && !ISO2_RE_LOCAL.test(filter) && !ISO3166_2_RE_LOCAL.test(filter)) {
     const iso2 = await resolveNameToIso2(filter, env.GEO_BUCKET);
-    if (!iso2) return error(`Unknown country name '${filter}' — use a continent slug, ISO alpha-2 code, or country name`, 400);
+    if (!iso2) return error(`Unknown filter '${filter}' — use a continent slug, ISO alpha-2 code, ISO 3166-2 region code (e.g. US-MA), or country name`, 400);
     filter = iso2;
   }
 

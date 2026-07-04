@@ -26,7 +26,10 @@ export function filterFeatures(topo, objectKey, params) {
 
     if (layer === 'districts') {
       if (filter === 'world') return true;
-      return p.iso2 === filter.toUpperCase();
+      const f = filter.toUpperCase();
+      // ISO 3166-2 region code (e.g. US-MA) → match by parent_gid
+      // ISO alpha-2 country code (e.g. US) → match by iso2
+      return f.includes('-') ? p.parent_gid === f : p.iso2 === f;
     }
 
     return true;

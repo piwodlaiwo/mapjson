@@ -79,13 +79,17 @@ GET https://api.mapjson.com/v1/geo
 
 ## Adding a new country property
 
-When adding a new opt-in property to `properties.json` (e.g. `areakm2`), three places must ALL be updated or the property silently disappears:
+- **Naming convention**: lowercase, single token — `areakm2`, `iso2`, `capital` — not camelCase. (`nameOfficial`, `capitalLat`, `capitalLng`, `isoNum` predate this convention; don't use them as a template for new keys.)
+- Key matching against `?properties=` is an **exact, case-sensitive string match** against `ALL_PROP_KEYS` (see `worker/src/merge-props.js`) — there is no normalization in `validate.js`. A mismatched case (e.g. `areaKm2` vs `areakm2`) is silently dropped from the response with no error, same as an unrecognized key.
+
+When adding a new opt-in property, these places must ALL be updated or the property silently disappears:
 
 1. **`pipeline/build-properties.js`** — compute and store the value in `props[key]`
 2. **`worker/src/merge-props.js`** — add the key to `ALL_PROP_KEYS` (the allowlist that gates what `mergeProperties` returns)
-3. **`docs/docs.html`** — add a row to the Properties section so users know it exists
+3. **`docs/docs.html`** — add the key to the `properties` options list in the params table AND add a row to the Properties section below — both exist and can drift independently
+4. **Regenerate and ship the data**: `npm run build-props` (rebuilds `processed/properties.json` locally) → `npm run upload` (pushes it to R2) → `cd worker && npm run deploy` (redeploys the worker so the new allowlist key takes effect) — steps 1–3 alone only change source files, not the live API
 
-Missing step 2 means the API silently ignores the property even though it's in properties.json.
+Missing step 2 means the API silently ignores the property even though it's in properties.json. Missing step 4 means the code is correct but the live API still doesn't reflect it.
 
 ## Example pages
 

@@ -72,6 +72,13 @@ GET https://api.mapjson.com/v1/geo
   &format=topojson|geojson
 ```
 
-- `districts` always returns high resolution (Natural Earth only has 10m admin2)
+- `districts` always returns high resolution regardless of `detail` param (Natural Earth only has 10m admin2)
+- `filter` accepts ISO 3166-2 region codes for districts: `filter=US-MA` returns only Massachusetts counties
 - Country names in `filter` are resolved to ISO2 in the worker (`filter=Poland` = `filter=PL`)
 - `properties` are merged from `properties.json` in R2 at request time
+
+## Example pages
+
+- Example code blocks must be **full standalone HTML** starting with `<!DOCTYPE html>` — not partial snippets
+- Map background color must **contrast with the choropleth color scheme** — never use a blue background with a blue (`d3.interpolateBlues`) choropleth; use a warm neutral (e.g. `#d4cfc8`) instead
+- County/region border stroke should complement the fill palette — cream (`#f4efe8`) works against blue fills; dark (`#3a5e70`) works against light land fills

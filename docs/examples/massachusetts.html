@@ -74,7 +74,7 @@
     .map-wrap {
       margin-bottom: 2.5rem;
       border: 1px solid var(--border);
-      background: #7ab4cc;
+      background: #d4cfc8;
       line-height: 0;
       position: relative;
     }
@@ -128,7 +128,7 @@
   <a class="back-link" href="index.html">← Examples</a>
 
   <header>
-    <div class="tag">districts · high detail · region filter · topojson · choropleth</div>
+    <div class="tag">districts · region filter · topojson · choropleth · fips join</div>
     <h1>Massachusetts Counties</h1>
     <p>Fetching only Massachusetts counties using <code>filter=US-MA</code> — 14 features, pruned to the arcs of this state rather than the full US dataset. The choropleth joins 2020 census population data to each county via its <code>gid</code>, which is the 5-digit FIPS code used by Census, BLS, CDC, and most US federal data sources.</p>
   </header>
@@ -139,59 +139,98 @@
 
   <section>
     <h2>API Call</h2>
-    <pre>https://api.mapjson.com/v1/geo?layer=districts&amp;filter=US-MA&amp;detail=high&amp;properties=name</pre>
+    <pre>https://api.mapjson.com/v1/geo?layer=districts&amp;filter=US-MA&amp;detail=medium&amp;properties=name</pre>
   </section>
 
   <section>
     <h2>Code</h2>
-    <pre>&lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
-&lt;script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"&gt;&lt;/script&gt;
+    <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;Massachusetts Counties&lt;/title&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"&gt;&lt;/script&gt;
+  &lt;style&gt;
+    body { margin: 0; background: #d4cfc8; }
+    svg { width: 100%; height: 100vh; display: block; }
+    .county { stroke: #f4efe8; stroke-width: 0.5; }
+    .tooltip {
+      position: fixed;
+      background: #2c2317;
+      color: #f4efe8;
+      font-family: monospace;
+      font-size: 11px;
+      padding: 6px 10px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      line-height: 1.6;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="tooltip" id="tooltip"&gt;&lt;/div&gt;
+  &lt;svg id="map"&gt;&lt;/svg&gt;
+  &lt;script&gt;
+    // 2020 Census population keyed by FIPS gid — joins directly to Census/BLS/CDC data
+    const population = {
+      "25001": 213444,  // Barnstable
+      "25003": 154518,  // Berkshire
+      "25005": 569048,  // Bristol
+      "25007": 17535,   // Dukes (Martha's Vineyard)
+      "25009": 801077,  // Essex
+      "25011": 71372,   // Franklin
+      "25013": 470490,  // Hampden
+      "25015": 160830,  // Hampshire
+      "25017": 1632002, // Middlesex
+      "25019": 14255,   // Nantucket
+      "25021": 722023,  // Norfolk
+      "25023": 521202,  // Plymouth
+      "25025": 803907,  // Suffolk (Boston)
+      "25027": 857591,  // Worcester
+    };
 
-&lt;script&gt;
-// 2020 Census population keyed by FIPS gid
-const population = {
-  "25001": 213444,  // Barnstable
-  "25003": 154518,  // Berkshire
-  "25005": 569048,  // Bristol
-  "25007": 17535,   // Dukes (Martha's Vineyard)
-  "25009": 801077,  // Essex
-  "25011": 71372,   // Franklin
-  "25013": 470490,  // Hampden
-  "25015": 160830,  // Hampshire
-  "25017": 1632002, // Middlesex
-  "25019": 14255,   // Nantucket
-  "25021": 722023,  // Norfolk
-  "25023": 521202,  // Plymouth
-  "25025": 803907,  // Suffolk (Boston)
-  "25027": 857591,  // Worcester
-};
+    const url = "https://api.mapjson.com/v1/geo?layer=districts&amp;filter=US-MA&amp;detail=medium&amp;properties=name";
 
-const url = "https://api.mapjson.com/v1/geo?layer=districts&filter=US-MA&detail=high&properties=name";
+    const width = 960, height = 480;
+    const tooltip = document.getElementById("tooltip");
 
-const width = 960, height = 480;
-const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${width} ${height}`);
+    const svg = d3.select("#map")
+      .attr("viewBox", `0 0 ${width} ${height}`);
 
-const color = d3.scaleSequential()
-  .domain([0, d3.max(Object.values(population))])
-  .interpolator(d3.interpolateBlues);
+    const color = d3.scaleSequential()
+      .domain([0, d3.max(Object.values(population))])
+      .interpolator(d3.interpolateBlues);
 
-d3.json(url).then(topo => {
-  const geojson = topojson.feature(topo, topo.objects.geo);
+    d3.json(url).then(topo =&gt; {
+      const geojson = topojson.feature(topo, topo.objects.geo);
 
-  const projection = d3.geoMercator()
-    .fitExtent([[40, 40], [width - 40, height - 40]], geojson);
-  const path = d3.geoPath().projection(projection);
+      const projection = d3.geoMercator()
+        .fitExtent([[40, 40], [width - 40, height - 40]], geojson);
+      const path = d3.geoPath().projection(projection);
 
-  svg.selectAll("path")
-    .data(geojson.features)
-    .join("path")
-    .attr("d", path)
-    // join population data via gid (FIPS)
-    .attr("fill", d => color(population[d.properties.gid] || 0))
-    .attr("stroke", "#7ab4cc")
-    .attr("stroke-width", 0.8);
-});
-&lt;/script&gt;</pre>
+      svg.selectAll("path")
+        .data(geojson.features)
+        .join("path")
+        .attr("class", "county")
+        .attr("d", path)
+        .attr("fill", d =&gt; color(population[d.properties.gid] || 0))
+        .on("mousemove", function(event, d) {
+          const pop = population[d.properties.gid];
+          tooltip.style.left = (event.clientX + 12) + "px";
+          tooltip.style.top  = (event.clientY - 10) + "px";
+          tooltip.style.opacity = 1;
+          tooltip.innerHTML =
+            `&lt;strong&gt;${d.properties.name}&lt;/strong&gt;&lt;br&gt;` +
+            `gid: ${d.properties.gid}&lt;br&gt;` +
+            `population: ${pop ? pop.toLocaleString() : "—"}`;
+        })
+        .on("mouseleave", () =&gt; { tooltip.style.opacity = 0; });
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
   </section>
 
 </div>
@@ -217,7 +256,7 @@ d3.json(url).then(topo => {
     "25027": 857591,
   };
 
-  const url = "https://api.mapjson.com/v1/geo?layer=districts&filter=US-MA&detail=high&properties=name";
+  const url = "https://api.mapjson.com/v1/geo?layer=districts&filter=US-MA&detail=medium&properties=name";
 
   const width = 960, height = 480;
   const wrap = document.getElementById("map-wrap");
@@ -244,8 +283,8 @@ d3.json(url).then(topo => {
       .join("path")
       .attr("d", path)
       .attr("fill", d => color(population[d.properties.gid] || 0))
-      .attr("stroke", "#7ab4cc")
-      .attr("stroke-width", 0.8)
+      .attr("stroke", "#f4efe8")
+      .attr("stroke-width", 0.5)
       .on("mousemove", function(event, d) {
         const gid = d.properties.gid;
         const pop = population[gid];

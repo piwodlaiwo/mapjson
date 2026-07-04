@@ -347,10 +347,11 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
               <span class="opt">oceania</span>
               <span class="opt">antarctica</span>
               <span class="opt">{ISO2}</span>
+              <span class="opt">{ISO 3166-2}</span>
               <span class="opt">{name}</span>
             </div>
           </td>
-          <td>Filters output to a continent or a specific country. Accepts an ISO alpha-2 code (<code>FR</code>) or a full country name (<code>France</code>) — both work identically. Use with <code>layer=regions</code> to get one country's regions, or with <code>layer=districts</code> to get its counties/districts.</td>
+          <td>Filters output to a continent, country, or region. Accepts a continent slug, ISO alpha-2 country code (<code>FR</code>), ISO 3166-2 region code (<code>US-MA</code>), or full country name (<code>France</code>). Use <code>layer=regions&amp;filter=US</code> to get one country's regions. Use <code>layer=districts&amp;filter=US</code> for all US counties, or <code>filter=US-MA</code> for just Massachusetts counties. Region-level filter is required for <code>districts</code> — continent slugs and <code>world</code> are not accepted.</td>
         </tr>
         <tr>
           <td><code class="param-name">detail</code></td>
@@ -402,7 +403,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
       <div class="layer-cell">
         <div class="layer-name">districts</div>
         <div class="layer-type">polygon</div>
-        <div class="layer-desc">Second-level administrative divisions — US counties, with 5-digit FIPS codes as <code>gid</code> for easy data joins. Currently covers the US; use <code>filter=US</code>. The <code>detail</code> parameter is ignored — districts always return at high resolution.</div>
+        <div class="layer-desc">Second-level administrative divisions — US counties, with 5-digit FIPS codes as <code>gid</code> for easy data joins. Use <code>filter=US</code> for all US counties, or <code>filter=US-MA</code> for a single state. The <code>detail</code> parameter is ignored — districts always return at high resolution.</div>
       </div>
       <div class="layer-cell">
         <div class="layer-name">lakes</div>
@@ -614,8 +615,9 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
     <p style="margin-bottom:0.75rem;">The catalog lists every <code>gid</code> in a layer with its name, parent, and all known external codes — useful for building lookup tables or crosswalks without downloading geometry.</p>
     <pre>GET /v1/catalog?layer=countries
 GET /v1/catalog?layer=regions&amp;filter=PL
-GET /v1/catalog?layer=districts&amp;filter=US</pre>
-    <p style="margin-top:0.5rem; font-size:12px; color:var(--muted);"><code>filter</code> is required for <code>regions</code> and <code>districts</code> — pass an ISO alpha-2 code, the same value you would use with the <code>/v1/geo</code> endpoint. Omitting it returns an error. The <code>countries</code> layer ignores <code>filter</code> and always returns all countries.</p>
+GET /v1/catalog?layer=districts&amp;filter=US
+GET /v1/catalog?layer=districts&amp;filter=US-MA</pre>
+    <p style="margin-top:0.5rem; font-size:12px; color:var(--muted);"><code>filter</code> is required for <code>regions</code> and <code>districts</code>. Accepts the same values as <code>/v1/geo</code>: an ISO alpha-2 country code (<code>US</code>) or an ISO 3166-2 region code (<code>US-MA</code>) for districts. Omitting it returns an error. The <code>countries</code> layer ignores <code>filter</code>.</p>
     <p style="margin-top:0.75rem; font-size:12px; color:var(--muted);">Returns a JSON array. Example entry for a region:</p>
     <pre style="margin-top:0.5rem;">{
   "gid":        "US-CA",

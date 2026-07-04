@@ -369,7 +369,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
           <td><code class="param-name">properties</code></td>
           <td><code class="default">none</code></td>
           <td><code>name, nameOfficial, iso2, iso3, isoNum, continent, subregion, capital, capitalLat, capitalLng</code></td>
-          <td>Comma-separated list of properties to attach to each feature. Omit entirely for geometry-only output (smallest response). Only applies to <code>countries</code> and <code>regions</code> layers.</td>
+          <td>Comma-separated list of properties to attach to each feature. Only applies to the <code>countries</code> layer — the worker merges these from a lookup table at request time. Omit entirely for geometry-only output (smallest response). Districts and regions include <code>gid</code>, <code>name</code>, <code>parent_gid</code>, and <code>iso2</code> by default; the <code>properties</code> parameter is ignored for those layers.</td>
         </tr>
         <tr>
           <td><code class="param-name">format</code></td>
@@ -464,7 +464,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
   <!-- ── Properties ── -->
   <section>
     <h2>Properties</h2>
-    <p style="margin-bottom:1rem;">Available on <code>countries</code> and <code>regions</code> layers. No properties are returned by default — pass <code>?properties=name,iso2</code> to request specific fields. This keeps the default response as small as possible.</p>
+    <p style="margin-bottom:1rem;">Only applies to the <code>countries</code> layer. No properties are returned by default — pass <code>?properties=name,iso2</code> to request specific fields, keeping the response as small as possible. Regions and districts include <code>gid</code>, <code>name</code>, <code>parent_gid</code>, and <code>iso2</code> in every response automatically; passing <code>properties</code> has no effect on those layers.</p>
     <div class="props-grid">
       <div>
         <div class="prop-row"><span class="prop-key">name</span><span class="prop-desc">Short English name (e.g. "France")</span></div>

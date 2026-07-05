@@ -64,6 +64,7 @@
       text-decoration: none;
     }
     .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); }
 
     /* ── Hero ── */
     .hero {
@@ -193,19 +194,6 @@
     }
 
     /* ── Footer ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 900px;
-      margin: 0 auto;
-      font-size: 11px;
-      color: var(--muted);
-    }
-    footer a { color: var(--muted); text-decoration: none; }
-    footer a:hover { color: var(--ink); }
   </style>
 </head>
 <body>
@@ -215,6 +203,9 @@
   <div class="nav-links">
     <a href="/docs/">Docs</a>
     <a href="/examples/">Examples</a>
+    <a href="https://keys.mapjson.com/">Clean</a>
+    <a href="https://keys.mapjson.com/explorer">Explore</a>
+    <a href="https://keys.mapjson.com/build">Build</a>
   </div>
 </nav>
 
@@ -278,14 +269,6 @@ d3.json("https://api.mapjson.com/v1/geo")
     <p>Omit <code>properties</code> for geometry-only output. Add <code>properties=name,iso2,capital</code> to get exactly the fields you need and nothing more.</p>
   </div>
 </div>
-
-<footer>
-  <span>mapjson.com</span>
-  <div style="display:flex; gap:1.5rem;">
-    <a href="/docs/">Docs</a>
-    <a href="/examples/">Examples</a>
-  </div>
-</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>

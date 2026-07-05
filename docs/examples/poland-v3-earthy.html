@@ -20,6 +20,7 @@
     .nav-links { display: flex; gap: 2rem; }
     .nav-links a { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
     .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); }
     .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 4rem; }
     .back-link { display: inline-block; padding: 2rem 0 0; font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; }
     header { border-bottom: 1.5px solid var(--ink); padding: 1rem 0 1.25rem; margin-bottom: 2rem; }
@@ -38,7 +39,10 @@
   <a class="nav-brand" href="/">mapjson</a>
   <div class="nav-links">
     <a href="/docs/">Docs</a>
-    <a href="/examples/">Examples</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="https://keys.mapjson.com/">Clean</a>
+    <a href="https://keys.mapjson.com/explorer">Explore</a>
+    <a href="https://keys.mapjson.com/build">Build</a>
   </div>
 </nav>
 <div class="page">

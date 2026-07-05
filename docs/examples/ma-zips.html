@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Massachusetts ZIP Areas — mapjson examples</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #2c2317;
+      --bg: #f4efe8;
+      --accent: #b22222;
+      --muted: #7a6f64;
+      --border: #d8d0c5;
+      --code-bg: #eae5de;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 300;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link {
+      display: inline-block;
+      padding: 2.5rem 0 0;
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .back-link:hover { color: var(--ink); }
+    header {
+      border-bottom: 1.5px solid var(--ink);
+      padding: 1rem 0 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    header .tag {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 2.25rem;
+      font-weight: 400;
+      line-height: 1.1;
+    }
+    header p { color: var(--muted); margin-top: 0.6rem; font-size: 12px; max-width: 640px; line-height: 1.7; }
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    section { margin-bottom: 2.5rem; }
+    .map-wrap {
+      margin-bottom: 2.5rem;
+      border: 1px solid var(--border);
+      background: #fdfcfa;
+      line-height: 0;
+      position: relative;
+    }
+    .map-wrap svg { width: 100%; display: block; }
+    pre {
+      background: var(--code-bg);
+      border-left: 3px solid var(--ink);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.65;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 48px;
+    }
+    .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink); text-decoration: none; letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    .tooltip {
+      position: absolute;
+      background: #2c2317;
+      color: #f4efe8;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      padding: 6px 10px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      white-space: nowrap;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="../index.html">mapjson</a>
+  <div class="nav-links">
+    <a href="../docs.html">Docs</a>
+    <a href="index.html">Examples</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <a class="back-link" href="index.html">← Examples</a>
+
+  <header>
+    <div class="tag">postal · US-MA · ZCTA · zip codes</div>
+    <h1>Massachusetts ZIP Areas</h1>
+    <p>All 539 Massachusetts ZIP code areas (Census 2020 ZCTAs) from the <code>postal</code> layer, colored by 3-digit ZIP prefix — the USPS sectional center geography. Every feature's <code>gid</code> is the bare 5-digit ZIP code, so joining your ZIP-keyed data is a dictionary lookup. The layer is served per state: <code>filter=US-MA</code> is required. If your ZIP column is messy, <a href="https://ontology.mapjson.com" style="color:var(--accent)">ontology.mapjson.com</a> cleans it first.</p>
+  </header>
+
+  <div class="map-wrap" id="map-wrap">
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+
+  <section>
+    <h2>API Call</h2>
+    <pre>https://api.mapjson.com/v1/geo?layer=postal&filter=US-MA</pre>
+  </section>
+
+  <section>
+    <h2>Code</h2>
+    <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;Massachusetts ZIP Areas&lt;/title&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"&gt;&lt;/script&gt;
+  &lt;style&gt;
+    body { margin: 0; background: #fdfcfa; }
+    svg { width: 100%; height: 100vh; display: block; }
+    .zcta { stroke: #fff; stroke-width: 0.4; }
+    .zcta:hover { opacity: 0.75; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;svg id="map"&gt;&lt;/svg&gt;
+  &lt;script&gt;
+    const url = "https://api.mapjson.com/v1/geo?layer=postal&filter=US-MA";
+
+    const width = 960, height = 620;
+    const svg = d3.select("#map").attr("viewBox", `0 0 ${width} ${height}`);
+
+    d3.json(url).then(topo =&gt; {
+      const fc = topojson.feature(topo, topo.objects.geo);
+      const path = d3.geoPath(d3.geoMercator().fitExtent([[10,10],[width-10,height-10]], fc));
+
+      // Color by 3-digit ZIP prefix — every feature's gid IS its ZIP code
+      const prefixes = [...new Set(fc.features.map(d =&gt; d.properties.gid.slice(0,3)))].sort();
+      const color = d3.scaleOrdinal(prefixes, d3.schemeTableau10.concat(d3.schemeSet3));
+
+      svg.selectAll(".zcta")
+        .data(fc.features)
+        .join("path")
+        .attr("class", "zcta")
+        .attr("d", path)
+        .attr("fill", d =&gt; color(d.properties.gid.slice(0,3)))
+        .append("title")
+        .text(d =&gt; `ZIP ${d.properties.gid}`);
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script>
+  const url = "https://api.mapjson.com/v1/geo?layer=postal&filter=US-MA";
+
+  const width = 960, height = 620;
+  const wrap = document.getElementById("map-wrap");
+  const tooltip = document.getElementById("tooltip");
+
+  const svg = d3.select(wrap).append("svg")
+    .attr("viewBox", `0 0 ${width} ${height}`)
+    .style("width", "100%")
+    .style("height", "auto");
+
+  d3.json(url).then(topo => {
+    const fc = topojson.feature(topo, topo.objects.geo);
+    const path = d3.geoPath(d3.geoMercator().fitExtent([[10, 10], [width - 10, height - 10]], fc));
+
+    const prefixes = [...new Set(fc.features.map(d => d.properties.gid.slice(0, 3)))].sort();
+    const color = d3.scaleOrdinal(prefixes, d3.schemeTableau10.concat(d3.schemeSet3));
+
+    svg.selectAll(".zcta")
+      .data(fc.features)
+      .join("path")
+      .attr("fill", d => color(d.properties.gid.slice(0, 3)))
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 0.4)
+      .attr("d", path)
+      .on("mousemove", function (event, d) {
+        const rect = wrap.getBoundingClientRect();
+        tooltip.style.left = (event.clientX - rect.left + 12) + "px";
+        tooltip.style.top  = (event.clientY - rect.top  - 10) + "px";
+        tooltip.style.opacity = 1;
+        tooltip.innerHTML = `<strong>ZIP ${d.properties.gid}</strong><br>prefix ${d.properties.gid.slice(0, 3)} · ${d.properties.parent_gid}`;
+      })
+      .on("mouseleave", () => { tooltip.style.opacity = 0; });
+  });
+</script>
+</body>
+</html>

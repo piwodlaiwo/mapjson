@@ -57,11 +57,11 @@ async function handleCatalog(request, env) {
   const layer  = q.get('layer')  || 'countries';
   const filter = q.get('filter') ? q.get('filter').toUpperCase() : null;
 
-  if (!['countries', 'regions', 'districts'].includes(layer)) {
-    return error(`layer must be one of: countries, regions, districts`);
+  if (!['countries', 'regions', 'districts', 'postal'].includes(layer)) {
+    return error(`layer must be one of: countries, regions, districts, postal`);
   }
-  if ((layer === 'regions' || layer === 'districts') && !filter) {
-    return error(`${layer} catalog requires a country filter — add ?filter=PL (ISO alpha-2 code)`);
+  if ((layer === 'regions' || layer === 'districts' || layer === 'postal') && !filter) {
+    return error(`${layer} catalog requires a filter — add ?filter=PL (ISO alpha-2 code)${layer === 'postal' ? ' or ?filter=US-MA (state code)' : ''}`);
   }
 
   const obj = await env.GEO_BUCKET.get(`catalog/${layer}.json`);
@@ -102,6 +102,24 @@ async function handleGeo(request, env) {
     const iso2 = await resolveNameToIso2(filter, env.GEO_BUCKET);
     if (!iso2) return error(`Unknown filter '${filter}' — use a continent slug, ISO alpha-2 code, ISO 3166-2 region code (e.g. US-MA), or country name`, 400);
     filter = iso2;
+  }
+
+  // Postal (ZCTA) files are pre-split per state — serve directly, no filtering,
+  // no property merge (features already carry gid/parent_gid/iso2), no pruning.
+  // The detail parameter is ignored: one 1:500k-generalized version per state.
+  if (layer === 'postal') {
+    const obj = await env.GEO_BUCKET.get(`postal/${filter}.topojson`);
+    if (!obj) return error(`No postal data for '${filter}' — use a US state code (e.g. filter=US-MA)`, 404);
+    const topo = await obj.json();
+    const objectKey = Object.keys(topo.objects)[0];
+    if (objectKey !== 'geo') {
+      topo.objects.geo = topo.objects[objectKey];
+      delete topo.objects[objectKey];
+    }
+    if (format === 'geojson') {
+      return json(feature(topo, topo.objects.geo), 200, { 'Cache-Control': 'public, max-age=3600' });
+    }
+    return json(topo, 200, { 'Cache-Control': 'public, max-age=3600' });
   }
 
   const fileDetail = DETAIL_TO_FILE[detail];

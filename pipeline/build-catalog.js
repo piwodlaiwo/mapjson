@@ -106,6 +106,32 @@ function buildDistricts() {
   return entries;
 }
 
+function buildPostal() {
+  const dir = path.join(PROCESSED, 'postal');
+  if (!fs.existsSync(dir)) {
+    console.warn('  skipping postal catalog — processed/postal/ not found');
+    return [];
+  }
+
+  const entries = [];
+  for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.topojson'))) {
+    for (const p of readTopoProperties(path.join(dir, file))) {
+      if (!p.gid) continue;
+      entries.push({
+        gid:        p.gid,
+        name:       p.gid,          // ZCTAs have no names — the code is the name
+        layer:      'postal',
+        parent_gid: p.parent_gid || null,
+        iso2:       p.iso2       || null,
+        gid_source: 'zcta',
+      });
+    }
+  }
+
+  entries.sort((a, b) => (a.gid || '').localeCompare(b.gid || ''));
+  return entries;
+}
+
 async function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
@@ -129,6 +155,11 @@ async function main() {
   const districts = buildDistricts();
   fs.writeFileSync(path.join(OUT_DIR, 'districts.json'), JSON.stringify(districts));
   console.log(`  ✓ ${districts.length} districts`);
+
+  console.log('Building postal catalog...');
+  const postal = buildPostal();
+  fs.writeFileSync(path.join(OUT_DIR, 'postal.json'), JSON.stringify(postal));
+  console.log(`  ✓ ${postal.length} ZCTAs`);
 
   console.log('Done. Run: npm run upload');
 }

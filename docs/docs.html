@@ -326,6 +326,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
               <span class="opt default-val">countries</span>
               <span class="opt">regions</span>
               <span class="opt">districts</span>
+              <span class="opt">postal</span>
               <span class="opt">lakes</span>
               <span class="opt">rivers</span>
               <span class="opt">coastlines</span>
@@ -404,6 +405,11 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
         <div class="layer-name">districts</div>
         <div class="layer-type">polygon</div>
         <div class="layer-desc">Second-level administrative divisions — US counties, with 5-digit FIPS codes as <code>gid</code> for easy data joins. Use <code>filter=US</code> for all US counties, or <code>filter=US-MA</code> for a single state. The <code>detail</code> parameter is ignored — districts always return at high resolution.</div>
+      </div>
+      <div class="layer-cell">
+        <div class="layer-name">postal</div>
+        <div class="layer-type">polygon</div>
+        <div class="layer-desc">US ZIP code areas (Census 2020 ZCTAs — polygon approximations of USPS ZIP codes), with the 5-digit code as <code>gid</code>. A state filter is required: <code>filter=US-MA</code>. Served per state at 1:500k; <code>detail</code> is ignored. Note: PO-box-only ZIPs have no polygon, and boundaries are census approximations. Public domain (US Census Bureau).</div>
       </div>
       <div class="layer-cell">
         <div class="layer-name">lakes</div>
@@ -605,6 +611,10 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
         <div class="param-name">districts</div>
         <div class="param-desc">5-digit FIPS code for US counties — <code>06037</code> (Los Angeles), <code>36061</code> (Manhattan). The first two digits are the state FIPS, which maps directly to the state's ISO 3166-2 via the catalog.</div>
       </div>
+      <div class="param-row">
+        <div class="param-name">postal</div>
+        <div class="param-desc">5-digit ZCTA code (Census ZIP Code Tabulation Area) — <code>02139</code> (Cambridge MA), <code>90210</code> (Beverly Hills). Matches the ZIP codes in your data for ~95% of use cases; <code>parent_gid</code> is the state's ISO 3166-2.</div>
+      </div>
     </div>
 
     <h3 style="font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; margin-bottom:0.75rem; margin-top:1.5rem;">Hierarchy</h3>
@@ -620,7 +630,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
 GET /v1/catalog?layer=regions&amp;filter=PL
 GET /v1/catalog?layer=districts&amp;filter=US
 GET /v1/catalog?layer=districts&amp;filter=US-MA</pre>
-    <p style="margin-top:0.5rem; font-size:12px; color:var(--muted);"><code>filter</code> is required for <code>regions</code> and <code>districts</code>. Accepts the same values as <code>/v1/geo</code>: an ISO alpha-2 country code (<code>US</code>) or an ISO 3166-2 region code (<code>US-MA</code>) for districts. Omitting it returns an error. The <code>countries</code> layer ignores <code>filter</code>.</p>
+    <p style="margin-top:0.5rem; font-size:12px; color:var(--muted);"><code>filter</code> is required for <code>regions</code>, <code>districts</code>, and <code>postal</code>. Accepts the same values as <code>/v1/geo</code>: an ISO alpha-2 country code (<code>US</code>) or an ISO 3166-2 region code (<code>US-MA</code>) for districts. Omitting it returns an error. The <code>countries</code> layer ignores <code>filter</code>.</p>
     <p style="margin-top:0.75rem; font-size:12px; color:var(--muted);">Returns a JSON array. Example entry for a region:</p>
     <pre style="margin-top:0.5rem;">{
   "gid":        "US-CA",

@@ -1,4 +1,4 @@
-const VALID_LAYERS  = new Set(['countries', 'regions', 'districts', 'lakes', 'rivers', 'coastlines']);
+const VALID_LAYERS  = new Set(['countries', 'regions', 'districts', 'postal', 'lakes', 'rivers', 'coastlines']);
 const VALID_FILTERS = new Set(['world', 'europe', 'asia', 'africa', 'north-america', 'south-america', 'oceania', 'antarctica']);
 const VALID_DETAIL  = new Set(['low', 'medium', 'high', 'ultra']);
 const VALID_FORMAT  = new Set(['topojson', 'geojson']);
@@ -33,6 +33,11 @@ export function parseAndValidate(url) {
   }
   if (layer === 'districts' && (filter === 'world' || VALID_FILTERS.has(filter))) {
     errors.push(`districts layer requires a country or region filter — use an ISO alpha-2 code (e.g. filter=US) or ISO 3166-2 region code (e.g. filter=US-MA)`);
+  }
+  // postal is served from per-state files (~33k ZCTAs nationally is too large
+  // for a single response), so a state-level region code is mandatory
+  if (layer === 'postal' && !ISO3166_2_RE.test(filter)) {
+    errors.push(`postal layer requires a state filter — use an ISO 3166-2 region code (e.g. filter=US-MA)`);
   }
   if (!VALID_DETAIL.has(detail)) {
     errors.push(`detail must be one of: low, medium, high, ultra`);

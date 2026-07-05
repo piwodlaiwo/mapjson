@@ -28,6 +28,25 @@ const DISPUTED_TYPES = new Set(['Disputed', 'Indeterminate']);
 // TYPE values (trimmed) to exclude entirely from the base files
 const EXCLUDE_TYPES = new Set(['Lease']);
 
+// ISO alpha-2 assignments for territories Natural Earth ships without one
+// (ISO_A2 = -99). X-codes are from the ISO 3166 user-assigned range; every one
+// of these is flagged disputed=true so they stay out of default API responses.
+// Taiwan gets its real ISO code (Natural Earth carries China's POV, 'CN-TW').
+// Keep in sync with ISO_PATCHES in build-properties.js.
+const ISO2_OVERRIDES = {
+  TWN: 'TW',
+  ESB: 'XD', SOL: 'XS', BRI: 'XB', CYN: 'XC', CNM: 'XZ', KAS: 'XG',
+  WSB: 'XA', SPI: 'XF', BRT: 'XT', CLP: 'XL', CSI: 'XO', PGA: 'XP',
+  ATC: 'XH', BJN: 'XN', SER: 'XE', SCR: 'XR',
+};
+const FORCE_DISPUTED = Object.keys(ISO2_OVERRIDES).filter((k) => k !== 'TWN');
+
+// Object/array literals for use inside mapshaper -each "…" expressions —
+// single quotes only, since the expression itself is double-quoted.
+const iso2OverridesExpr = '{' + Object.entries(ISO2_OVERRIDES)
+  .map(([k, v]) => `${k}:'${v}'`).join(',') + '}';
+const forceDisputedExpr = '[' + FORCE_DISPUTED.map((k) => `'${k}'`).join(',') + ']';
+
 async function run(cmdStr) {
   return new Promise((resolve, reject) => {
     mapshaper.runCommands(cmdStr, (err) => (err ? reject(err) : resolve()));
@@ -61,7 +80,7 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
   await run(
     `-i ${inFile} ` +
     `-filter "!(${excludeList}) && ADM0_A3.trim() != 'FRA' && ADM0_A3.trim() != 'NOR' && ADM0_A3.trim() != 'NLD' && ADM0_A3.trim() != 'NZL' && ADM0_A3.trim() != 'IOA' && ADM0_A3.trim() != 'MAR' && ADM0_A3.trim() != 'SAH'" ` +
-    `-each "disputed = (${disputedList}); iso2 = (ADM0_A3.trim() == 'KOS' ? 'XK' : ISO_A2 == '-99' ? null : ISO_A2); gid = iso2 || ('x-' + ADM0_A3.trim()); cont = CONTINENT" ` +
+    `-each "disputed = (${disputedList}) || ${forceDisputedExpr}.indexOf(ADM0_A3.trim()) > -1; iso2 = ${iso2OverridesExpr}[ADM0_A3.trim()] || (ADM0_A3.trim() == 'KOS' ? 'XK' : ISO_A2 == '-99' ? null : ISO_A2); gid = iso2 || ('x-' + ADM0_A3.trim()); cont = CONTINENT" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
     `-o format=topojson ${tmpMain}`
   );

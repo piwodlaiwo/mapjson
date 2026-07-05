@@ -13,7 +13,7 @@ const ROOT     = __dirname;
 const EXAMPLES = path.join(ROOT, 'docs/examples');
 const INDEX    = path.join(EXAMPLES, 'index.html');
 const VALIDATE = path.join(ROOT, 'worker/src/validate.js');
-const DOCS     = path.join(ROOT, 'docs/docs.html');
+const DOCS     = path.join(ROOT, 'docs/docs/index.html');
 
 // Files intentionally not listed in index.html (drafts, color variants, internal tools)
 const UNLISTED_OK = /^(poland-v\d|validate-pipeline)/;

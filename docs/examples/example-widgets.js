@@ -157,7 +157,7 @@
   // ---- copy button on the Code section ----------------------------------
 
   for (const h2 of document.querySelectorAll("section h2")) {
-    if (h2.textContent.trim() !== "Code") continue;
+    if (!h2.textContent.trim().startsWith("Code")) continue;
     const pre = h2.parentElement.querySelector("pre");
     if (!pre) continue;
     h2.classList.add("mj-has-copy");

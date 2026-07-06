@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Build your Map — mapjson</title>
+  <link rel="canonical" href="https://mapjson.com/build/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/tabulator-tables@6.3.1/dist/css/tabulator_simple.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+  <script src="https://unpkg.com/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --ink: #2c2317; --bg: #f4efe8; --accent: #b22222; --muted: #7a6f64;
+            --border: #d8d0c5; --code-bg: #eae5de; }
+    html, body { height: 100%; }
+    body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Mono', monospace;
+           font-weight: 300; font-size: 13px; line-height: 1.6;
+           display: flex; flex-direction: column; }
+
+    .topnav { background: var(--bg); border-bottom: 1px solid var(--border);
+              display: flex; align-items: center; justify-content: space-between;
+              padding: 0 2rem; height: 48px; flex: none; }
+    .topnav .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink);
+                         text-decoration: none; letter-spacing: .04em; }
+    .topnav .nav-links { display: flex; gap: 2rem; }
+    .topnav .nav-links a { font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+                           color: var(--muted); text-decoration: none; }
+    .topnav .nav-links a:hover, .topnav .nav-links a.here { color: var(--ink); }
+
+    header { border-bottom: 1.5px solid var(--ink); padding: 1.25rem 2rem 1rem;
+             display: flex; flex-wrap: wrap; gap: 1rem; align-items: baseline; flex: none; }
+    header h1 { font-family: 'Playfair Display', serif; font-style: italic;
+                font-size: 1.6rem; font-weight: 400; }
+    header .tagline { color: var(--muted); letter-spacing: .14em;
+                      text-transform: uppercase; font-size: 10.5px; }
+    header #status { margin-left: auto; color: var(--muted); font-size: 11px; }
+    header #status.err { color: var(--accent); }
+
+    main { flex: 1; display: flex; min-height: 0; }
+    #map { flex: 1; min-width: 0; position: relative; background: #fbfaf7; }
+    #map svg { display: block; width: 100%; height: 100%; }
+    .tooltip { position: absolute; background: var(--ink); color: var(--bg);
+               font-size: 11px; padding: 5px 9px; pointer-events: none; opacity: 0;
+               white-space: nowrap; line-height: 1.6; z-index: 5; }
+    #legend { position: absolute; left: 1rem; bottom: 1rem; background: rgba(244,239,232,.92);
+              border: 1px solid var(--border); padding: .5rem .75rem; font-size: 11px;
+              color: var(--muted); display: none; align-items: center; gap: .5rem; }
+    #legend .ramp { width: 120px; height: 10px; border: 1px solid var(--border); }
+
+    aside { width: 21rem; border-left: 1px solid var(--border); padding: 1.25rem 1.5rem;
+            overflow-y: auto; background: #faf7f2; flex: none; }
+    aside h3 { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+               color: var(--muted); margin: 1.25rem 0 .5rem; font-weight: 500;
+               border-bottom: 1px solid var(--border); padding-bottom: .25rem; }
+    aside h3:first-child { margin-top: 0; }
+    aside label { display: flex; align-items: center; gap: .5rem; margin: .4rem 0;
+                  justify-content: space-between; }
+    aside label span { color: var(--muted); font-size: 12px; }
+    select, input[type=text] { font: inherit; font-size: 12px; background: #fff;
+                               border: 1px solid var(--border); padding: .3rem .45rem; width: 12.5rem; }
+    input:focus, select:focus { outline: 1.5px solid var(--ink); }
+    aside label.check { justify-content: flex-start; cursor: pointer; }
+    aside label.check span { color: var(--ink); }
+    button { font: inherit; font-size: 12px; background: var(--ink); color: var(--bg);
+             border: none; padding: .35rem .9rem; cursor: pointer; }
+    button:hover { background: var(--accent); }
+    button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--ink); }
+    button.ghost:hover { background: var(--code-bg); }
+    .filebtn { display: inline-block; border: 1px solid var(--ink); padding: .3rem .8rem;
+               cursor: pointer; font-size: 12px; }
+    .filebtn:hover { background: var(--code-bg); }
+    input[type=file] { display: none; }
+    .btnrow { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0; }
+    .hint { color: var(--muted); font-size: 11.5px; margin: .4rem 0; }
+    #apiurl { background: var(--code-bg); padding: .5rem .6rem; font-size: 10.5px;
+              line-height: 1.5; margin-top: .5rem; white-space: pre-wrap; word-break: break-all;
+              cursor: copy; }
+    #apiurl:hover { outline: 1px solid var(--border); }
+
+    #bottom { display: none; height: 42%; min-height: 220px; border-top: 1.5px solid var(--ink);
+              flex: none; flex-direction: column; background: #faf7f2; }
+    #bottom.open { display: flex; }
+    .tabs { display: flex; align-items: center; gap: 1rem; padding: .4rem 1rem;
+            border-bottom: 1px solid var(--border); flex: none; }
+    .tabs .tab { background: none; border: none; color: var(--muted); font-size: 11px;
+                 letter-spacing: .12em; text-transform: uppercase; padding: .2rem .2rem; }
+    .tabs .tab.here { color: var(--ink); border-bottom: 1.5px solid var(--accent); }
+    .tabs .tab:hover { color: var(--ink); background: none; }
+    .tabs .spacer { flex: 1; }
+    .tabs .x { background: none; border: none; color: var(--muted); font-size: 15px; padding: 0 .4rem; }
+    .tabs .x:hover { color: var(--ink); background: none; }
+    .pane { flex: 1; min-height: 0; overflow: auto; }
+    #snippet { padding: 1rem 1.25rem; font-size: 11.5px; line-height: 1.55;
+               font-family: 'IBM Plex Mono', monospace; }
+
+    /* Tabulator, dressed in parchment */
+    .tabulator { background: transparent; border: none; font: inherit; font-size: 12px; height: 100%; }
+    .tabulator .tabulator-header { background: #faf7f2; border-bottom: 1px solid var(--ink); }
+    .tabulator .tabulator-header .tabulator-col { background: #faf7f2; border-right: 1px solid var(--border); }
+    .tabulator .tabulator-header .tabulator-col-title { font-size: 10.5px; letter-spacing: .1em;
+                 text-transform: uppercase; color: var(--muted); font-weight: 500; }
+    .tabulator-row { background: transparent; border-bottom: 1px dotted var(--border); }
+    .tabulator-row.tabulator-row-even { background: rgba(255,255,255,.45); }
+    .tabulator-row .tabulator-cell { border-right: 1px solid transparent; }
+    .tabulator-row .tabulator-cell.tabulator-editing { border: 1px solid var(--accent); }
+    .tabulator-row .tabulator-cell.tabulator-editing input { font: inherit; }
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="nav-brand" href="https://mapjson.com">mapjson</a>
+  <div class="nav-links">
+    <a href="https://mapjson.com/docs/">Docs</a>
+    <a href="https://mapjson.com/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a class="here" href="/build/">Build</a>
+  </div>
+</nav>
+<header>
+  <h1>Build your Map</h1>
+  <div class="tagline">join your cleaned data to boundaries</div>
+  <span id="status"></span>
+</header>
+
+<main>
+  <div id="map">
+    <div class="tooltip" id="tooltip"></div>
+    <div id="legend"><span id="lmin"></span><span class="ramp" id="lramp"></span><span id="lmax"></span><span id="lcol"></span></div>
+  </div>
+  <aside>
+    <h3>Geo</h3>
+    <label><span>layer</span><select id="layer">
+      <option value="countries">countries</option>
+      <option value="regions">regions</option>
+      <option value="districts">districts</option>
+      <option value="postal">postal (US ZIPs)</option>
+    </select></label>
+    <label><span>filter</span><input type="text" id="filter" list="filterlist" placeholder="world"></label>
+    <datalist id="filterlist"></datalist>
+    <label><span>detail</span><select id="detail">
+      <option value="low">low</option>
+      <option value="medium" selected>medium</option>
+      <option value="high">high</option>
+    </select></label>
+    <pre id="apiurl" title="click to copy"></pre>
+
+    <h3>Data</h3>
+    <p class="hint">Optional — a CSV with a <code style="background:var(--code-bg)">gid</code> column
+      (from the <a href="/clean/">cleaner</a>) colors the map.</p>
+    <div class="btnrow">
+      <label class="filebtn">upload CSV<input type="file" id="file" accept=".csv,text/csv"></label>
+      <button id="sample" class="ghost">sample</button>
+      <button id="clear" class="ghost" style="display:none">clear</button>
+    </div>
+    <label id="vcwrap" style="display:none"><span>color by</span><select id="valuecol"></select></label>
+    <div class="btnrow" id="databtns" style="display:none">
+      <button id="editdata">edit data</button>
+      <button id="download" class="ghost">download CSV</button>
+    </div>
+    <p class="hint" id="datastatus"></p>
+
+    <h3>D3 options</h3>
+    <label><span>projection</span><select id="proj">
+      <option value="auto" selected>auto</option>
+      <option value="geoNaturalEarth1">Natural Earth</option>
+      <option value="geoEqualEarth">Equal Earth</option>
+      <option value="geoMercator">Mercator</option>
+      <option value="geoAlbersUsa">Albers USA</option>
+      <option value="geoOrthographic">Orthographic</option>
+    </select></label>
+    <label><span>colors</span><select id="ramp">
+      <option value="red" selected>mapjson red</option>
+      <option value="blues">blues</option>
+      <option value="greens">greens</option>
+      <option value="viridis">viridis</option>
+    </select></label>
+    <label class="check"><input type="checkbox" id="zoom" checked> <span>zoom &amp; pan</span></label>
+    <label class="check"><input type="checkbox" id="hover" checked> <span>hover tooltip</span></label>
+    <label class="check"><input type="checkbox" id="grat"> <span>graticule</span></label>
+
+    <h3>Output</h3>
+    <div class="btnrow"><button id="viewcode">view code</button></div>
+    <p class="hint">A complete standalone page reproducing this exact map — every option
+      above rewrites it live.</p>
+  </aside>
+</main>
+
+<div id="bottom">
+  <div class="tabs">
+    <button class="tab here" data-pane="grid">data</button>
+    <button class="tab" data-pane="codepane">code</button>
+    <span class="spacer"></span>
+    <button id="copycode" class="ghost" style="display:none">copy</button>
+    <button class="x" id="closebottom" title="close">&times;</button>
+  </div>
+  <div id="grid" class="pane"></div>
+  <div id="codepane" class="pane" style="display:none"><pre id="snippet"></pre></div>
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+
+// ---- state --------------------------------------------------------------
+
+const state = {
+  layer: "countries", filter: "", detail: "medium",
+  proj: "auto", ramp: "red", zoom: true, hover: true, grat: false,
+  rows: null, valueCol: null, parents: null,   // parents: multi-state postal handoff
+};
+
+const FILTER_SUGGESTIONS = {
+  countries: ["europe", "africa", "asia", "north-america", "south-america", "oceania"],
+  regions:   ["US", "DE", "FR", "PL", "GB", "IT", "ES", "CA", "BR", "IN", "AU", "JP"],
+  districts: ["US", "US-MA", "US-CA", "US-TX", "US-NY", "US-FL"],
+  postal:    ["US-MA", "US-CA", "US-TX", "US-NY", "US-FL", "US-WA"],
+};
+
+// Sample = what the cleaner hands you for a messy state file with a value column
+const SAMPLE = `state,unemployment,gid,matched_name,match_status,confidence,iso2,iso3,fips,postal
+Mass,2.9,US-MA,Massachusetts,resolved,0.99,,,25,MA
+Cali,5.2,US-CA,California,resolved,0.92,,,06,CA
+N.Y.,4.4,US-NY,New York,resolved,0.99,,,36,NY
+Tex.,4.0,US-TX,Texas,resolved,0.99,,,48,TX
+Fla.,3.3,US-FL,Florida,resolved,0.99,,,12,FL
+Ga.,3.6,US-GA,Georgia,resolved,0.99,,,13,GA
+Ill.,4.8,US-IL,Illinois,resolved,0.99,,,17,IL
+Wash.,4.6,US-WA,Washington,resolved,0.99,,,53,WA
+Colo.,3.9,US-CO,Colorado,resolved,0.99,,,08,CO
+Mich.,4.3,US-MI,Michigan,resolved,0.99,,,26,MI`;
+
+// ---- csv ----------------------------------------------------------------
+
+function parseCSV(text) {
+  const rows = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"' && text[i+1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i+1] === "\n") i++;
+      row.push(cell); cell = "";
+      if (row.some((v) => v.trim() !== "")) rows.push(row); row = [];
+    } else cell += c;
+  }
+  row.push(cell);
+  if (row.some((v) => v.trim() !== "")) rows.push(row);
+  const header = rows.shift();
+  return rows.map((r) => Object.fromEntries(header.map((h, i) => [h.trim(), (r[i] ?? "").trim()])));
+}
+
+const csvCell = (v) => { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+function toCSV(rows) {
+  const cols = Object.keys(rows[0]);
+  return [cols.join(","), ...rows.map((r) => cols.map((c) => csvCell(r[c])).join(","))].join("\n");
+}
+
+// Which geo call matches these gids?
+function inferGeo(rows) {
+  const gids = rows.map((r) => r.gid).filter(Boolean);
+  const isPostal = rows.filter((r) => r.layer === "postal").length > rows.length / 2;
+  if (isPostal) {
+    const parents = [...new Set(rows.map((r) => r.parent).filter(Boolean))].sort();
+    return { layer: "postal", filter: parents[0] || "US-MA", parents: parents.length > 1 ? parents : null };
+  }
+  if (gids.every((g) => /^\d{4,5}$/.test(g))) return { layer: "districts", filter: "US", parents: null };
+  const prefixed = gids.filter((g) => /^[A-Z]{2}-/.test(g));
+  if (prefixed.length >= gids.length / 2) {
+    const counts = {};
+    for (const g of prefixed) counts[g.slice(0, 2)] = (counts[g.slice(0, 2)] ?? 0) + 1;
+    const country = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+    return { layer: "regions", filter: country, parents: null };
+  }
+  return { layer: "countries", filter: "", parents: null };
+}
+
+// First column that's numeric in most rows and isn't one the cleaner appended
+const APPENDED = new Set(["gid", "matched_name", "match_status", "confidence", "layer", "parent", "iso2", "iso3", "fips", "postal", "zcta", "isoNum"]);
+function numericColumns(rows) {
+  return Object.keys(rows[0]).filter((c) => !APPENDED.has(c))
+    .filter((c) => rows.filter((r) => r[c] !== "" && !isNaN(Number(r[c]))).length > rows.length / 2);
+}
+
+// ---- geo url + fetch ----------------------------------------------------
+
+function geoURLs() {
+  if (state.parents) return state.parents.map((p) =>
+    `https://api.mapjson.com/v1/geo?layer=postal&filter=${p}&format=geojson`);
+  let u = `https://api.mapjson.com/v1/geo?layer=${state.layer}`;
+  if (state.filter) u += `&filter=${encodeURIComponent(state.filter)}`;
+  if (state.layer !== "districts") u += `&detail=${state.detail}`;   // districts ignore detail
+  if (state.layer === "countries") u += `&properties=name`;
+  return [u];
+}
+
+const fcCache = new Map();
+async function fetchGeo() {
+  const urls = geoURLs();
+  const key = urls.join("|");
+  if (fcCache.has(key)) return fcCache.get(key);
+  let fc;
+  if (state.parents) {
+    const fcs = await Promise.all(urls.map((u) => d3.json(u)));
+    fc = { type: "FeatureCollection", features: fcs.flatMap((f) => f.features) };
+  } else {
+    const topo = await d3.json(urls[0]);
+    if (topo.error) throw new Error(topo.error);
+    fc = topojson.feature(topo, topo.objects.geo);
+  }
+  fcCache.set(key, fc);
+  return fc;
+}
+
+// ---- color --------------------------------------------------------------
+
+const RAMPS = {
+  red:     (t) => d3.interpolateRgb("#f4efe8", "#b22222")(t),
+  blues:   d3.interpolateBlues,
+  greens:  d3.interpolateGreens,
+  viridis: d3.interpolateViridis,
+};
+
+// ---- render -------------------------------------------------------------
+
+function status(msg, err) { const s = $("status"); s.textContent = msg; s.className = err ? "err" : ""; }
+
+function currentProjName(fc) {
+  if (state.proj !== "auto") return state.proj;
+  if (state.layer === "postal") return "geoMercator";
+  if ((state.layer === "regions" || state.layer === "districts") && state.filter.startsWith("US") && !state.parents)
+    return "geoAlbersUsa";
+  return "geoNaturalEarth1";
+}
+
+let renderSeq = 0;
+async function render() {
+  const urls = geoURLs();
+  $("apiurl").textContent = urls.map((u) => "GET " + u).join("\n");
+  if (state.layer === "postal" && !state.filter && !state.parents)
+    return status("postal needs a state filter, e.g. US-MA", true);
+
+  const seq = ++renderSeq;
+  status("fetching boundaries…");
+  let fc;
+  try { fc = await fetchGeo(); }
+  catch (err) { return status(err.message, true); }
+  if (seq !== renderSeq) return;   // a newer render superseded this one
+
+  const rows = state.rows ? state.rows.filter((r) => r.gid) : null;
+  const value = rows && state.valueCol
+    ? new Map(rows.filter((r) => r[state.valueCol] !== "" && !isNaN(+r[state.valueCol]))
+                  .map((r) => [r.gid, +r[state.valueCol]]))
+    : null;
+
+  const box = $("map").getBoundingClientRect();
+  const W = Math.max(300, box.width), H = Math.max(300, box.height);
+  const projName = currentProjName(fc);
+  let projection = d3[projName]();
+  if (projName === "geoOrthographic") {
+    const c = d3.geoCentroid(fc);
+    projection.rotate([-c[0], -c[1]]);
+  }
+  projection.fitExtent([[16, 16], [W - 16, H - 16]], fc);
+  const path = d3.geoPath(projection);
+
+  const interp = RAMPS[state.ramp];
+  const [lo, hi] = value && value.size ? d3.extent([...value.values()]) : [0, 1];
+  const color = (v) => interp(hi === lo ? 0.5 : (v - lo) / (hi - lo));
+
+  d3.select("#map").selectAll("svg").remove();
+  const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
+  const g = svg.append("g");
+
+  if (state.grat && projName !== "geoAlbersUsa") {
+    g.append("path").datum({ type: "Sphere" }).attr("d", path)
+      .attr("fill", "none").attr("stroke", "#d8d0c5").attr("stroke-width", 0.8);
+    g.append("path").datum(d3.geoGraticule10()).attr("d", path)
+      .attr("fill", "none").attr("stroke", "#d8d0c5").attr("stroke-width", 0.4);
+  }
+
+  const feats = g.selectAll("path.feat")
+    .data(fc.features)
+    .join("path")
+      .attr("class", "feat")
+      .attr("d", path)
+      .attr("fill", (d) => value && value.has(d.properties.gid) ? color(value.get(d.properties.gid))
+                          : rows ? "#fbfaf7" : "#eae5de")
+      .attr("stroke", "#b8ad9e")
+      .attr("stroke-width", 0.5);
+
+  const tip = $("tooltip");
+  if (state.hover) {
+    feats.on("mousemove", (ev, d) => {
+        const p = d.properties, r = rows && rows.find((x) => x.gid === p.gid);
+        tip.innerHTML = `<b>${p.name || p.gid}</b> · ${p.gid}` +
+          (r && state.valueCol ? `<br>${state.valueCol}: ${r[state.valueCol]}` : "");
+        const m = $("map").getBoundingClientRect();
+        tip.style.left = Math.min(ev.clientX - m.left + 12, m.width - tip.offsetWidth - 8) + "px";
+        tip.style.top = (ev.clientY - m.top + 12) + "px";
+        tip.style.opacity = 1;
+      })
+      .on("mouseleave", () => (tip.style.opacity = 0));
+  } else tip.style.opacity = 0;
+
+  if (state.zoom) {
+    svg.call(d3.zoom().scaleExtent([1, 12]).on("zoom", (ev) => g.attr("transform", ev.transform)));
+  }
+
+  // legend
+  const leg = $("legend");
+  if (value && value.size) {
+    leg.style.display = "flex";
+    $("lramp").style.background = `linear-gradient(to right, ${d3.range(0, 1.01, 0.2).map((t) => interp(t)).join(",")})`;
+    $("lmin").textContent = lo; $("lmax").textContent = hi;
+    $("lcol").textContent = `“${state.valueCol}”`;
+  } else leg.style.display = "none";
+
+  status(rows
+    ? `${rows.length} rows joined onto ${fc.features.length} features`
+    : `${fc.features.length} features — one API call, no data yet`);
+
+  updateCode();
+}
+
+// ---- code snippet -------------------------------------------------------
+
+function genCode() {
+  const urls = geoURLs();
+  const projName = state.proj === "auto" ? currentProjName() : state.proj;
+  const hasData = !!state.rows;
+  const interpSrc = {
+    red: `t => d3.interpolateRgb("#f4efe8", "#b22222")(t)`,
+    blues: "d3.interpolateBlues", greens: "d3.interpolateGreens", viridis: "d3.interpolateViridis",
+  }[state.ramp];
+
+  const fetchSrc = state.parents
+    ? `const URLS = ${JSON.stringify(urls, null, 2).replace(/\n/g, "\n    ")};
+    const loads = [Promise.all(URLS.map(u => d3.json(u))).then(fcs =>
+      ({ type: "FeatureCollection", features: fcs.flatMap(f => f.features) }))${hasData ? `, d3.csv("cleaned.csv")` : ""}];
+    Promise.all(loads).then(([fc${hasData ? ", rows" : ""}]) => {`
+    : `const GEO = "${urls[0]}";
+    const loads = [d3.json(GEO)${hasData ? `, d3.csv("cleaned.csv")` : ""}];
+    Promise.all(loads).then(([topo${hasData ? ", rows" : ""}]) => {
+      const fc = topojson.feature(topo, topo.objects.geo);`;
+
+  const projSrc = projName === "geoOrthographic"
+    ? `const c = d3.geoCentroid(fc);
+      const projection = d3.geoOrthographic().rotate([-c[0], -c[1]])
+        .fitExtent([[16, 16], [width - 16, height - 16]], fc);`
+    : `const projection = d3.${projName}().fitExtent([[16, 16], [width - 16, height - 16]], fc);`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>My map</title>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"><\/script>
+  ${state.parents ? "" : `<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"><\/script>\n  `}<style>
+    body { margin: 0; background: #fff; }
+    svg { width: 100%; height: 100vh; display: block; }
+  </style>
+</head>
+<body>
+  <svg id="map"></svg>
+  <script>
+    ${hasData ? `// cleaned.csv is the download from mapjson.com/clean/, sitting next to this file\n    ` : ""}${fetchSrc}
+      const width = 960, height = 560;
+      const svg = d3.select("#map").attr("viewBox", \`0 0 \${width} \${height}\`);
+      const g = svg.append("g");
+
+      ${projSrc}
+      const path = d3.geoPath(projection);
+${hasData ? `
+      // the join: feature gid -> your value
+      const value = new Map(rows.map(r => [r.gid, +r["${state.valueCol || "value"}"]]));
+      const interp = ${interpSrc};
+      const [lo, hi] = d3.extent([...value.values()]);
+      const color = v => interp((v - lo) / (hi - lo));
+` : ""}${state.grat && projName !== "geoAlbersUsa" ? `
+      g.append("path").datum({ type: "Sphere" }).attr("d", path)
+        .attr("fill", "none").attr("stroke", "#ccc");
+      g.append("path").datum(d3.geoGraticule10()).attr("d", path)
+        .attr("fill", "none").attr("stroke", "#ccc").attr("stroke-width", 0.4);
+` : ""}
+      g.selectAll("path.feat")
+        .data(fc.features)
+        .join("path")
+          .attr("class", "feat")
+          .attr("d", path)
+          .attr("fill", d => ${hasData
+            ? `value.has(d.properties.gid) ? color(value.get(d.properties.gid)) : "#eee"`
+            : `"#e8e4dc"`})
+          .attr("stroke", "#999")
+          .attr("stroke-width", 0.5)${state.hover ? `
+        .append("title")
+          .text(d => d.properties.name || d.properties.gid)` : ""};
+${state.zoom ? `
+      svg.call(d3.zoom().scaleExtent([1, 12]).on("zoom", ev => g.attr("transform", ev.transform)));
+` : ""}    });
+  <\/script>
+</body>
+</html>`;
+}
+
+function updateCode() { $("snippet").textContent = genCode(); }
+
+// ---- data grid ----------------------------------------------------------
+
+let table = null;
+function openBottom(pane) {
+  $("bottom").classList.add("open");
+  document.querySelectorAll(".tabs .tab").forEach((t) => t.classList.toggle("here", t.dataset.pane === pane));
+  $("grid").style.display = pane === "grid" ? "" : "none";
+  $("codepane").style.display = pane === "codepane" ? "" : "none";
+  $("copycode").style.display = pane === "codepane" ? "" : "none";
+  if (pane === "grid") buildTable();
+  render();   // map area resized
+}
+function buildTable() {
+  if (!state.rows) return;
+  if (table) { table.destroy(); table = null; }
+  table = new Tabulator("#grid", {
+    data: state.rows,
+    layout: "fitDataFill",
+    columns: Object.keys(state.rows[0]).map((c) => ({ title: c, field: c, editor: "input" })),
+  });
+  table.on("cellEdited", () => { state.rows = table.getData(); render(); });
+}
+
+// ---- data loading -------------------------------------------------------
+
+function loadRows(rows, { geo } = {}) {
+  if (!rows || !rows.length) return status("empty CSV", true);
+  if (!rows.some((r) => r.gid)) return status("no gid column — run your keys through the cleaner first", true);
+  state.rows = rows;
+  const g = geo || inferGeo(rows);
+  state.layer = g.layer; state.filter = g.filter; state.parents = g.parents || null;
+  $("layer").value = state.layer; $("filter").value = state.filter;
+  syncFilterSuggestions();
+
+  const numeric = numericColumns(rows);
+  state.valueCol = numeric[0] || null;
+  const vc = $("valuecol");
+  vc.innerHTML = "";
+  for (const c of numeric) { const o = document.createElement("option"); o.value = o.textContent = c; vc.appendChild(o); }
+  $("vcwrap").style.display = numeric.length ? "flex" : "none";
+  $("databtns").style.display = "flex";
+  $("clear").style.display = "";
+  $("datastatus").textContent = `${rows.length} rows · ${Object.keys(rows[0]).length} columns`;
+  if (table) buildTable();
+  render();
+}
+
+function clearRows() {
+  state.rows = null; state.valueCol = null; state.parents = null;
+  if (table) { table.destroy(); table = null; }
+  $("vcwrap").style.display = "none";
+  $("databtns").style.display = "none";
+  $("clear").style.display = "none";
+  $("datastatus").textContent = "";
+  $("bottom").classList.remove("open");
+  render();
+}
+
+// ---- controls -----------------------------------------------------------
+
+function syncFilterSuggestions() {
+  const dl = $("filterlist");
+  dl.innerHTML = "";
+  for (const v of FILTER_SUGGESTIONS[state.layer]) {
+    const o = document.createElement("option"); o.value = v; dl.appendChild(o);
+  }
+  $("filter").placeholder = state.layer === "countries" ? "world" :
+    state.layer === "postal" ? "US-MA (required)" : "e.g. " + FILTER_SUGGESTIONS[state.layer][0];
+}
+
+$("layer").addEventListener("change", (e) => {
+  state.layer = e.target.value; state.parents = null;
+  state.filter = state.layer === "countries" ? "" :
+    state.layer === "postal" ? "US-MA" : "US";
+  $("filter").value = state.filter;
+  syncFilterSuggestions();
+  render();
+});
+$("filter").addEventListener("change", (e) => { state.filter = e.target.value.trim(); state.parents = null; render(); });
+$("detail").addEventListener("change", (e) => { state.detail = e.target.value; render(); });
+$("proj").addEventListener("change", (e) => { state.proj = e.target.value; render(); });
+$("ramp").addEventListener("change", (e) => { state.ramp = e.target.value; render(); });
+for (const id of ["zoom", "hover", "grat"])
+  $(id).addEventListener("change", (e) => { state[id] = e.target.checked; render(); });
+$("valuecol").addEventListener("change", (e) => { state.valueCol = e.target.value; render(); });
+
+$("sample").addEventListener("click", () => loadRows(parseCSV(SAMPLE)));
+$("clear").addEventListener("click", clearRows);
+$("file").addEventListener("change", async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  loadRows(parseCSV(await f.text()));
+  e.target.value = "";
+});
+$("editdata").addEventListener("click", () => openBottom("grid"));
+$("viewcode").addEventListener("click", () => openBottom("codepane"));
+$("closebottom").addEventListener("click", () => { $("bottom").classList.remove("open"); render(); });
+document.querySelectorAll(".tabs .tab").forEach((t) =>
+  t.addEventListener("click", () => openBottom(t.dataset.pane)));
+$("copycode").addEventListener("click", async () => {
+  await navigator.clipboard.writeText($("snippet").textContent);
+  $("copycode").textContent = "copied ✓";
+  setTimeout(() => ($("copycode").textContent = "copy"), 1500);
+});
+$("download").addEventListener("click", () => {
+  if (!state.rows) return;
+  const blob = new Blob([toCSV(state.rows)], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "cleaned.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+$("apiurl").addEventListener("click", async () => {
+  await navigator.clipboard.writeText(geoURLs().join("\n"));
+  status("API URL copied");
+});
+window.addEventListener("resize", () => render());
+
+// ---- boot: cleaner handoff or blank world -------------------------------
+
+syncFilterSuggestions();
+const handoff = localStorage.getItem("mapjson-build");
+if (handoff) {
+  localStorage.removeItem("mapjson-build");
+  try {
+    const { csv, consensus } = JSON.parse(handoff);
+    const rows = parseCSV(csv);
+    let geo = null;
+    if (consensus && consensus.layer) {
+      geo = inferGeo(rows);   // gets postal parents right; consensus refines layer/filter
+      if (consensus.layer !== "postal") geo = { layer: consensus.layer, filter: consensus.country || geo.filter, parents: null };
+    }
+    loadRows(rows, { geo });
+  } catch { render(); }
+} else {
+  render();
+}
+</script>
+</body>
+</html>

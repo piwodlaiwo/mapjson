@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>mapjson keys — explorer</title>
+  <link rel="canonical" href="https://mapjson.com/explorer/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #2c2317; --bg: #f4efe8; --accent: #b22222; --muted: #7a6f64;
+      --border: #d8d0c5; --code-bg: #eae5de;
+      --countries: #b22222; --regions: #3d6b35; --districts: #8a6d1a;
+    }
+    html, body { height: 100%; }
+    body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Mono', monospace;
+           font-weight: 300; font-size: 13px; line-height: 1.6; display: flex; flex-direction: column; }
+
+    .topnav { background: var(--bg); border-bottom: 1px solid var(--border);
+              display: flex; align-items: center; justify-content: space-between;
+              padding: 0 2rem; height: 48px; flex: none; }
+    .topnav .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink);
+                         text-decoration: none; letter-spacing: .04em; }
+    .topnav .nav-links { display: flex; gap: 2rem; }
+    .topnav .nav-links a { font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+                           color: var(--muted); text-decoration: none; }
+    .topnav .nav-links a:hover, .topnav .nav-links a.here { color: var(--ink); }
+
+    header { border-bottom: 1.5px solid var(--ink); padding: 1.25rem 2rem 1rem;
+             display: flex; flex-wrap: wrap; gap: 1rem; align-items: baseline; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 400; }
+    header h1 em { font-style: italic; }
+    header h1 a { color: inherit; text-decoration: none; }
+
+    .bar { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center;
+           padding: .75rem 2rem; border-bottom: 1px solid var(--border); }
+    input[type=text], select { font: inherit; background: #fff; border: 1px solid var(--border);
+                               padding: .35rem .6rem; }
+    input[type=text] { width: 16rem; }
+    input:focus, select:focus { outline: 1.5px solid var(--ink); }
+    button { font: inherit; background: var(--ink); color: var(--bg); border: none;
+             padding: .4rem 1rem; cursor: pointer; }
+    button:hover { background: var(--accent); }
+    .legend { display: flex; gap: 1rem; margin-left: auto; font-size: 11px; color: var(--muted); }
+    .legend span::before { content: "●"; margin-right: .3rem; }
+    .legend .lc::before { color: var(--countries); } .legend .lr::before { color: var(--regions); }
+    .legend .ld::before { color: var(--districts); } .legend .la::before { content: "◦"; }
+    .legend .li::before { content: "▪"; }
+    #note { color: var(--muted); font-size: 11px; }
+    #error { color: var(--accent); font-size: 12px; }
+
+    main { flex: 1; display: flex; min-height: 0; }
+    #cy { flex: 1; min-width: 0; }
+    aside { width: 21rem; border-left: 1px solid var(--border); padding: 1.25rem 1.5rem;
+            overflow-y: auto; background: #faf7f2; }
+    aside h2 { font-family: 'Playfair Display', serif; font-weight: 600; font-size: 1.15rem; }
+    aside .gid { display: inline-block; background: var(--ink); color: var(--bg);
+                 padding: .1rem .5rem; margin: .35rem 0 .75rem; }
+    aside h3 { font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+               color: var(--muted); margin: 1.1rem 0 .35rem; font-weight: 500; }
+    aside ul { list-style: none; }
+    aside li { padding: .1rem 0; border-bottom: 1px dotted var(--border); }
+    aside li .src { color: var(--muted); font-size: 11px; float: right; }
+    aside li .src.curated { color: var(--regions); }
+    aside .hint { color: var(--muted); font-size: 11.5px; margin-top: 1.25rem; }
+    code { background: var(--code-bg); padding: .05rem .3rem; }
+  </style>
+</head>
+<body>
+  <nav class="topnav">
+    <a class="nav-brand" href="https://mapjson.com">mapjson</a>
+    <div class="nav-links">
+      <a href="https://mapjson.com/docs/">Docs</a>
+      <a href="https://mapjson.com/examples/">Examples</a>
+      <a href="/clean/">Clean</a>
+      <a class="here" href="/explorer/">Explore</a>
+      <a href="/build/">Build</a>
+    </div>
+  </nav>
+  <header>
+    <h1><a href="https://mapjson.com">mapjson</a> <em>keys</em> — explorer</h1>
+  </header>
+
+  <div class="bar">
+    <input type="text" id="q" placeholder="Mass, Georgia, DE-BY, 25025…" autofocus>
+    <select id="depth"><option value="1">depth 1</option><option value="2">depth 2</option></select>
+    <button id="go">Explore</button>
+    <span id="note"></span>
+    <span id="error"></span>
+    <span class="legend">
+      <span class="lc">country</span><span class="lr">region</span><span class="ld">district</span>
+      <span class="la">alias</span><span class="li">code</span>
+    </span>
+  </div>
+
+  <main>
+    <div id="cy"></div>
+    <aside id="panel">
+      <h2>Explore the keys</h2>
+      <p class="hint">Search any messy key — the search box runs the resolver itself, so
+        <code>Mass</code>, <code>Ga.</code> or a FIPS code all work. Click any entity node to
+        refocus. Dashed links are shared names/codes: that's where the ambiguity lives —
+        <code>MA</code> belongs to Massachusetts <em>and</em> Morocco, and the resolver's job is
+        picking the right one from batch context.</p>
+    </aside>
+  </main>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+const LAYER_COLOR = { countries: "#b22222", regions: "#3d6b35", districts: "#8a6d1a" };
+
+const cy = cytoscape({
+  container: $("cy"),
+  wheelSensitivity: 0.2,
+  style: [
+    { selector: 'node[kind="entity"]', style: {
+        "background-color": (n) => LAYER_COLOR[n.data("layer")] || "#7a6f64",
+        label: "data(label)", "font-family": "IBM Plex Mono, monospace", "font-size": 9,
+        color: "#2c2317", width: 18, height: 18,
+        "text-valign": "bottom", "text-margin-y": 3,
+    }},
+    { selector: 'node[role="focus"]', style: {
+        width: 30, height: 30, "border-width": 2.5, "border-color": "#2c2317",
+        "font-size": 11, "font-weight": 500,
+    }},
+    { selector: 'node[role="co-claimant"]', style: { "border-width": 1.5, "border-color": "#b22222", "border-style": "dashed" }},
+    { selector: 'node[kind="alias"]', style: {
+        "background-color": "#faf7f2", "border-width": 1, "border-color": "#7a6f64",
+        label: "data(label)", "font-family": "IBM Plex Mono, monospace", "font-size": 8.5,
+        color: "#7a6f64", width: 10, height: 10, "text-valign": "bottom", "text-margin-y": 2,
+    }},
+    { selector: 'node[kind="identifier"]', style: {
+        shape: "rectangle", "background-color": "#eae5de", "border-width": 1,
+        "border-color": "#7a6f64", label: "data(label)",
+        "font-family": "IBM Plex Mono, monospace", "font-size": 8.5, color: "#7a6f64",
+        width: 10, height: 10, "text-valign": "bottom", "text-margin-y": 2,
+    }},
+    { selector: 'node[?shared]', style: { "border-color": "#b22222", color: "#b22222" }},
+    { selector: "edge", style: { width: 1, "line-color": "#c9bfb1", "curve-style": "haystack" }},
+    { selector: 'edge[type="contains"]', style: {
+        width: 1.5, "line-color": "#a89c8e", "curve-style": "bezier",
+        "target-arrow-shape": "triangle", "target-arrow-color": "#a89c8e", "arrow-scale": 0.7,
+    }},
+    { selector: 'edge[type^="alias"]', style: { "line-style": "dashed" }},
+    { selector: 'edge[type^="code"]', style: { "line-style": "dotted" }},
+    { selector: 'edge[type$="shared"]', style: { "line-color": "#b22222", "line-style": "dashed" }},
+  ],
+});
+
+cy.on("tap", 'node[kind="entity"]', (ev) => load(ev.target.id()));
+
+async function load(gid) {
+  $("error").textContent = "";
+  try {
+    const depth = $("depth").value;
+    const [graph, entity] = await Promise.all([
+      fetch(`https://keys.mapjson.com/v1/entities/${encodeURIComponent(gid)}/graph?depth=${depth}`).then((r) => r.json()),
+      fetch(`https://keys.mapjson.com/v1/entities/${encodeURIComponent(gid)}`).then((r) => r.json()),
+    ]);
+    if (graph.error) return ($("error").textContent = graph.error);
+
+    cy.elements().remove();
+    cy.add([...graph.elements.nodes, ...graph.elements.edges]);
+    cy.layout({ name: "cose", animate: false, padding: 40, nodeRepulsion: 9000 }).run();
+    $("note").textContent =
+      `${graph.elements.nodes.length} nodes` + (graph.truncated ? " (truncated — refocus a child to go deeper)" : "");
+    renderPanel(entity);
+    history.replaceState(null, "", "#" + encodeURIComponent(gid));
+  } catch (err) {
+    $("error").textContent = "load failed: " + err.message;
+  }
+}
+
+function renderPanel(e) {
+  const idents = (e.identifiers || [])
+    .map((i) => `<li>${esc(i.value)}<span class="src">${esc(i.scheme)}</span></li>`).join("");
+  const names = (e.names || [])
+    .map((n) => `<li>${esc(n.name)}<span class="src ${esc(n.source)}">${esc(n.type)} · ${esc(n.source)}</span></li>`).join("");
+  const cross = ["iso2", "iso3", "isoNum", "fips", "fipsState", "postal"]
+    .filter((k) => e[k] != null).map((k) => `<li>${k}: <code>${esc(e[k])}</code></li>`).join("");
+  $("panel").innerHTML =
+    `<h2>${esc(e.name)}</h2><span class="gid">${esc(e.gid)}</span>` +
+    `<div>${esc(e.layer)}${e.parent ? ` · in <a href="#" onclick="load('${esc(e.parent)}');return false">${esc(e.parent)}</a>` : ""}</div>` +
+    (cross ? `<h3>crosswalk</h3><ul>${cross}</ul>` : "") +
+    `<h3>names &amp; aliases</h3><ul>${names || "<li>—</li>"}</ul>` +
+    `<h3>codes</h3><ul>${idents || "<li>—</li>"}</ul>` +
+    `<p class="hint">Aliases marked <span style="color:var(--regions)">curated</span> came from the
+      feedback flywheel or hand curation; red-dashed neighbors share a name or code with this
+      entity and are exactly what batch consensus disambiguates.</p>`;
+}
+
+async function search() {
+  const q = $("q").value.trim();
+  if (!q) return;
+  $("error").textContent = "";
+  try {
+    const res = await fetch("https://keys.mapjson.com/v1/resolve", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ keys: [q] }),
+    });
+    const data = await res.json();
+    const r = data.results[0];
+    if (!r.gid) return ($("error").textContent = `no match for "${q}"`);
+    load(r.entityId || r.gid); // postal entities are namespaced internally (US-02139)
+  } catch (err) {
+    $("error").textContent = "search failed: " + err.message;
+  }
+}
+$("go").addEventListener("click", search);
+$("q").addEventListener("keydown", (e) => { if (e.key === "Enter") search(); });
+
+// Deep link (#US-RI) or a nicely ambiguous default
+load(decodeURIComponent(location.hash.slice(1)) || "US-RI");
+</script>
+</body>
+</html>

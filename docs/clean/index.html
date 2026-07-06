@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Clean Keys — mapjson</title>
+  <link rel="canonical" href="https://mapjson.com/clean/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #2c2317; --bg: #f4efe8; --accent: #b22222; --muted: #7a6f64;
+      --border: #d8d0c5; --code-bg: #eae5de;
+      --ok: #3d6b35; --ok-bg: #e6ecdd; --warn: #8a6d1a; --warn-bg: #f1e9d2;
+      --bad: #a03024; --bad-bg: #f0ddd8;
+    }
+    body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Mono', monospace;
+           font-weight: 300; font-size: 13px; line-height: 1.7; }
+    .page { max-width: 980px; margin: 0 auto; padding: 0 2rem 6rem; }
+
+    header { border-bottom: 1.5px solid var(--ink); padding: 3rem 0 1.5rem; margin-bottom: 2.5rem; }
+    header h1 { font-family: 'Playfair Display', serif; font-style: italic; font-size: 3rem;
+                font-weight: 400; line-height: 1; }
+    header h1 a { color: inherit; text-decoration: none; }
+    header .tagline { margin-top: .5rem; color: var(--muted); letter-spacing: .18em;
+                      text-transform: uppercase; font-size: 11px; }
+    header .base-url { margin-top: 1.25rem; display: inline-block; background: var(--ink);
+                       color: var(--bg); padding: .4rem .75rem; letter-spacing: .04em; }
+
+    section { margin-bottom: 2.5rem; }
+    h2 { font-family: 'Playfair Display', serif; font-weight: 600; font-size: 1.25rem;
+         margin-bottom: 1rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+    p.help { color: var(--muted); margin-bottom: .75rem; }
+    a { color: var(--accent); }
+
+    textarea { width: 100%; height: 10rem; background: #fff; border: 1px solid var(--border);
+               font: inherit; padding: .75rem; resize: vertical; }
+    textarea:focus, select:focus, input:focus { outline: 1.5px solid var(--ink); }
+    .controls { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-top: .75rem; }
+    select, input[type=text] { font: inherit; background: #fff; border: 1px solid var(--border);
+                               padding: .35rem .5rem; }
+    button { font: inherit; font-weight: 400; background: var(--ink); color: var(--bg);
+             border: none; padding: .5rem 1.1rem; cursor: pointer; letter-spacing: .04em; }
+    button:hover { background: var(--accent); }
+    button.small { padding: .2rem .6rem; font-size: 12px; }
+    button:disabled { opacity: .4; cursor: default; }
+    .filebtn { display: inline-block; border: 1px solid var(--ink); padding: .45rem 1rem;
+               cursor: pointer; }
+    .filebtn:hover { background: var(--code-bg); }
+    input[type=file] { display: none; }
+
+    .pills { display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .pill { padding: .15rem .7rem; border: 1px solid var(--border); background: #fff; }
+    .pill b { font-weight: 500; }
+    .pill.ok { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); }
+    .pill.warn { background: var(--warn-bg); color: var(--warn); border-color: var(--warn); }
+    .pill.bad { background: var(--bad-bg); color: var(--bad); border-color: var(--bad); }
+
+    .tablewrap { overflow-x: auto; background: #fff; border: 1px solid var(--border); }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { text-align: left; padding: .45rem .75rem; border-bottom: 1px solid var(--border);
+             white-space: nowrap; }
+    th { font-weight: 500; text-transform: uppercase; font-size: 10.5px; letter-spacing: .12em;
+         color: var(--muted); }
+    tr.ok td:first-child { box-shadow: inset 3px 0 0 var(--ok); }
+    tr.warn td:first-child { box-shadow: inset 3px 0 0 var(--warn); }
+    tr.bad td:first-child { box-shadow: inset 3px 0 0 var(--bad); }
+    td .status { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+    tr.ok .status { color: var(--ok); } tr.warn .status { color: var(--warn); }
+    tr.bad .status { color: var(--bad); }
+    td select { max-width: 22rem; }
+    .fixed { color: var(--ok); font-size: 11px; letter-spacing: .06em; }
+
+    code, .mono { background: var(--code-bg); padding: .1rem .35rem; }
+    #error { color: var(--bad); margin-top: .75rem; display: none; }
+
+    .topnav { position: sticky; top: 0; z-index: 100; background: var(--bg);
+              border-bottom: 1px solid var(--border); display: flex; align-items: center;
+              justify-content: space-between; padding: 0 2rem; height: 48px; }
+    .topnav .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink);
+                         text-decoration: none; letter-spacing: .04em; }
+    .topnav .nav-links { display: flex; gap: 2rem; }
+    .topnav .nav-links a { font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+                           color: var(--muted); text-decoration: none; }
+    .topnav .nav-links a:hover, .topnav .nav-links a.here { color: var(--ink); }
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="nav-brand" href="https://mapjson.com">mapjson</a>
+  <div class="nav-links">
+    <a href="https://mapjson.com/docs/">Docs</a>
+    <a href="https://mapjson.com/examples/">Examples</a>
+    <a class="here" href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+<div class="page">
+  <header>
+    <h1>Clean Keys</h1>
+    <div class="tagline">clean messy geographic data with mapjson ontology</div>
+    <div class="base-url">POST keys.mapjson.com/v1/resolve</div>
+  </header>
+
+  <section>
+    <h2>1 &middot; Paste your keys</h2>
+    <p class="help">One key per line, or paste/upload a CSV — country names, state names,
+      postal codes, FIPS, ISO codes, misspellings welcome. Nothing is stored except
+      anonymous resolution outcomes that improve matching.</p>
+    <textarea id="input" placeholder="Mass&#10;Calif.&#10;N.Y.&#10;Georgia&#10;Texas&#10;Florida"></textarea>
+    <div class="controls">
+      <label class="filebtn">upload CSV<input type="file" id="file" accept=".csv,text/csv"></label>
+      <span id="colpick" style="display:none">key column:
+        <select id="column"></select></span>
+      <span>layer: <select id="layer">
+        <option value="">auto</option><option value="countries">countries</option>
+        <option value="regions">regions</option><option value="districts">districts</option>
+        <option value="postal">postal (US ZIPs)</option>
+      </select></span>
+      <span>country: <input type="text" id="country" size="4" maxlength="2" placeholder="—"></span>
+      <button id="go">Resolve</button>
+    </div>
+    <div id="error"></div>
+  </section>
+
+  <section id="results" style="display:none">
+    <h2>2 &middot; Review</h2>
+    <p class="help">Corrections you confirm here become aliases in the next index build.</p>
+    <div class="pills" id="pills"></div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>your key</th><th>status</th><th>conf</th><th>match</th>
+        <th>gid</th><th>codes</th><th>fix</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+  </section>
+
+  <section id="download" style="display:none">
+    <h2>3 &middot; Use it</h2>
+    <p class="help">The cleaned CSV appends <code>gid</code> (mapjson's join key), the canonical
+      name, and ISO/FIPS codes to your data. Boundary features from
+      <a href="https://mapjson.com/docs/">api.mapjson.com/v1/geo</a> carry the same
+      <code>gid</code>, so drawing a map is a dictionary lookup: feature gid &rarr; your value &rarr; a color.
+      <a href="/build/">The build page</a> does exactly that — drop this CSV on it and
+      watch it become a choropleth, code included.</p>
+    <div class="controls">
+      <button id="dl">Download cleaned CSV</button>
+      <a href="/build/" style="margin-left:.5rem">turn it into a map &rarr;</a>
+    </div>
+  </section>
+</div>
+
+<script>
+"use strict";
+const API = "https://keys.mapjson.com";
+const $ = (id) => document.getElementById(id);
+
+let table = null;   // {header: [...]|null, rows: [[...]], keyCol: int}
+let results = [];   // resolver results, parallel to table.rows
+
+// ---- input handling ---------------------------------------------------
+
+// Minimal CSV parser (quotes, commas, CRLF).
+function parseCSV(text) {
+  const rows = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+      else if (c === '"') q = false;
+      else cell += c;
+    } else if (c === '"') q = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell); cell = "";
+      if (row.some((v) => v.trim() !== "")) rows.push(row);
+      row = [];
+    } else cell += c;
+  }
+  row.push(cell);
+  if (row.some((v) => v.trim() !== "")) rows.push(row);
+  return rows;
+}
+
+function ingest(text) {
+  const rows = parseCSV(text);
+  if (rows.length === 0) return null;
+  const multi = rows.some((r) => r.length > 1);
+  if (!multi) return { header: null, rows: rows.map((r) => [r[0].trim()]), keyCol: 0 };
+  // Heuristic: first row is a header if no cell in it parses as a number
+  const hasHeader = rows[0].every((v) => v.trim() === "" || isNaN(Number(v)));
+  const header = hasHeader ? rows[0].map((v) => v.trim()) : rows[0].map((_, i) => "col" + (i + 1));
+  return { header, rows: hasHeader ? rows.slice(1) : rows, keyCol: 0 };
+}
+
+function showColumnPicker() {
+  const pick = $("colpick"), sel = $("column");
+  if (!table || !table.header) { pick.style.display = "none"; return; }
+  sel.innerHTML = "";
+  table.header.forEach((h, i) => {
+    const o = document.createElement("option");
+    o.value = i; o.textContent = h;
+    sel.appendChild(o);
+  });
+  // Default to a column whose name smells geographic
+  const guess = table.header.findIndex((h) => /state|country|region|county|geo|name|location|place/i.test(h));
+  sel.value = guess >= 0 ? guess : 0;
+  table.keyCol = Number(sel.value);
+  pick.style.display = "";
+}
+
+$("file").addEventListener("change", async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const text = await f.text();
+  $("input").value = text;
+  table = ingest(text);
+  showColumnPicker();
+});
+$("input").addEventListener("input", () => { table = null; $("colpick").style.display = "none"; });
+$("column").addEventListener("change", (e) => { if (table) table.keyCol = Number(e.target.value); });
+
+// ---- resolve ----------------------------------------------------------
+
+$("go").addEventListener("click", async () => {
+  $("error").style.display = "none";
+  if (!table) { table = ingest($("input").value); showColumnPicker(); }
+  if (!table || table.rows.length === 0) return fail("Nothing to resolve — paste some keys first.");
+  if (table.rows.length > 1000) return fail("Max 1,000 keys per request in v1.");
+
+  const keys = table.rows.map((r) => r[table.keyCol] ?? "");
+  const context = {};
+  if ($("layer").value) context.layer = $("layer").value;
+  const cc = $("country").value.trim();
+  if (cc) context.country = cc.toUpperCase();
+
+  $("go").disabled = true;
+  try {
+    const res = await fetch(API + "/v1/resolve", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ keys, context }),
+    });
+    const data = await res.json();
+    if (!res.ok) return fail(data.error || res.statusText);
+    results = data.results;
+    render(data);
+  } catch (err) {
+    fail("Request failed: " + err.message);
+  } finally {
+    $("go").disabled = false;
+  }
+});
+
+function fail(msg) { const e = $("error"); e.textContent = msg; e.style.display = "block"; $("go").disabled = false; }
+
+// ---- render -----------------------------------------------------------
+
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const codes = (r) => Object.entries(r.crosswalk || {}).map(([k, v]) => k + ":" + v).join(" ");
+
+let lastConsensus = null;
+
+function render(data) {
+  lastConsensus = data.consensus || null;
+  const pills = $("pills");
+  const c = data.counts;
+  pills.innerHTML =
+    `<span class="pill"><b>${results.length}</b> keys</span>` +
+    (c.resolved ? `<span class="pill ok"><b>${c.resolved}</b> resolved</span>` : "") +
+    ((c.ambiguous || c.low_confidence)
+      ? `<span class="pill warn"><b>${(c.ambiguous || 0) + (c.low_confidence || 0)}</b> to review</span>` : "") +
+    (c.miss ? `<span class="pill bad"><b>${c.miss}</b> unmatched</span>` : "") +
+    (data.consensus
+      ? `<span class="pill">batch looks like: <b>${esc(data.consensus.layer || "")}${data.consensus.country ? " · " + esc(data.consensus.country) : ""}</b></span>` : "");
+
+  const tbody = $("rows");
+  tbody.innerHTML = "";
+  results.forEach((r, i) => {
+    const tr = document.createElement("tr");
+    const cls = r.status === "resolved" ? "ok" : r.status === "miss" ? "bad" : "warn";
+    tr.className = cls;
+    tr.innerHTML =
+      `<td>${esc(r.key)}</td>` +
+      `<td><span class="status">${esc(r.status.replace("_", " "))}</span></td>` +
+      `<td>${r.confidence ? r.confidence.toFixed(2) : "—"}</td>` +
+      `<td>${r.name ? esc(r.name) : "—"}</td>` +
+      `<td>${r.gid ? `<span class="mono">${esc(r.gid)}</span>` : "—"}</td>` +
+      `<td>${esc(codes(r))}</td>` +
+      `<td></td>`;
+    tr.lastChild.appendChild(fixCell(r, i, tr));
+    tbody.appendChild(tr);
+  });
+
+  $("results").style.display = "";
+  $("download").style.display = "";
+  $("results").scrollIntoView({ behavior: "smooth" });
+}
+
+// The review cell: candidate picker for ambiguous/low-confidence, free-text gid for misses.
+function fixCell(r, i, tr) {
+  const wrap = document.createElement("span");
+  if (r.status === "resolved") return wrap;
+
+  const sel = document.createElement("select");
+  if (r.candidates) {
+    for (const c of r.candidates) {
+      const o = document.createElement("option");
+      o.value = c.gid;
+      o.textContent = `${c.name} (${c.gid}, ${c.layer}, ${c.confidence.toFixed(2)})`;
+      sel.appendChild(o);
+    }
+  } else {
+    sel.style.display = "none";
+  }
+  const input = document.createElement("input");
+  input.type = "text"; input.size = 8; input.placeholder = "gid";
+  if (r.candidates) input.style.display = "none";
+
+  const btn = document.createElement("button");
+  btn.className = "small"; btn.textContent = "confirm";
+  btn.addEventListener("click", async () => {
+    const gid = r.candidates ? sel.value : input.value.trim();
+    if (!gid) return;
+    btn.disabled = true;
+    try {
+      const res = await fetch(API + "/v1/feedback", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: r.key, wrong_gid: r.gid ?? null, correct_gid: gid }),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error); btn.disabled = false; return; }
+      // Apply the correction locally so the download reflects it
+      const chosen = (r.candidates || []).find((c) => c.gid === gid);
+      Object.assign(r, chosen || { gid }, { status: "resolved", corrected: true });
+      results[i] = r;
+      tr.className = "ok";
+      tr.children[1].innerHTML = '<span class="status">confirmed</span>';
+      tr.children[3].textContent = r.name || "";
+      tr.children[4].innerHTML = `<span class="mono">${esc(r.gid)}</span>`;
+      tr.children[5].textContent = codes(r);
+      wrap.innerHTML = '<span class="fixed">saved &#10003;</span>';
+    } catch (err) {
+      alert("feedback failed: " + err.message);
+      btn.disabled = false;
+    }
+  });
+
+  wrap.append(sel, input, btn);
+  return wrap;
+}
+
+// ---- download ---------------------------------------------------------
+
+const csvCell = (v) => {
+  v = v == null ? "" : String(v);
+  return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+};
+
+function buildCleanedCSV() {
+  const extra = ["gid", "matched_name", "match_status", "confidence", "layer", "parent", "iso2", "iso3", "fips", "postal", "zcta"];
+  const header = table.header
+    ? [...table.header, ...extra]
+    : ["key", ...extra];
+  const lines = [header.map(csvCell).join(",")];
+  table.rows.forEach((row, i) => {
+    const r = results[i] || {};
+    const x = r.crosswalk || {};
+    const cells = [
+      ...(table.header ? row : [row[0]]),
+      r.gid ?? "", r.name ?? "", r.corrected ? "confirmed" : r.status ?? "",
+      r.confidence ?? "", r.layer ?? "", r.parent ?? "",
+      x.iso2 ?? "", x.iso3 ?? "", x.fips ?? x.fipsState ?? "", x.postal ?? "", x.zcta ?? "",
+    ];
+    lines.push(cells.map(csvCell).join(","));
+  });
+  return lines.join("\n");
+}
+
+$("dl").addEventListener("click", () => {
+  const blob = new Blob([buildCleanedCSV()], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "cleaned.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// Hand cleaned rows straight to the build page — no download/re-upload loop.
+document.querySelectorAll('a[href="/build/"]').forEach((a) =>
+  a.addEventListener("click", () => {
+    if (!table || !results.length) return;   // nothing resolved yet: plain navigation
+    try {
+      localStorage.setItem("mapjson-build",
+        JSON.stringify({ csv: buildCleanedCSV(), consensus: lastConsensus }));
+    } catch { /* storage full/blocked — build falls back to upload */ }
+  }));
+</script>
+</body>
+</html>

@@ -8,3 +8,9 @@ binding = "GEO_BUCKET"
 bucket_name = "mapjson"
 
 # KV not needed — properties.json is served from R2 and cached in memory
+
+# The key-resolution API (resolve/feedback/entities) is the mapjson-ontology
+# worker, exposed through this worker so developers see one API host.
+[[services]]
+binding = "ONTOLOGY"
+service = "mapjson-ontology"

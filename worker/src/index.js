@@ -195,6 +195,15 @@ async function handleGeo(request, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const p = url.pathname;
+
+    // Key-resolution endpoints live in the separate mapjson-ontology worker,
+    // reached via service binding. Forwarded before the OPTIONS handler so
+    // preflight responses advertise POST (this worker's CORS is GET-only).
+    if (p === '/v1/resolve' || p === '/v1/feedback' || p === '/v1/health' ||
+        p.startsWith('/v1/entities/') || p.startsWith('/v1/curation/')) {
+      return env.ONTOLOGY.fetch(request);
+    }
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: CORS });

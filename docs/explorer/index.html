@@ -168,8 +168,8 @@ async function load(gid) {
   try {
     const depth = $("depth").value;
     const [graph, entity] = await Promise.all([
-      fetch(`https://keys.mapjson.com/v1/entities/${encodeURIComponent(gid)}/graph?depth=${depth}`).then((r) => r.json()),
-      fetch(`https://keys.mapjson.com/v1/entities/${encodeURIComponent(gid)}`).then((r) => r.json()),
+      fetch(`https://api.mapjson.com/v1/entities/${encodeURIComponent(gid)}/graph?depth=${depth}`).then((r) => r.json()),
+      fetch(`https://api.mapjson.com/v1/entities/${encodeURIComponent(gid)}`).then((r) => r.json()),
     ]);
     if (graph.error) return ($("error").textContent = graph.error);
 
@@ -208,7 +208,7 @@ async function search() {
   if (!q) return;
   $("error").textContent = "";
   try {
-    const res = await fetch("https://keys.mapjson.com/v1/resolve", {
+    const res = await fetch("https://api.mapjson.com/v1/resolve", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ keys: [q] }),
     });

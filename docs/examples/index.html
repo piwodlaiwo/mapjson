@@ -150,16 +150,6 @@
 
   <div class="grid">
 
-    <a class="card" href="country-area.html">
-      <div class="card-tag">countries · world · areakm2 · choropleth · Equal Earth</div>
-      <div class="card-title">Country Area</div>
-      <div class="card-desc">World countries colored by land area using the opt-in <code>areakm2</code> property. Log scale handles Russia-to-Monaco range. Demonstrates using <code>areakm2</code> as a denominator for density calculations.</div>
-      <div class="card-footer">
-        <span class="card-url">properties=name,areakm2</span>
-        <span class="card-arrow">→</span>
-      </div>
-    </a>
-
     <a class="card" href="world-countries.html">
       <div class="card-tag">countries · low detail · properties · hover · zoom</div>
       <div class="card-title">World Countries</div>
@@ -190,12 +180,12 @@
       </div>
     </a>
 
-    <a class="card" href="ma-zips.html">
-      <div class="card-tag">postal · US-MA · ZCTA · zip codes</div>
-      <div class="card-title">Massachusetts ZIP Areas</div>
-      <div class="card-desc">All 539 Massachusetts ZIP code areas from the new <code>postal</code> layer, colored by 3-digit prefix. Every feature's <code>gid</code> is the bare ZIP code — join your ZIP-keyed data with a dictionary lookup.</div>
+    <a class="card" href="caribbean.html">
+      <div class="card-tag">countries · medium detail · filter · properties</div>
+      <div class="card-title">Caribbean Islands</div>
+      <div class="card-desc">The Caribbean zoomed in at medium detail — each territory appears as its own polygon. Aruba, Martinique, Guadeloupe, Bonaire and others all hover correctly with their own ISO codes.</div>
       <div class="card-footer">
-        <span class="card-url">layer=postal&filter=US-MA</span>
+        <span class="card-url">filter=north-america · detail=medium</span>
         <span class="card-arrow">→</span>
       </div>
     </a>
@@ -210,32 +200,12 @@
       </div>
     </a>
 
-    <a class="card" href="disputed.html">
-      <div class="card-tag">countries · disputed territories</div>
-      <div class="card-title">Disputed Territories</div>
-      <div class="card-desc">World countries including disputed and partially-recognized territories — Kosovo, Western Sahara, Palestine, and others — highlighted separately.</div>
+    <a class="card" href="globe.html">
+      <div class="card-tag">countries · orthographic · graticule · interactive</div>
+      <div class="card-title">Globe</div>
+      <div class="card-desc">World countries on an orthographic (perspective) projection — the view from space. Land in sage green, ocean in slate blue, 30° graticule in white. Drag to rotate.</div>
       <div class="card-footer">
-        <span class="card-url">disputed=true</span>
-        <span class="card-arrow">→</span>
-      </div>
-    </a>
-
-    <a class="card" href="caribbean.html">
-      <div class="card-tag">countries · medium detail · filter · properties</div>
-      <div class="card-title">Caribbean Islands</div>
-      <div class="card-desc">The Caribbean zoomed in at medium detail — each territory appears as its own polygon. Aruba, Martinique, Guadeloupe, Bonaire and others all hover correctly with their own ISO codes.</div>
-      <div class="card-footer">
-        <span class="card-url">filter=north-america · detail=medium</span>
-        <span class="card-arrow">→</span>
-      </div>
-    </a>
-
-    <a class="card" href="poland.html">
-      <div class="card-tag">regions · high detail · filter · properties</div>
-      <div class="card-title">Poland Voivodeships</div>
-      <div class="card-desc">Poland's 16 first-level administrative divisions at high detail. Uses <code>fitSize</code> to auto-fit the projection to the returned geometry — the same pattern works for any country.</div>
-      <div class="card-footer">
-        <span class="card-url">layer=regions · filter=PL · detail=high</span>
+        <span class="card-url">layer=countries · geoOrthographic</span>
         <span class="card-arrow">→</span>
       </div>
     </a>
@@ -250,12 +220,42 @@
       </div>
     </a>
 
+    <a class="card" href="ma-zips.html">
+      <div class="card-tag">postal · US-MA · ZCTA · zip codes</div>
+      <div class="card-title">Massachusetts ZIP Areas</div>
+      <div class="card-desc">All 539 Massachusetts ZIP code areas from the new <code>postal</code> layer, colored by 3-digit prefix. Every feature's <code>gid</code> is the bare ZIP code — join your ZIP-keyed data with a dictionary lookup.</div>
+      <div class="card-footer">
+        <span class="card-url">layer=postal&filter=US-MA</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="card" href="poland.html">
+      <div class="card-tag">regions · high detail · filter · properties</div>
+      <div class="card-title">Poland Voivodeships</div>
+      <div class="card-desc">Poland's 16 first-level administrative divisions at high detail. Uses <code>fitSize</code> to auto-fit the projection to the returned geometry — the same pattern works for any country.</div>
+      <div class="card-footer">
+        <span class="card-url">layer=regions · filter=PL · detail=high</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
     <a class="card" href="aruba.html">
       <div class="card-tag">countries · high detail · iso filter</div>
       <div class="card-title">Aruba</div>
       <div class="card-desc">Aruba is 180 km² — invisible at standard resolutions. When <code>filter</code> is an ISO country code and <code>detail=high</code>, the API automatically serves a high-resolution file for small countries and territories.</div>
       <div class="card-footer">
         <span class="card-url">filter=AW · detail=high</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="card" href="country-area.html">
+      <div class="card-tag">countries · world · areakm2 · choropleth · Equal Earth</div>
+      <div class="card-title">Country Area</div>
+      <div class="card-desc">World countries colored by land area using the opt-in <code>areakm2</code> property. Log scale handles Russia-to-Monaco range. Demonstrates using <code>areakm2</code> as a denominator for density calculations.</div>
+      <div class="card-footer">
+        <span class="card-url">properties=name,areakm2</span>
         <span class="card-arrow">→</span>
       </div>
     </a>
@@ -270,22 +270,22 @@
       </div>
     </a>
 
+    <a class="card" href="disputed.html">
+      <div class="card-tag">countries · disputed territories</div>
+      <div class="card-title">Disputed Territories</div>
+      <div class="card-desc">World countries including disputed and partially-recognized territories — Kosovo, Western Sahara, Palestine, and others — highlighted separately.</div>
+      <div class="card-footer">
+        <span class="card-url">disputed=true</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
     <a class="card" href="massachusetts.html">
       <div class="card-tag">districts · region filter · topojson · choropleth</div>
       <div class="card-title">Massachusetts Counties</div>
       <div class="card-desc">14 counties fetched with <code>filter=US-MA</code> — only this state's districts, not all 3224 US counties. Population choropleth joined via 5-digit FIPS <code>gid</code> — the same code used by Census, BLS, and CDC data.</div>
       <div class="card-footer">
         <span class="card-url">layer=districts · filter=US-MA</span>
-        <span class="card-arrow">→</span>
-      </div>
-    </a>
-
-    <a class="card" href="globe.html">
-      <div class="card-tag">countries · orthographic · graticule · interactive</div>
-      <div class="card-title">Globe</div>
-      <div class="card-desc">World countries on an orthographic (perspective) projection — the view from space. Land in sage green, ocean in slate blue, 30° graticule in white. Drag to rotate.</div>
-      <div class="card-footer">
-        <span class="card-url">layer=countries · geoOrthographic</span>
         <span class="card-arrow">→</span>
       </div>
     </a>

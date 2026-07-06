@@ -32,7 +32,7 @@
     }
     .mj-menu a:hover { background: var(--code-bg, #eae5de); }
     .mj-copy {
-      float: right; margin-top: -2px;
+      float: right;
     }
     h2.mj-has-copy { overflow: hidden; }
   `;

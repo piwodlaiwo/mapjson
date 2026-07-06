@@ -101,9 +101,31 @@
       transition: opacity 0.1s;
       white-space: nowrap;
     }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 48px;
+    }
+    .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink); text-decoration: none; letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); }
   </style>
 </head>
 <body>
+
+<nav>
+  <a class="nav-brand" href="/">mapjson</a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="https://keys.mapjson.com/">Clean</a>
+    <a href="https://keys.mapjson.com/explorer">Explore</a>
+    <a href="https://keys.mapjson.com/build">Build</a>
+  </div>
+</nav>
 <div class="page">
 
   <a class="back-link" href="/examples/">← Examples</a>

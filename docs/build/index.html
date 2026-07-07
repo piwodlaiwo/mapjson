@@ -301,7 +301,7 @@ function geoURLs() {
     `https://api.mapjson.com/v1/geo?layer=postal&filter=${p}&format=geojson`);
   let u = `https://api.mapjson.com/v1/geo?layer=${state.layer}`;
   if (state.filter) u += `&filter=${encodeURIComponent(state.filter)}`;
-  if (state.layer !== "districts") u += `&detail=${state.detail}`;   // districts ignore detail
+  if (state.layer === "countries" || state.layer === "regions") u += `&detail=${state.detail}`;   // districts & postal ignore detail
   if (state.layer === "countries") u += `&properties=name`;
   return [u];
 }
@@ -550,6 +550,7 @@ function loadRows(rows, { geo } = {}) {
   state.layer = g.layer; state.filter = g.filter; state.parents = g.parents || null;
   $("layer").value = state.layer; $("filter").value = state.filter;
   syncFilterSuggestions();
+  syncDetailControl();
 
   const numeric = numericColumns(rows);
   state.valueCol = numeric[0] || null;
@@ -587,12 +588,29 @@ function syncFilterSuggestions() {
     state.layer === "postal" ? "US-MA (required)" : "e.g. " + FILTER_SUGGESTIONS[state.layer][0];
 }
 
+// districts and postal are served at a single resolution — lock the detail
+// control on those layers and restore the user's choice when they leave.
+let lastFreeDetail = "medium";
+function syncDetailControl() {
+  const locked = state.layer === "districts" || state.layer === "postal";
+  const sel = $("detail");
+  if (locked) {
+    if (!sel.disabled) lastFreeDetail = state.detail;
+    state.detail = "high"; sel.value = "high"; sel.disabled = true;
+    sel.title = "districts and postal come in one resolution — the API ignores detail";
+  } else if (sel.disabled) {
+    state.detail = lastFreeDetail; sel.value = lastFreeDetail; sel.disabled = false;
+    sel.title = "";
+  }
+}
+
 $("layer").addEventListener("change", (e) => {
   state.layer = e.target.value; state.parents = null;
   state.filter = state.layer === "countries" ? "" :
     state.layer === "postal" ? "US-MA" : "US";
   $("filter").value = state.filter;
   syncFilterSuggestions();
+  syncDetailControl();
   render();
 });
 $("filter").addEventListener("change", (e) => { state.filter = e.target.value.trim(); state.parents = null; render(); });

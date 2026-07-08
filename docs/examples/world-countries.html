@@ -16,16 +16,17 @@
   <link rel="apple-touch-icon" href="/icon-full.svg">
   <meta name="theme-color" content="#1a1a1a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --ink: #1a1a1a;
       --bg: #fafafa;
-      --accent: #b22222;
-      --muted: #9a988f;
-      --border: #e2e1dd;
-      --code-bg: #efefec;
+      --accent: #b0402f;
+      --muted: #9b9a94;
+      --border: #e5e4df;
+      --code-bg: #efeeea;
     }
     body {
       background: var(--bg);
@@ -58,15 +59,14 @@
       margin-bottom: 0.5rem;
     }
     header h1 {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
+      font-family: 'Space Grotesk', sans-serif;
       font-size: 2.25rem;
       font-weight: 400;
       line-height: 1.1;
     }
     header p { color: var(--muted); margin-top: 0.6rem; font-size: 12px; max-width: 640px; line-height: 1.7; }
     h2 {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Space Grotesk', sans-serif;
       font-weight: 600;
       font-size: 1.1rem;
       margin-bottom: 0.75rem;
@@ -120,6 +120,24 @@
     .nav-brand .pin { position: relative; display: inline-block; width: 12px; height: 12px; background: var(--ink, #1a1a1a); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
     .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 4.5px; height: 4.5px; background: var(--bg, #fafafa); border-radius: 50%; transform: translate(-50%, -50%); }
     .nav-brand .word { margin-left: 5px; }
+    /* type system: Space Grotesk display/body, IBM Plex Mono labels/params/code */
+    body { font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; }
+    .back-link, .tag, pre, code { font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; color: #a7a6a0; }
+    header p { font-size: 15px; line-height: 1.65; color: #4a4a45; max-width: 680px; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; }
+    section .note { font-size: 13px; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    /* type system: nav + lockup (TYPOGRAPHY.md) */
+    .nav-links a { font-size: 12px; letter-spacing: 0.18em; color: #9b9a94; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { gap: 4px; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; }
+    .nav-brand .pin { width: 14px; height: 14px; }
+    .nav-brand .pin i { width: 5px; height: 5px; }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
   </style>
 </head>
 <body>

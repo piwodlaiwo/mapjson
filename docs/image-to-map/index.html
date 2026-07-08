@@ -17,13 +17,14 @@
   <link rel="apple-touch-icon" href="/icon-full.svg">
   <meta name="theme-color" content="#1a1a1a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --ink: #1a1a1a; --bg: #fafafa; --accent: #b22222; --muted: #9a988f;
-            --border: #e2e1dd; --code-bg: #efefec; }
+    :root { --ink: #1a1a1a; --bg: #fafafa; --accent: #b0402f; --muted: #9b9a94;
+            --border: #e5e4df; --code-bg: #efeeea; }
     body { background: var(--bg); color: var(--ink); font-family: 'IBM Plex Mono', monospace;
            font-weight: 300; font-size: 13px; line-height: 1.7; }
     .page { max-width: 980px; margin: 0 auto; padding: 0 2rem 6rem; }
@@ -39,7 +40,7 @@
     .topnav .nav-links a:hover { color: var(--ink); }
 
     header { border-bottom: 1.5px solid var(--ink); padding: 3rem 0 1.5rem; margin-bottom: 2.5rem; }
-    header h1 { font-family: 'Playfair Display', serif; font-style: italic; font-size: 2.4rem;
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 2.4rem;
                 font-weight: 400; line-height: 1; }
     header .tagline { margin-top: .5rem; color: var(--muted); letter-spacing: .18em;
                       text-transform: uppercase; font-size: 11px; }
@@ -48,7 +49,7 @@
            vertical-align: middle; }
 
     section { margin-bottom: 2.5rem; }
-    h2 { font-family: 'Playfair Display', serif; font-weight: 600; font-size: 1.25rem;
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 1.25rem;
          margin-bottom: 1rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
     p.help { color: var(--muted); margin-bottom: .75rem; }
     a { color: var(--accent); }
@@ -103,6 +104,20 @@
     .nav-brand .pin { position: relative; display: inline-block; width: 12px; height: 12px; background: var(--ink, #1a1a1a); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
     .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 4.5px; height: 4.5px; background: var(--bg, #fafafa); border-radius: 50%; transform: translate(-50%, -50%); }
     .nav-brand .word { margin-left: 5px; }
+    /* type system: Space Grotesk headings/prose; the dense param UI stays IBM Plex Mono */
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 500; letter-spacing: -0.02em; }
+    h2, aside h2, aside h3 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; letter-spacing: -0.01em; }
+    header p, .help, .hint { font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: #4a4a45; }
+    header p code, .help code, .hint code { font-family: 'IBM Plex Mono', monospace; font-size: 0.9em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+    /* type system: nav + lockup (TYPOGRAPHY.md) */
+    .nav-links a { font-size: 12px; letter-spacing: 0.18em; color: #9b9a94; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { gap: 4px; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; }
+    .nav-brand .pin { width: 14px; height: 14px; }
+    .nav-brand .pin i { width: 5px; height: 5px; }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
   </style>
 </head>
 <body>
@@ -467,7 +482,7 @@ async function pngPipeline(file) {
     try {
       proj.fitSize([GRID, GRID], c.fc);
       const path = d3.geoPath(proj, cctx);
-      cctx.beginPath(); path(c.fc); cctx.fillStyle = "#9a988f"; cctx.fill();
+      cctx.beginPath(); path(c.fc); cctx.fillStyle = "#9b9a94"; cctx.fill();
     } catch {}
     div.appendChild(cv);
     div.insertAdjacentHTML("beforeend",
@@ -543,7 +558,7 @@ function drawResult(fc, colorByGid, projName) {
   const path = d3.geoPath(proj);
   svg.selectAll("path").data(fc.features).join("path")
     .attr("d", path)
-    .attr("fill", (d) => colorByGid[d.properties.gid] || "#efefec")
+    .attr("fill", (d) => colorByGid[d.properties.gid] || "#efeeea")
     .attr("stroke", "#b8ad9e").attr("stroke-width", 0.5)
     .append("title").text((d) => `${d.properties.name || d.properties.gid} · ${d.properties.gid}`);
   $("resultsec").style.display = "";

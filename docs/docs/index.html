@@ -16,17 +16,18 @@
   <link rel="apple-touch-icon" href="/icon-full.svg">
   <meta name="theme-color" content="#1a1a1a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --ink: #1a1a1a;
       --bg: #fafafa;
-      --accent: #b22222;
-      --muted: #9a988f;
-      --border: #e2e1dd;
-      --code-bg: #efefec;
+      --accent: #b0402f;
+      --muted: #9b9a94;
+      --border: #e5e4df;
+      --code-bg: #efeeea;
     }
 
     body {
@@ -48,8 +49,7 @@
       margin-bottom: 3rem;
     }
     header h1 {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
+      font-family: 'Space Grotesk', sans-serif;
       font-size: 3rem;
       font-weight: 400;
       letter-spacing: -0.01em;
@@ -75,7 +75,7 @@
     /* ── Sections ── */
     section { margin-bottom: 3.5rem; }
     h2 {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Space Grotesk', sans-serif;
       font-weight: 600;
       font-size: 1.25rem;
       margin-bottom: 1.25rem;
@@ -270,6 +270,22 @@
     .nav-brand .pin { position: relative; display: inline-block; width: 12px; height: 12px; background: var(--ink, #1a1a1a); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
     .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 4.5px; height: 4.5px; background: var(--bg, #fafafa); border-radius: 50%; transform: translate(-50%, -50%); }
     .nav-brand .word { margin-left: 5px; }
+    /* type system: Space Grotesk display/body, IBM Plex Mono labels/params/code */
+    body { font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 14px; }
+    pre, code, table, .endpoint, .base-url, .tagline, .opt, .example-label, .back-link { font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; letter-spacing: -0.03em; }
+    h2, h3 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; letter-spacing: -0.02em; }
+    section > p { color: #4a4a45; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    /* type system: nav + lockup (TYPOGRAPHY.md) */
+    .nav-links a { font-size: 12px; letter-spacing: 0.18em; color: #9b9a94; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { gap: 4px; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; }
+    .nav-brand .pin { width: 14px; height: 14px; }
+    .nav-brand .pin i { width: 5px; height: 5px; }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
   </style>
 </head>
 <body>
@@ -629,14 +645,14 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
       </div>
     </div>
 
-    <h3 style="font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; margin-bottom:0.75rem; margin-top:1.5rem;">Hierarchy</h3>
+    <h3 style="font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:600; margin-bottom:0.75rem; margin-top:1.5rem;">Hierarchy</h3>
     <p style="margin-bottom:1rem;">Features below the country level carry a <code>parent_gid</code> property that links upward through the hierarchy. You can traverse the full tree without downloading extra geometry.</p>
     <pre style="margin-bottom:1.5rem;">district  06037  (Los Angeles County)
   └─ region   US-CA  (California)
        └─ country  US  (United States)</pre>
     <p style="font-size:12px; color:var(--muted);">The <code>parent_gid</code> of a region is always a country ISO alpha-2. The <code>parent_gid</code> of a district is always the state's ISO 3166-2.</p>
 
-    <h3 style="font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; margin-bottom:0.75rem; margin-top:1.5rem;">Catalog endpoint</h3>
+    <h3 style="font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:600; margin-bottom:0.75rem; margin-top:1.5rem;">Catalog endpoint</h3>
     <p style="margin-bottom:0.75rem;">The catalog lists every <code>gid</code> in a layer with its name, parent, and all known external codes — useful for building lookup tables or crosswalks without downloading geometry.</p>
     <pre>GET /v1/catalog?layer=countries
 GET /v1/catalog?layer=regions&amp;filter=PL
@@ -653,7 +669,7 @@ GET /v1/catalog?layer=districts&amp;filter=US-MA</pre>
   "gid_source": "iso3166-2"
 }</pre>
 
-    <h3 style="font-family:'Playfair Display',serif; font-size:1rem; font-weight:600; margin-bottom:0.75rem; margin-top:1.5rem;">Joining to external data</h3>
+    <h3 style="font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:600; margin-bottom:0.75rem; margin-top:1.5rem;">Joining to external data</h3>
     <p style="font-size:12px; color:var(--muted); line-height:1.7;">The <code>gid</code> is chosen to match codes your data already uses. Census, CDC, BLS, and most US federal sources use 5-digit FIPS for counties — join on <code>gid</code> directly. For countries, ISO alpha-2 is the most widely used identifier in web APIs and statistical databases. For states and international regions, ISO 3166-2 is used by Eurostat, NUTS crosswalks, and most administrative data sources. Where a dataset uses a different code system, use the catalog to build a translation table.</p>
   </section>
 

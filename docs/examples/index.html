@@ -16,16 +16,17 @@
   <link rel="apple-touch-icon" href="/icon-full.svg">
   <meta name="theme-color" content="#1a1a1a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --ink: #1a1a1a;
       --bg: #fafafa;
-      --accent: #b22222;
-      --muted: #9a988f;
-      --border: #e2e1dd;
-      --code-bg: #efefec;
+      --accent: #b0402f;
+      --muted: #9b9a94;
+      --border: #e5e4df;
+      --code-bg: #efeeea;
     }
     body {
       background: var(--bg);
@@ -50,8 +51,7 @@
     }
     .site-link:hover { color: var(--ink); }
     header h1 {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
+      font-family: 'Space Grotesk', sans-serif;
       font-size: 2.5rem;
       font-weight: 400;
       margin-top: 0.75rem;
@@ -91,7 +91,7 @@
       margin-bottom: 0.75rem;
     }
     .card-title {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Space Grotesk', sans-serif;
       font-size: 1.15rem;
       font-weight: 400;
       margin-bottom: 0.6rem;
@@ -134,6 +134,29 @@
     .nav-brand .pin { position: relative; display: inline-block; width: 12px; height: 12px; background: var(--ink, #1a1a1a); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
     .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 4.5px; height: 4.5px; background: var(--bg, #fafafa); border-radius: 50%; transform: translate(-50%, -50%); }
     .nav-brand .word { margin-left: 5px; }
+    /* type system: Space Grotesk display/body, IBM Plex Mono labels/params (target: MapJSON Examples.dc.html) */
+    body { font-family: 'Space Grotesk', sans-serif; font-weight: 400; }
+    .page { max-width: 1100px; }
+    header { border-bottom: 2px solid var(--ink); }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 500; font-size: clamp(3rem, 6vw, 4rem); letter-spacing: -0.03em; line-height: 0.98; }
+    header p { font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.2em; color: #9b9a94; }
+    .card { padding: 40px 44px 34px; min-height: 280px; }
+    .card-tag { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.16em; color: #a7a6a0; }
+    .card-title { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.12; margin-top: 4px; }
+    .card-desc { font-size: 16px; line-height: 1.55; color: #4a4a45; }
+    .card-desc code { font-family: 'IBM Plex Mono', monospace; font-size: 14px; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; }
+    .card-footer { margin-top: 24px; align-items: center; }
+    .card-url { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #6a6962; }
+    .card-arrow { font-size: 18px; color: var(--accent); }
+    /* type system: nav + lockup (TYPOGRAPHY.md) */
+    .nav-links a { font-size: 12px; letter-spacing: 0.18em; color: #9b9a94; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { gap: 4px; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; }
+    .nav-brand .pin { width: 14px; height: 14px; }
+    .nav-brand .pin i { width: 5px; height: 5px; }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
   </style>
 </head>
 <body>

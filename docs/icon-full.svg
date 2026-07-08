@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="64" viewBox="0 0 120 64" font-family="&#39;JetBrains Mono&#39;, ui-monospace, monospace">
+  
+  <text x="6" y="46" font-size="62" font-weight="500" fill="#c8c6c0">{</text>
+  <g transform="translate(60 26)">
+    <path d="M0 -16c-8.8 0-16 7-16 15.7C-16 11.5 0 29 0 29s16-17.5 16-29.3C16 -9 8.8 -16 0 -16z" fill="#1a1a1a"></path>
+    <circle cx="0" cy="-0.3" r="5.9" fill="#fafafa"></circle>
+  </g>
+  <text x="86" y="46" font-size="62" font-weight="500" fill="#c8c6c0">}</text>
+</svg>

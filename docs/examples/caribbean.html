@@ -12,17 +12,20 @@
     gtag('js', new Date());
     gtag('config', 'G-V4HGN0GB4Z');
   </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --ink: #2c2317;
-      --bg: #f4efe8;
+      --ink: #1a1a1a;
+      --bg: #fafafa;
       --accent: #b22222;
-      --muted: #7a6f64;
-      --border: #d8d0c5;
-      --code-bg: #eae5de;
+      --muted: #9a988f;
+      --border: #e2e1dd;
+      --code-bg: #efefec;
     }
     body {
       background: var(--bg);
@@ -110,12 +113,17 @@
     .nav-links a { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
     .nav-links a:hover { color: var(--ink); }
     .nav-links a.here { color: var(--ink); }
+    .nav-brand { display: inline-flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink, #1a1a1a); text-decoration: none; }
+    .nav-brand .b { font-size: 19px; font-weight: 500; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 12px; height: 12px; background: var(--ink, #1a1a1a); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 4.5px; height: 4.5px; background: var(--bg, #fafafa); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 5px; }
   </style>
 </head>
 <body>
 
 <nav>
-  <a class="nav-brand" href="/">mapjson</a>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
   <div class="nav-links">
     <a href="/docs/">Docs</a>
     <a class="here" href="/examples/">Examples</a>

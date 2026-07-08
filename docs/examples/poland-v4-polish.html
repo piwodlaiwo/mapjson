@@ -4,11 +4,14 @@
   <meta charset="utf-8">
   <title>Poland — Variant 4: Polish Flag Colors</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --ink: #2c2317; --bg: #f4efe8; --muted: #7a6f64; --border: #d8d0c5; }
+    :root { --ink: #1a1a1a; --bg: #fafafa; --muted: #9a988f; --border: #e2e1dd; }
     body { background: #1a1218; color: var(--ink); font-family: 'IBM Plex Mono', monospace; font-weight: 300; font-size: 13px; }
     nav {
       position: sticky; top: 0; z-index: 100;
@@ -32,11 +35,16 @@
     .variants a.active { color: var(--ink); border-color: var(--ink); }
     .variants a:hover { color: var(--ink); }
     .map-wrap { line-height: 0; }
+    .nav-brand { display: inline-flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink, #1a1a1a); text-decoration: none; }
+    .nav-brand .b { font-size: 19px; font-weight: 500; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 12px; height: 12px; background: var(--ink, #1a1a1a); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 4.5px; height: 4.5px; background: var(--bg, #fafafa); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 5px; }
   </style>
 </head>
 <body>
 <nav>
-  <a class="nav-brand" href="/">mapjson</a>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
   <div class="nav-links">
     <a href="/docs/">Docs</a>
     <a class="here" href="/examples/">Examples</a>
@@ -100,7 +108,7 @@
       .style("font-family", "IBM Plex Mono, monospace")
       .style("font-size", "9px")
       .style("font-weight", "400")
-      .style("fill", (d, i) => shuffleIndex[i] > 9 ? "#fff" : "#2c2317")
+      .style("fill", (d, i) => shuffleIndex[i] > 9 ? "#fff" : "#1a1a1a")
       .style("stroke", (d, i) => shuffleIndex[i] > 9 ? "rgba(20,5,10,0.5)" : "rgba(252,232,232,0.85)")
       .style("stroke-width", "3px")
       .style("paint-order", "stroke fill")

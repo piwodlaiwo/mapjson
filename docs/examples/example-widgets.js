@@ -14,23 +14,23 @@
     .mj-btn {
       font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400;
       letter-spacing: 0.14em; text-transform: uppercase;
-      background: rgba(244, 239, 232, 0.92); color: var(--ink, #2c2317);
-      border: 1px solid var(--border, #d8d0c5); padding: 5px 10px; cursor: pointer;
+      background: rgba(250, 250, 250, 0.92); color: var(--ink, #1a1a1a);
+      border: 1px solid var(--border, #e2e1dd); padding: 5px 10px; cursor: pointer;
     }
-    .mj-btn:hover { border-color: var(--ink, #2c2317); }
+    .mj-btn:hover { border-color: var(--ink, #1a1a1a); }
     .mj-share { position: relative; }
     .mj-menu {
       position: absolute; right: 0; bottom: calc(100% + 6px); display: none;
       flex-direction: column; min-width: 140px;
-      background: var(--bg, #f4efe8); border: 1px solid var(--border, #d8d0c5);
-      box-shadow: 0 2px 10px rgba(44, 35, 23, 0.12);
+      background: var(--bg, #fafafa); border: 1px solid var(--border, #e2e1dd);
+      box-shadow: 0 2px 10px rgba(26, 26, 26, 0.12);
     }
     .mj-menu.open { display: flex; }
     .mj-menu a {
       padding: 7px 12px; font-size: 10px; letter-spacing: 0.14em;
-      text-transform: uppercase; text-decoration: none; color: var(--ink, #2c2317);
+      text-transform: uppercase; text-decoration: none; color: var(--ink, #1a1a1a);
     }
-    .mj-menu a:hover { background: var(--code-bg, #eae5de); }
+    .mj-menu a:hover { background: var(--code-bg, #efefec); }
     .mj-copy {
       float: right;
     }

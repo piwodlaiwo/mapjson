@@ -114,12 +114,13 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
 
   // 4. NLD, NZL, IOA — ISO_N3 and ISO_A2 are already correct in map_units except for
   //    Netherlands proper at 10m (SU_A3=NLX has ISO_A2=-99, ISO_N3=-99) — patch it.
-  //    IOA (Indian Ocean Territories of Australia) splits into CX + CC with no parent feature.
+  //    IOA (Indian Ocean Territories of Australia) has no ISO code either; it gets the
+  //    user-assigned X-code XI (Keep in sync with ISO_PATCHES in build-properties.js).
   await run(
     `-i ${mapUnitsFile} ` +
     `-filter "ADM0_A3.trim() == 'NLD' || ADM0_A3.trim() == 'NZL' || ADM0_A3.trim() == 'IOA'" ` +
     `-each "disputed = false; ` +
-           `iso2 = (SU_A3.trim() == 'NLX' ? 'NL' : (ISO_A2 == '-99' ? null : ISO_A2)); ` +
+           `iso2 = (SU_A3.trim() == 'NLX' ? 'NL' : SU_A3.trim() == 'IOA' ? 'XI' : (ISO_A2 == '-99' ? null : ISO_A2)); ` +
            `gid = iso2 || ('x-' + SU_A3.trim()); ` +
            `cont = CONTINENT" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +

@@ -217,7 +217,7 @@
       <div class="route">—</div>
     </div>
   </div>
-  <p style="margin-bottom:2.5rem; font-size:12px; color:var(--muted); max-width:640px; line-height:1.7;">Russia's own shortest path from Kaliningrad to Chukotka runs within a couple of degrees of the North Pole, and Chukotka itself sits just past the antimeridian — so both the country's true boundary and its geodesic line get cut into a small disconnected sliver at the map's far-left edge. That's a real consequence of flattening a sphere, not a rendering bug.</p>
+  <p style="margin-bottom:2.5rem; font-size:12px; color:var(--muted); max-width:640px; line-height:1.7;">Russia's own shortest path from Kaliningrad to Chukotka runs within a couple of degrees of the North Pole, so the line is capped and drawn as two visible legs near each real endpoint rather than one continuous arc through the (off-frame) middle. The map itself is rotated so its seam falls in open Pacific water instead of through Chukotka — the default Mercator centering would otherwise cut Russia in two at the antimeridian.</p>
 
   <section>
     <h2>API Call</h2>
@@ -281,7 +281,11 @@
       const russia = fc.features.filter((f) =&gt; f.properties.name === "Russia");
       const fit = fc.features.filter((f) =&gt; f.properties.name !== "Antarctica"); // Mercator + poles don't mix
 
-      const projection = d3.geoMercator().fitExtent([[8, 8], [width - 8, height - 8]], { type: "FeatureCollection", features: fit });
+      // Default centering puts the seam at the antimeridian, which cuts
+      // straight through Chukotka (and the Aleutians, Fiji...). Rotating the
+      // map moves that seam into open Pacific water instead, so Russia (and
+      // everything else near the date line) renders as one unbroken shape.
+      const projection = d3.geoMercator().rotate([-150, 0]).fitExtent([[8, 8], [width - 8, height - 8]], { type: "FeatureCollection", features: fit });
       const path = d3.geoPath(projection);
 
       const africaExtent = extent(africa, false);
@@ -295,23 +299,23 @@
       // degrees of the Pole — geometrically correct, but Mercator's
       // y-coordinate runs to +/-infinity at 90°, so drawing that whole arc
       // means most of the line is off-frame. Cap it at MAX_LAT: drop the
-      // near-pole middle, keep the two visible legs near each endpoint, and
-      // split into a MultiLineString at both that cut and any antimeridian
-      // crossing (a plain LineString isn't antimeridian-clipped the way
-      // polygons are).
+      // near-pole middle and keep the two visible legs near each endpoint as
+      // separate lines (path() still antimeridian-clips each leg on its own,
+      // same as it does for the country polygons).
       const MAX_LAT = 78;
       function geodesic(a, b, color) {
         const interpolate = d3.geoInterpolate([a.lon, a.lat], [b.lon, b.lat]);
-        const coords = d3.range(0, 1.001, 0.005).map(interpolate).filter((p) =&gt; Math.abs(p[1]) &lt;= MAX_LAT);
-        const lines = [[coords[0]]];
-        for (let i = 1; i &lt; coords.length; i++) {
-          const dLon = Math.abs(coords[i][0] - coords[i - 1][0]);
-          const dLat = Math.abs(coords[i][1] - coords[i - 1][1]);
-          if (dLon &gt; 180 || dLat &gt; 5) lines.push([]);
-          lines[lines.length - 1].push(coords[i]);
-        }
+        const raw = d3.range(0, 1.001, 0.005).map(interpolate);
+        const lines = [[]];
+        let lastKept = -2;
+        raw.forEach((p, i) =&gt; {
+          if (Math.abs(p[1]) &gt; MAX_LAT) return;
+          if (i !== lastKept + 1) lines.push([]);
+          lines[lines.length - 1].push(p);
+          lastKept = i;
+        });
         svg.append("path")
-          .datum({ type: "MultiLineString", coordinates: lines })
+          .datum({ type: "MultiLineString", coordinates: lines.filter((l) =&gt; l.length &gt; 1) })
           .attr("d", path).attr("fill", "none").attr("stroke", color).attr("stroke-width", 2);
       }
 
@@ -378,7 +382,11 @@
     const russia = fc.features.filter((f) => f.properties.name === "Russia");
     const fit = fc.features.filter((f) => f.properties.name !== "Antarctica");
 
-    const projection = d3.geoMercator().fitExtent([[8, 8], [width - 8, height - 8]], { type: "FeatureCollection", features: fit });
+    // Default centering puts the seam at the antimeridian, which cuts
+    // straight through Chukotka (and the Aleutians, Fiji...). Rotating the
+    // map moves that seam into open Pacific water instead, so Russia (and
+    // everything else near the date line) renders as one unbroken shape.
+    const projection = d3.geoMercator().rotate([-150, 0]).fitExtent([[8, 8], [width - 8, height - 8]], { type: "FeatureCollection", features: fit });
     const path = d3.geoPath(projection);
 
     const africaExtent = extent(africa, false);
@@ -390,23 +398,24 @@
     // apart (Russia's own extremes) swings to within a couple degrees of the
     // Pole — geometrically correct, but Mercator's y-coordinate runs to
     // +/-infinity at 90°, so drawing that whole arc means most of the line
-    // is off-frame. Cap it at MAX_LAT: drop the near-pole middle, keep the
-    // two visible legs near each endpoint, and split into a MultiLineString
-    // at both that cut and any antimeridian crossing (a plain LineString
-    // isn't antimeridian-clipped the way polygons are).
+    // is off-frame. Cap it at MAX_LAT: drop the near-pole middle and keep the
+    // two visible legs near each endpoint as separate lines (path() still
+    // antimeridian-clips each leg on its own, same as it does for the
+    // country polygons).
     const MAX_LAT = 78;
     function geodesic(a, b, color) {
       const interpolate = d3.geoInterpolate([a.lon, a.lat], [b.lon, b.lat]);
-      const coords = d3.range(0, 1.001, 0.005).map(interpolate).filter((p) => Math.abs(p[1]) <= MAX_LAT);
-      const lines = [[coords[0]]];
-      for (let i = 1; i < coords.length; i++) {
-        const dLon = Math.abs(coords[i][0] - coords[i - 1][0]);
-        const dLat = Math.abs(coords[i][1] - coords[i - 1][1]);
-        if (dLon > 180 || dLat > 5) lines.push([]);
-        lines[lines.length - 1].push(coords[i]);
-      }
+      const raw = d3.range(0, 1.001, 0.005).map(interpolate);
+      const lines = [[]];
+      let lastKept = -2;
+      raw.forEach((p, i) => {
+        if (Math.abs(p[1]) > MAX_LAT) return;
+        if (i !== lastKept + 1) lines.push([]);
+        lines[lines.length - 1].push(p);
+        lastKept = i;
+      });
       svg.append("path")
-        .datum({ type: "MultiLineString", coordinates: lines })
+        .datum({ type: "MultiLineString", coordinates: lines.filter((l) => l.length > 1) })
         .attr("d", path).attr("fill", "none").attr("stroke", color).attr("stroke-width", 2.2);
     }
 

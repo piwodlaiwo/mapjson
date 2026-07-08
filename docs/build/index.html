@@ -61,6 +61,10 @@
               border: 1px solid var(--border); padding: .5rem .75rem; font-size: 11px;
               color: var(--muted); display: none; align-items: center; gap: .5rem; }
     #legend .ramp { width: 120px; height: 10px; border: 1px solid var(--border); }
+    #savepng { position: absolute; right: 1rem; bottom: 1rem; z-index: 5;
+               background: rgba(250,250,250,.92); color: var(--ink); border: 1px solid var(--border);
+               font-size: 10px; letter-spacing: .14em; text-transform: uppercase; padding: 5px 10px; }
+    #savepng:hover { background: rgba(250,250,250,.92); border-color: var(--ink); }
 
     aside { width: 21rem; border-left: 1px solid var(--border); padding: 1.25rem 1.5rem;
             overflow-y: auto; background: #faf7f2; flex: none; }
@@ -172,6 +176,7 @@
   <div id="map">
     <div class="tooltip" id="tooltip"></div>
     <div id="legend"><span id="lmin"></span><span class="ramp" id="lramp"></span><span id="lmax"></span><span id="lcol"></span></div>
+    <button id="savepng" title="export the map as a 2x png">save png</button>
   </div>
   <aside>
     <h3>Geo</h3>
@@ -658,6 +663,38 @@ $("layer").addEventListener("change", (e) => {
 });
 $("filter").addEventListener("change", (e) => { state.filter = e.target.value.trim(); state.parents = null; render(); });
 $("detail").addEventListener("change", (e) => { state.detail = e.target.value; render(); });
+
+$("savepng").addEventListener("click", async () => {
+  const svg = document.querySelector("#map svg");
+  if (!svg) return;
+  const vb = svg.viewBox.baseVal;
+  const clone = svg.cloneNode(true);
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  clone.setAttribute("width", vb.width);
+  clone.setAttribute("height", vb.height);
+  const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(clone)], { type: "image/svg+xml;charset=utf-8" }));
+  try {
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i); i.onerror = () => rej(new Error("rasterization failed"));
+      i.src = url;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = vb.width * 2; canvas.height = vb.height * 2;   // 2x export
+    const c = canvas.getContext("2d");
+    c.fillStyle = getComputedStyle($("map")).backgroundColor || "#fbfaf7";
+    c.fillRect(0, 0, canvas.width, canvas.height);
+    c.drawImage(img, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((b) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(b);
+      a.download = `${state.layer}-${(state.filter || "world").toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }, "image/png");
+  } catch { status("png export failed", true); }
+  finally { URL.revokeObjectURL(url); }
+});
 $("proj").addEventListener("change", (e) => { state.proj = e.target.value; render(); });
 $("ramp").addEventListener("change", (e) => { state.ramp = e.target.value; render(); });
 for (const id of ["zoom", "hover", "grat"])

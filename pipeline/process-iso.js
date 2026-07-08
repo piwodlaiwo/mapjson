@@ -80,10 +80,13 @@ function processCountry(iso3) {
   const geoms = topo.objects[key].geometries;
   if (!geoms?.length) return null;
 
-  const p      = geoms[0].properties || {};
-  const iso2   = p.ISO2   || null;
-  const isoNum = p.ISON   || 0;
-  const gid    = isoNum > 0 ? String(isoNum) : `x-${iso3}`;
+  const p    = geoms[0].properties || {};
+  const iso2 = p.ISO2 || null;
+  // gid must be the ISO alpha-2 code — the join key used everywhere else in the
+  // API (properties.json, catalog, mergeProperties). This used to be the ISO
+  // numeric code, which doesn't match anything and left every country in
+  // ISO3_LIST with null properties at detail=high.
+  const gid  = iso2 || `x-${iso3}`;
 
   for (const g of geoms) {
     g.properties = { gid, iso2 };
@@ -132,7 +135,7 @@ function processANT() {
     const adm0 = clone(base);
     adm0.objects.geo = {
       type: 'GeometryCollection',
-      geometries: matching.map(g => ({ ...g, properties: { gid: String(isoNum), iso2 } })),
+      geometries: matching.map(g => ({ ...g, properties: { gid: iso2, iso2 } })),
     };
     delete adm0.objects[key];
     write(path.join(OUT_COUNTRIES, `${iso2}.topojson`), adm0);

@@ -202,7 +202,7 @@
   <header>
     <div class="tag">points · type=city · capitals · Equal Earth</div>
     <h1>Cities &amp; Capitals</h1>
-    <p>The <code>/v1/points?type=city</code> endpoint returns the world's most populous cities plus every national capital as a GeoJSON <code>FeatureCollection</code>. Circles are sized by population; national capitals (<code>capital: true</code>) are drawn in gold. Every point is pre-tagged with its country and admin1 region, so a single <code>filter</code> narrows the set to a continent, country, or state — no client-side geometry needed.</p>
+    <p>The <code>/v1/points?type=city</code> endpoint returns the world's most populous cities plus every national capital as a GeoJSON <code>FeatureCollection</code>. Circles are sized by <code>popMetro</code> — metropolitan / urban-agglomeration population, so Greater Tokyo reads ≈ 35.7M, not the ~9M city proper. National capitals (<code>capital: true</code>) are drawn in gold. Every point is pre-tagged with its country and admin1 region, so a single <code>filter</code> narrows the set to a continent, country, or state — no client-side geometry needed.</p>
   </header>
 
   <div class="map-wrap" id="map-wrap">
@@ -212,7 +212,7 @@
   <div class="legend">
     <div class="legend-item">
       <div class="legend-dot" style="background: #6fb0cc;"></div>
-      <span>city (sized by population)</span>
+      <span>city (sized by metro population)</span>
     </div>
     <div class="legend-item">
       <div class="legend-dot" style="background: #edb24a; border: 1px solid #fff6e5;"></div>
@@ -272,12 +272,12 @@
         .attr("d", path).attr("fill", LAND).attr("stroke", LAND_STROKE).attr("stroke-width", 0.3);
 
       // Biggest circles first so smaller ones stay clickable on top
-      const feats = cities.features.slice().sort((a, b) =&gt; (b.properties.pop || 0) - (a.properties.pop || 0));
+      const feats = cities.features.slice().sort((a, b) =&gt; (b.properties.popMetro || 0) - (a.properties.popMetro || 0));
 
       svg.append("g").selectAll("circle").data(feats).join("circle")
         .attr("cx", d =&gt; projection(d.geometry.coordinates)[0])
         .attr("cy", d =&gt; projection(d.geometry.coordinates)[1])
-        .attr("r", d =&gt; radius(d.properties.pop || 0))
+        .attr("r", d =&gt; radius(d.properties.popMetro || 0))
         .attr("fill", d =&gt; d.properties.capital ? CAPITAL : CITY)
         .attr("fill-opacity", 0.85)
         .attr("stroke", d =&gt; d.properties.capital ? CAP_STROKE : "none")
@@ -290,7 +290,7 @@
           tooltip.innerHTML =
             `&lt;strong&gt;${p.name}${p.capital ? " ★" : ""}&lt;/strong&gt;&lt;br&gt;` +
             `${p.countryName}${p.region ? " · " + p.region : ""}&lt;br&gt;` +
-            (p.pop ? p.pop.toLocaleString() + " people" : "population n/a");
+            (p.popMetro ? p.popMetro.toLocaleString() + " (metro area)" : "population n/a");
         })
         .on("mouseleave", () =&gt; { tooltip.style.opacity = 0; });
     });
@@ -332,12 +332,12 @@
       .attr("d", path).attr("fill", LAND).attr("stroke", LAND_STROKE).attr("stroke-width", 0.3);
 
     // Biggest circles first so smaller ones stay clickable on top
-    const feats = cities.features.slice().sort((a, b) => (b.properties.pop || 0) - (a.properties.pop || 0));
+    const feats = cities.features.slice().sort((a, b) => (b.properties.popMetro || 0) - (a.properties.popMetro || 0));
 
     svg.append("g").selectAll("circle").data(feats).join("circle")
       .attr("cx", d => projection(d.geometry.coordinates)[0])
       .attr("cy", d => projection(d.geometry.coordinates)[1])
-      .attr("r", d => radius(d.properties.pop || 0))
+      .attr("r", d => radius(d.properties.popMetro || 0))
       .attr("fill", d => d.properties.capital ? CAPITAL : CITY)
       .attr("fill-opacity", 0.85)
       .attr("stroke", d => d.properties.capital ? CAP_STROKE : "none")
@@ -352,7 +352,7 @@
         tooltip.innerHTML =
           `<strong>${p.name}${p.capital ? " ★" : ""}</strong><br>` +
           `${p.countryName}${p.region ? " · " + p.region : ""}<br>` +
-          (p.pop ? p.pop.toLocaleString() + " people" : "population n/a");
+          (p.popMetro ? p.popMetro.toLocaleString() + " (metro area)" : "population n/a");
       })
       .on("mouseleave", function () { d3.select(this).attr("fill-opacity", 0.85); tooltip.style.opacity = 0; });
   });

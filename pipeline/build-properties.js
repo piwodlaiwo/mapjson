@@ -391,7 +391,7 @@ async function main() {
         countryName: country?.name || null,
         continent: country?.continent || null,
         region: regionForPoint(admin1Regions, lng, lat),
-        pop: p.POP_MAX || null,
+        popMetro: p.POP_MAX || null, // Natural Earth POP_MAX — metropolitan/urban-agglomeration population
         ...(isCapital ? { capital: true } : {}),
       },
     });

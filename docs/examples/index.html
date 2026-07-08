@@ -175,17 +175,17 @@
   /* mobile: nav + page headers (TYPOGRAPHY.md responsive pass) */
   @media (max-width: 640px) {
     html, body { overflow-x: hidden; }
-    nav, .topnav { padding: 0 0.75rem; }
-    .nav-links, .topnav .nav-links { gap: 0.3rem; }
-    .nav-links a, nav .nav-links a, .topnav .nav-links a { font-size: 7px !important; letter-spacing: 0.01em !important; }
-    .nav-brand .b, .topnav .nav-brand .b { font-size: 12px; }
-    .nav-brand .pin, .topnav .nav-brand .pin { width: 7px; height: 7px; }
-    .nav-brand .pin i, .topnav .nav-brand .pin i { width: 2.5px; height: 2.5px; }
-    .nav-brand .word, .topnav .nav-brand .word { font-size: 11px; margin-left: 3px; }
+    nav, .topnav { padding: 0 0.6rem; }
+    .nav-links, .topnav .nav-links { gap: 0.4rem; }
+    .nav-links a, nav .nav-links a, .topnav .nav-links a { font-size: 9.5px !important; letter-spacing: 0.07em !important; }
+    .nav-brand .b, .topnav .nav-brand .b { font-size: 16px; }
+    .nav-brand .pin, .topnav .nav-brand .pin { width: 9px; height: 9px; }
+    .nav-brand .pin i, .topnav .nav-brand .pin i { width: 3.2px; height: 3.2px; }
+    .nav-brand .word, .topnav .nav-brand .word { font-size: 13px; margin-left: 4px; }
 
-    header h1, .hero h1 { font-size: 1.75rem !important; letter-spacing: -0.02em !important; }
-    header .tag, header .tagline, .hero-eyebrow { font-size: 10px !important; }
-    header p, .hero p { font-size: 13px !important; }
+    header h1, .hero h1 { font-size: 2rem !important; letter-spacing: -0.02em !important; line-height: 1.1 !important; }
+    header .tag, header .tagline, .hero-eyebrow, header p.tagline { font-size: 10px !important; letter-spacing: 0.18em !important; }
+    header p:not(.tagline), .hero p { font-size: 13px !important; }
     .card { padding: 24px 20px 20px !important; }
   }
   </style>
@@ -207,7 +207,7 @@
 
   <header>
     <h1>Examples</h1>
-    <p>D3.js maps built with the mapjson API</p>
+    <p class="tagline">D3.js maps built with the mapjson API</p>
   </header>
 
   <div class="grid">

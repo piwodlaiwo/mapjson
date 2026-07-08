@@ -16,7 +16,7 @@ const VALIDATE = path.join(ROOT, 'worker/src/validate.js');
 const DOCS     = path.join(ROOT, 'docs/docs/index.html');
 
 // Files intentionally not listed in index.html (drafts, color variants, internal tools)
-const UNLISTED_OK = /^(poland-v\d|validate-pipeline)/;
+const UNLISTED_OK = /^(poland-v\d|validate-pipeline|africa-vs-russia)/;
 
 let failures = 0;
 function fail(msg) { console.error('  FAIL  ' + msg); failures++; }

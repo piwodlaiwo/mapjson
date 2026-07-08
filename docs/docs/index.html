@@ -336,13 +336,13 @@
   <header>
     <h1>API Reference</h1>
     <p class="tagline">Geographic map data as a single API call</p>
-    <div class="base-url">https://api.mapjson.com</div>
+    <div class="base-url">GET api.mapjson.com/v1/geo</div>
   </header>
 
   <!-- ── Overview ── -->
   <section>
     <h2>Overview</h2>
-    <p>mapjson returns topojson (or geojson) for any geographic layer in a single AJAX call. The shortest possible call returns 110m world countries with no attached properties — the most common use case for a world map.</p>
+    <p>mapjson returns topojson (or geojson) for any geographic layer in a single API call. The shortest possible call returns 110m world countries with no attached properties — the most common use case for a world map.</p>
     <pre><code>// Minimal call — 110m world countries, no properties
 d3.json("https://api.mapjson.com/v1/geo").then(topo => {
   const countries = topojson.feature(topo, topo.objects.geo);
@@ -358,7 +358,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
   <section>
     <h2>Endpoint</h2>
     <div class="endpoint">
-      <span class="method">GET</span><span class="path">/v1/geo</span><br>
+      <span class="method">GET</span><span class="path">https://api.mapjson.com/v1/geo</span><br>
       &nbsp;&nbsp;<span class="param">?layer</span><span class="sep">=</span><span class="value">countries</span><br>
       &nbsp;&nbsp;<span class="param">&amp;filter</span><span class="sep">=</span><span class="value">world</span><br>
       &nbsp;&nbsp;<span class="param">&amp;detail</span><span class="sep">=</span><span class="value">low</span><br>

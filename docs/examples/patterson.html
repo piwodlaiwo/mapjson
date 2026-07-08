@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Country Details — mapjson examples</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1a1a1a;
+      --bg: #fafafa;
+      --accent: #b0402f;
+      --muted: #9b9a94;
+      --border: #e5e4df;
+      --code-bg: #efeeea;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 300;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link {
+      display: inline-block;
+      padding: 2.5rem 0 0;
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .back-link:hover { color: var(--ink); }
+    header {
+      border-bottom: 1.5px solid var(--ink);
+      padding: 1rem 0 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    header .tag {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.25rem;
+      font-weight: 400;
+      line-height: 1.1;
+    }
+    header p { color: var(--muted); margin-top: 0.6rem; font-size: 12px; max-width: 640px; line-height: 1.7; }
+    h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    section { margin-bottom: 2.5rem; }
+    .map-wrap {
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+      background: #cfe0ea;
+      line-height: 0;
+      position: relative;
+    }
+    .map-wrap svg { width: 100%; display: block; }
+
+    .panel {
+      border: 1px solid var(--border);
+      margin-bottom: 2.5rem;
+      background: #fff;
+    }
+    .panel-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border);
+      background: var(--code-bg);
+    }
+    .panel-head .name { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 500; }
+    .panel-head .gid { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; }
+    .panel-empty { padding: 2rem 1.1rem; color: var(--muted); font-size: 13px; text-align: center; }
+    .panel-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+    }
+    @media (max-width: 640px) { .panel-grid { grid-template-columns: 1fr; } }
+    .panel-col { padding: 1rem 1.1rem; }
+    .panel-col + .panel-col { border-left: 1px solid var(--border); }
+    @media (max-width: 640px) { .panel-col + .panel-col { border-left: none; border-top: 1px solid var(--border); } }
+    .row { display: flex; gap: 0.75rem; padding: 0.3rem 0; border-bottom: 1px dotted var(--border); font-size: 12px; }
+    .row:last-child { border-bottom: none; }
+    .row .k { flex: 0 0 8.5rem; color: var(--muted); }
+    .row .v { flex: 1; word-break: break-word; }
+    .row .v.computed { color: #2f6b4c; }
+    .section-label {
+      font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--muted); margin: 0.9rem 0 0.3rem;
+    }
+    .section-label:first-child { margin-top: 0; }
+
+    pre {
+      background: var(--code-bg);
+      border-left: 3px solid var(--ink);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.65;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 48px;
+    }
+    .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink); text-decoration: none; letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); }
+    .nav-brand { display: inline-flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink, #1a1a1a); text-decoration: none; }
+    .nav-brand .b { font-size: 19px; font-weight: 500; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 12px; height: 12px; background: var(--ink, #1a1a1a); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 4.5px; height: 4.5px; background: var(--bg, #fafafa); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 5px; }
+    /* type system: Space Grotesk display/body, IBM Plex Mono labels/params/code */
+    body { font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; }
+    .back-link, .tag, pre, code { font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; color: #a7a6a0; }
+    header p { font-size: 15px; line-height: 1.65; color: #4a4a45; max-width: 680px; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; }
+    section .note { font-size: 13px; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    /* type system: nav + lockup (TYPOGRAPHY.md) */
+    .nav-links a { font-size: 12px; letter-spacing: 0.18em; color: #9b9a94; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { gap: 4px; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; }
+    .nav-brand .pin { width: 14px; height: 14px; }
+    .nav-brand .pin i { width: 5px; height: 5px; }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  </style>
+<style>
+  /* nav type: definitive — IBM Plex Mono per TYPOGRAPHY.md, identical on every page */
+  .nav-links a, nav .nav-links a, .topnav .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; }
+  .nav-links a:hover, .topnav .nav-links a:hover { color: var(--ink, #1a1a1a); }
+  .nav-links a.here, .topnav .nav-links a.here { color: var(--ink, #1a1a1a); font-weight: 500; }
+  .nav-brand, .topnav .nav-brand { display: inline-flex; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; text-decoration: none; color: var(--ink, #1a1a1a); letter-spacing: -0.01em; }
+  .nav-brand .b, .topnav .nav-brand .b { font-size: 21px; font-weight: 400; color: #c8c6c0; line-height: 1; }
+  .nav-brand .pin, .topnav .nav-brand .pin { width: 14px; height: 14px; }
+  .nav-brand .pin i, .topnav .nav-brand .pin i { width: 5px; height: 5px; }
+  .nav-brand .word, .topnav .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
+</style>
+  <style>
+  /* mobile: nav + page headers (TYPOGRAPHY.md responsive pass) */
+  @media (max-width: 640px) {
+    html, body { overflow-x: hidden; }
+    nav, .topnav { padding: 0 0.6rem; }
+    .nav-links, .topnav .nav-links { gap: 0.55rem; }
+    .nav-links a, nav .nav-links a, .topnav .nav-links a { font-size: 11px !important; letter-spacing: 0.08em !important; }
+    .nav-brand .b, .topnav .nav-brand .b { font-size: 16px; }
+    .nav-brand .pin, .topnav .nav-brand .pin { width: 9px; height: 9px; }
+    .nav-brand .pin i, .topnav .nav-brand .pin i { width: 3.2px; height: 3.2px; }
+    .nav-brand .word, .topnav .nav-brand .word { font-size: 13px; margin-left: 4px; }
+
+    header h1, .hero h1 { font-size: 2rem !important; letter-spacing: -0.02em !important; line-height: 1.1 !important; }
+    header .tag, header .tagline, .hero-eyebrow, header p.tagline { font-size: 10px !important; letter-spacing: 0.18em !important; }
+    header p:not(.tagline), .hero p { font-size: 13px !important; }
+    .card { padding: 24px 20px 20px !important; }
+  }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <a class="back-link" href="/examples/">← Examples</a>
+
+  <header>
+    <div class="tag">countries · Patterson projection · hover · d3.geoCentroid · d3.geoBounds · topojson.neighbors</div>
+    <h1>Country Details</h1>
+    <p>World countries on the Patterson projection (<code>d3.geoPatterson</code>, from the d3-geo-projection extension) — a compromise cylindrical designed to keep high-latitude countries from ballooning the way they do on Mercator. Hover any country for every opt-in property the API returns, plus three things computed client-side that the API doesn't provide at all: its centroid and bounding box (<code>d3.geoCentroid</code> / <code>d3.geoBounds</code>), and its topologically adjacent neighbors (<code>topojson.neighbors</code>, derived from shared arcs in the same response — no separate borders dataset).</p>
+  </header>
+
+  <div class="map-wrap" id="map-wrap"></div>
+
+  <div class="panel" id="panel">
+    <div class="panel-empty">Hover a country on the map above.</div>
+  </div>
+  <p style="margin-bottom:2.5rem; font-size:12px; color:var(--muted); max-width:640px; line-height:1.7;">Neighbor detection is exact — it comes from arcs literally shared between two borders in the topology — with one honest gap: a handful of countries (France, Norway, the Netherlands, Morocco/Western Sahara) get their boundary from a different source than their neighbors, so the shared-arc check has nothing to match. Try France to see how that's reported, rather than silently showing an empty list.</p>
+
+  <section>
+    <h2>API Call</h2>
+    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;detail=medium&amp;properties=name,nameOfficial,iso2,iso3,isoNum,continent,subregion,areakm2,capital,capitalLat,capitalLng,currencies,languages,idd,demonym</pre>
+  </section>
+
+  <section>
+    <h2>Code</h2>
+    <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;Country Details&lt;/title&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3-geo-projection@4/dist/d3-geo-projection.min.js"&gt;&lt;/script&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"&gt;&lt;/script&gt;
+  &lt;style&gt;
+    body { margin: 0; background: #cfe0ea; }
+    svg { width: 100%; height: 100vh; display: block; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;svg id="map"&gt;&lt;/svg&gt;
+  &lt;pre id="out"&gt;hover a country&lt;/pre&gt;
+  &lt;script&gt;
+    const PROPS = "name,nameOfficial,iso2,iso3,isoNum,continent,subregion,areakm2,capital,capitalLat,capitalLng,currencies,languages,idd,demonym";
+    const url = `https://api.mapjson.com/v1/geo?layer=countries&detail=medium&properties=${PROPS}`;
+
+    const width = 960, height = 500;
+    const svg = d3.select("#map").attr("viewBox", `0 0 ${width} ${height}`);
+    const out = document.getElementById("out");
+
+    d3.json(url).then(topo =&gt; {
+      const objects = topo.objects.geo.geometries;
+      const fc = topojson.feature(topo, topo.objects.geo);
+
+      // Adjacency from the topology's shared arcs — no separate borders file
+      const neighborIdx = topojson.neighbors(objects);
+
+      const projection = d3.geoPatterson().fitExtent([[8, 8], [width - 8, height - 8]], fc);
+      const path = d3.geoPath(projection);
+
+      svg.selectAll("path")
+        .data(fc.features)
+        .join("path")
+        .attr("d", path)
+        .attr("fill", "#d9d0be")
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 0.5)
+        .on("mousemove", (event, d) =&gt; {
+          const i = fc.features.indexOf(d);
+          const p = d.properties;
+          const centroid = d3.geoCentroid(d);           // [lon, lat]
+          const bounds = d3.geoBounds(d);                // [[w,s],[e,n]]
+          const neighbors = neighborIdx[i].map(j =&gt; fc.features[j].properties.name);
+
+          out.textContent = JSON.stringify({
+            ...p,
+            centroid: centroid.map(v =&gt; +v.toFixed(2)),
+            boundingBox: bounds.map(pt =&gt; pt.map(v =&gt; +v.toFixed(2))),
+            neighbors,
+          }, null, 2);
+        });
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-geo-projection@4/dist/d3-geo-projection.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script>
+  const PROPS = "name,nameOfficial,iso2,iso3,isoNum,continent,subregion,areakm2,capital,capitalLat,capitalLng,currencies,languages,idd,demonym";
+  const url = `https://api.mapjson.com/v1/geo?layer=countries&detail=medium&properties=${PROPS}`;
+
+  const width = 960, height = 500;
+  const wrap = document.getElementById("map-wrap");
+  const panel = document.getElementById("panel");
+
+  const svg = d3.select(wrap).append("svg")
+    .attr("viewBox", `0 0 ${width} ${height}`)
+    .style("width", "100%")
+    .style("height", "auto");
+
+  const g = svg.append("g");
+
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const fmtList = (arr, render) => (arr && arr.length ? arr.map(render).join(", ") : "—");
+
+  // topojson.neighbors() finds adjacency from shared arcs — it's exact, but
+  // only when both sides of a border were built from the same source. These
+  // gids are spliced in from a different shapefile than their neighbors (the
+  // pipeline's own de-facto/de-jure boundary fixes for France, Norway, the
+  // Netherlands, and Morocco/Western Sahara), so their border never shares an
+  // arc with the country next to it — real neighbors, zero detected.
+  const NO_SHARED_ARCS = new Set(["FR", "NO", "NL", "MA", "EH", "GF"]);
+  function neighborsText(gid, names) {
+    if (names.length) return names.join(", ");
+    if (NO_SHARED_ARCS.has(gid)) {
+      return "not detected — this boundary is stitched in from a different source than its neighbors, so they share no topology";
+    }
+    return "none (island or isolated)";
+  }
+
+  function renderPanel(d, neighborNames) {
+    const p = d.properties;
+    const centroid = d3.geoCentroid(d).map((v) => v.toFixed(2));
+    const bounds = d3.geoBounds(d).map((pt) => pt.map((v) => v.toFixed(2)));
+
+    const row = (k, v, computed) => `<div class="row"><div class="k">${k}</div><div class="v${computed ? " computed" : ""}">${v}</div></div>`;
+
+    panel.innerHTML = `
+      <div class="panel-head">
+        <span class="name">${esc(p.name || p.gid)}</span>
+        <span class="gid">${esc(p.gid)}</span>
+      </div>
+      <div class="panel-grid">
+        <div class="panel-col">
+          <div class="section-label">Identity</div>
+          ${row("Official name", esc(p.nameOfficial || "—"))}
+          ${row("ISO2 / ISO3", `${esc(p.iso2 || "—")} / ${esc(p.iso3 || "—")}`)}
+          ${row("ISO numeric", esc(p.isoNum || "—"))}
+          ${row("Continent", esc(p.continent || "—"))}
+          ${row("Subregion", esc(p.subregion || "—"))}
+          ${row("Area", p.areakm2 ? p.areakm2.toLocaleString() + " km²" : "—")}
+          <div class="section-label">Capital</div>
+          ${row("Capital", esc(p.capital || "—"))}
+          ${row("Lat / Lng", p.capitalLat != null ? `${p.capitalLat}, ${p.capitalLng}` : "—")}
+        </div>
+        <div class="panel-col">
+          <div class="section-label">Currency &amp; language</div>
+          ${row("Currencies", fmtList(p.currencies, (c) => `${esc(c.name)} (${esc(c.code)})`))}
+          ${row("Languages", fmtList(p.languages, (l) => esc(l.name)))}
+          ${row("Calling code", p.idd ? `${esc(p.idd.root)}${p.idd.suffixes[0] || ""}` + (p.idd.suffixes.length > 1 ? ` (+${p.idd.suffixes.length - 1} more)` : "") : "—")}
+          ${row("Demonym", esc(p.demonym || "—"))}
+          <div class="section-label">Computed client-side</div>
+          ${row("Centroid (lon, lat)", `${centroid[0]}, ${centroid[1]}`, true)}
+          ${row("Bounding box", `[${bounds[0].join(", ")}] – [${bounds[1].join(", ")}]`, true)}
+          ${row("Neighbors", esc(neighborsText(p.gid, neighborNames)), true)}
+        </div>
+      </div>
+    `;
+  }
+
+  d3.json(url).then(topo => {
+    const objects = topo.objects.geo.geometries;
+    const fc = topojson.feature(topo, topo.objects.geo);
+    const neighborIdx = topojson.neighbors(objects);
+
+    const projection = d3.geoPatterson().fitExtent([[8, 8], [width - 8, height - 8]], fc);
+    const path = d3.geoPath(projection);
+
+    g.selectAll("path")
+      .data(fc.features)
+      .join("path")
+      .attr("fill", "#d9d0be")
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 0.5)
+      .attr("d", path)
+      .style("cursor", "pointer")
+      .on("mousemove", function(event, d) {
+        const i = fc.features.indexOf(d);
+        const names = neighborIdx[i].map((j) => fc.features[j].properties.name || fc.features[j].properties.gid);
+        d3.select(this).attr("fill", "#b8ad9e");
+        renderPanel(d, names);
+      })
+      .on("mouseleave", function() {
+        d3.select(this).attr("fill", "#d9d0be");
+      });
+  });
+
+  const zoom = d3.zoom().scaleExtent([1, 12]).on("zoom", (event) => g.attr("transform", event.transform));
+  svg.call(zoom);
+</script>
+<script src="example-widgets.js" defer></script>
+</body>
+</html>

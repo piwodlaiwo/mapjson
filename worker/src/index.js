@@ -6,6 +6,8 @@ import { feature } from 'topojson-client';
 
 // Cache properties.json in memory for the lifetime of the Worker instance
 let propsCache = null;
+// Cache each points FeatureCollection (points/{type}.json) per Worker instance
+const pointsCache = {};
 
 const DETAIL_TO_FILE = { low: 'low', medium: 'medium', high: 'high', ultra: 'high' };
 
@@ -38,6 +40,14 @@ async function getProps(bucket) {
 
 const CONTINENT_SLUGS = new Set(['world', 'europe', 'asia', 'africa', 'north-america', 'south-america', 'oceania', 'antarctica']);
 const ISO2_RE_LOCAL   = /^[A-Z]{2}$/;
+
+// Point datasets served from /v1/points (geojson FeatureCollections in R2 at points/{type}.json)
+const POINT_TYPES = new Set(['city']);
+const POINT_CONTINENT = {
+  europe: 'Europe', asia: 'Asia', africa: 'Africa',
+  'north-america': 'North America', 'south-america': 'South America',
+  oceania: 'Oceania', antarctica: 'Antarctica',
+};
 
 // Resolve a country name (e.g. "Poland") to its ISO alpha-2 code using properties.json.
 // Returns the iso2 string if found, or null if the name is unknown.
@@ -192,6 +202,58 @@ async function handleGeo(request, env) {
   return json(topo, 200, { 'Cache-Control': 'public, max-age=3600' });
 }
 
+// Point features (cities, and later airports/hospitals/…). Served as GeoJSON only —
+// points have no shared arcs, so topojson buys nothing. `filter` reuses the same
+// grammar as /v1/geo: world | continent slug | ISO2 | ISO 3166-2 region | country name.
+async function handlePoints(request, env) {
+  const q = new URL(request.url).searchParams;
+  const type = (q.get('type') || 'city').toLowerCase();
+  const filter = q.get('filter') || 'world';
+  const format = (q.get('format') || 'geojson').toLowerCase();
+
+  if (!POINT_TYPES.has(type)) {
+    return error(`type must be one of: ${[...POINT_TYPES].join(', ')}`);
+  }
+  if (format !== 'geojson') {
+    return error('points are only available as geojson — omit format or set format=geojson');
+  }
+
+  const fLower = filter.toLowerCase();
+  const fUpper = filter.toUpperCase();
+  const isWorld     = fLower === 'world';
+  const isContinent = Object.prototype.hasOwnProperty.call(POINT_CONTINENT, fLower);
+  const isRegion    = /^[A-Z]{2}-[A-Z0-9]+$/.test(fUpper);
+  const isIso2      = ISO2_RE_LOCAL.test(fUpper);
+
+  // Resolve a country name → ISO2. world/continents/region codes/iso2 pass through.
+  let iso2Filter = fUpper;
+  if (!isWorld && !isContinent && !isRegion && !isIso2) {
+    const resolved = await resolveNameToIso2(filter, env.GEO_BUCKET);
+    if (!resolved) {
+      return error(`Unknown filter '${filter}' — use world, a continent slug, ISO alpha-2 code, ISO 3166-2 region code (e.g. US-MA), or country name`);
+    }
+    iso2Filter = resolved;
+  }
+
+  if (!pointsCache[type]) {
+    const obj = await env.GEO_BUCKET.get(`points/${type}.json`);
+    if (!obj) return error(`No points for type='${type}'`, 404);
+    pointsCache[type] = await obj.json();
+  }
+
+  let features = pointsCache[type].features;
+  if (isContinent) {
+    const cont = POINT_CONTINENT[fLower];
+    features = features.filter((f) => f.properties.continent === cont);
+  } else if (isRegion) {
+    features = features.filter((f) => f.properties.region === fUpper);
+  } else if (!isWorld) {
+    features = features.filter((f) => f.properties.countryIso2 === iso2Filter);
+  }
+
+  return json({ type: 'FeatureCollection', features }, 200, { 'Cache-Control': 'public, max-age=3600' });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -218,6 +280,13 @@ export default {
 
     if (url.pathname === '/v1/catalog') {
       return handleCatalog(request, env).catch((err) => {
+        console.error(err);
+        return error('Internal server error', 500);
+      });
+    }
+
+    if (url.pathname === '/v1/points') {
+      return handlePoints(request, env).catch((err) => {
         console.error(err);
         return error('Internal server error', 500);
       });

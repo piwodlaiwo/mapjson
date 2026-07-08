@@ -105,6 +105,7 @@
     .endpoint .sep { color: var(--muted); }
 
     /* ── Parameter table ── */
+    .tablewrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 0.5rem; }
     th {
       text-align: left;
@@ -298,6 +299,24 @@
   .nav-brand .pin i, .topnav .nav-brand .pin i { width: 5px; height: 5px; }
   .nav-brand .word, .topnav .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
 </style>
+  <style>
+  /* mobile: nav + page headers (TYPOGRAPHY.md responsive pass) */
+  @media (max-width: 640px) {
+    html, body { overflow-x: hidden; }
+    nav, .topnav { padding: 0 0.75rem; }
+    .nav-links, .topnav .nav-links { gap: 0.3rem; }
+    .nav-links a, nav .nav-links a, .topnav .nav-links a { font-size: 7px !important; letter-spacing: 0.01em !important; }
+    .nav-brand .b, .topnav .nav-brand .b { font-size: 12px; }
+    .nav-brand .pin, .topnav .nav-brand .pin { width: 7px; height: 7px; }
+    .nav-brand .pin i, .topnav .nav-brand .pin i { width: 2.5px; height: 2.5px; }
+    .nav-brand .word, .topnav .nav-brand .word { font-size: 11px; margin-left: 3px; }
+
+    header h1, .hero h1 { font-size: 1.75rem !important; letter-spacing: -0.02em !important; }
+    header .tag, header .tagline, .hero-eyebrow { font-size: 10px !important; }
+    header p, .hero p { font-size: 13px !important; }
+    .card { padding: 24px 20px 20px !important; }
+  }
+  </style>
 </head>
 <body>
 
@@ -347,6 +366,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
       &nbsp;&nbsp;<span class="param">&amp;format</span><span class="sep">=</span><span class="value">topojson</span>
     </div>
 
+    <div class="tablewrap">
     <table>
       <thead>
         <tr>
@@ -424,6 +444,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
         </tr>
       </tbody>
     </table>
+    </div>
   </section>
 
   <!-- ── Layers ── -->
@@ -471,6 +492,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
   <!-- ── Detail Levels ── -->
   <section>
     <h2>Detail Levels</h2>
+    <div class="tablewrap">
     <table class="detail-table">
       <thead>
         <tr>
@@ -501,6 +523,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
         </tr>
       </tbody>
     </table>
+    </div>
     <div class="note">
       When <code>filter</code> is an ISO alpha-2 country code and <code>detail=high</code>, the API automatically serves a higher-resolution file for ~60 small countries and territories (Monaco, Aruba, Singapore, Martinique, etc.) that are too small for Natural Earth 10m. No change to your API call is needed.
     </div>
@@ -603,6 +626,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
 
     <h3 style="margin-top:2rem; margin-bottom:0.75rem; font-size:14px; letter-spacing:0.05em; text-transform:uppercase; color:var(--muted);">Format size comparison</h3>
     <p style="margin-bottom:1rem;">Filtered topojson responses have unreferenced arcs pruned, making them significantly smaller than the equivalent geojson. Shared border arcs are deduplicated in topojson; geojson re-emits full floating-point coordinates for every feature independently.</p>
+    <div class="tablewrap">
     <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:0.5rem;">
       <thead>
         <tr style="border-bottom:1px solid var(--border); color:var(--muted); text-align:left;">
@@ -629,6 +653,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
         </tr>
       </tbody>
     </table>
+    </div>
     <p style="color:var(--muted); font-size:12px;">Sizes are uncompressed. gzip compression narrows the gap somewhat; topojson still wins for all request types.</p>
   </section>
 
@@ -691,6 +716,7 @@ GET /v1/catalog?layer=districts&amp;filter=US-MA</pre>
     <details>
       <summary>252 countries and territories</summary>
       <p style="font-size:11px; color:var(--muted); padding: 0.75rem 0 0.5rem;">* Informal code — not officially assigned by ISO 3166-1.</p>
+    <div class="tablewrap">
       <table class="iso-table">
         <thead>
           <tr>
@@ -954,6 +980,7 @@ GET /v1/catalog?layer=districts&amp;filter=US-MA</pre>
           <tr><td>ZW</td><td>ZWE</td><td>Zimbabwe</td></tr>
         </tbody>
       </table>
+    </div>
     </details>
   </section>
 

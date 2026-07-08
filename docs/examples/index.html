@@ -81,6 +81,7 @@
       flex-direction: column;
       border-top: 3px solid transparent;
       transition: background 0.1s;
+      min-width: 0;   /* grid items default to min-width:auto — this stops long unbroken text (card-footer's mono param line) from stretching the whole grid wider than the viewport */
     }
     .card:hover { background: var(--code-bg); border-top-color: var(--accent); }
     .card-tag {
@@ -108,8 +109,9 @@
       justify-content: space-between;
       align-items: baseline;
       font-size: 11px;
+      min-width: 0;
     }
-    .card-url { color: var(--muted); }
+    .card-url { color: var(--muted); min-width: 0; }
     .card-arrow { color: var(--accent); font-size: 14px; }
 
     .card.wide { grid-column: 1 / -1; }
@@ -169,6 +171,24 @@
   .nav-brand .pin i, .topnav .nav-brand .pin i { width: 5px; height: 5px; }
   .nav-brand .word, .topnav .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
 </style>
+  <style>
+  /* mobile: nav + page headers (TYPOGRAPHY.md responsive pass) */
+  @media (max-width: 640px) {
+    html, body { overflow-x: hidden; }
+    nav, .topnav { padding: 0 0.75rem; }
+    .nav-links, .topnav .nav-links { gap: 0.3rem; }
+    .nav-links a, nav .nav-links a, .topnav .nav-links a { font-size: 7px !important; letter-spacing: 0.01em !important; }
+    .nav-brand .b, .topnav .nav-brand .b { font-size: 12px; }
+    .nav-brand .pin, .topnav .nav-brand .pin { width: 7px; height: 7px; }
+    .nav-brand .pin i, .topnav .nav-brand .pin i { width: 2.5px; height: 2.5px; }
+    .nav-brand .word, .topnav .nav-brand .word { font-size: 11px; margin-left: 3px; }
+
+    header h1, .hero h1 { font-size: 1.75rem !important; letter-spacing: -0.02em !important; }
+    header .tag, header .tagline, .hero-eyebrow { font-size: 10px !important; }
+    header p, .hero p { font-size: 13px !important; }
+    .card { padding: 24px 20px 20px !important; }
+  }
+  </style>
 </head>
 <body>
 

@@ -556,7 +556,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
       <div class="prop-row"><span class="prop-key">idd</span><span class="prop-desc"><code>{root, suffixes}</code> — international dialing prefix. Concatenate root + a suffix for a full calling code (e.g. root <code>"+1"</code>, suffix <code>"212"</code> → +1-212, New York).</span></div>
       <div class="prop-row"><span class="prop-key">demonym</span><span class="prop-desc">What to call a person from this country, in English (e.g. <code>"French"</code>).</span></div>
     </div>
-    <p class="note" style="margin-top:1rem;"><code>currencies</code>, <code>languages</code>, <code>idd</code>, and <code>demonym</code> are sourced from <a href="https://github.com/mledoze/countries" style="color:var(--accent)">mledoze/countries</a> (public domain), joined by ISO alpha-2. They return <code>null</code> for territories without an official ISO 3166-1 assignment (disputed territories, Antarctica, etc. — 249 of mapjson's 265 countries/territories have a match).</p>
+    <p class="note" style="margin-top:1rem;"><code>currencies</code>, <code>languages</code>, <code>idd</code>, and <code>demonym</code> return <code>null</code> for territories without an official ISO 3166-1 assignment (disputed territories, Antarctica, etc. — 249 of mapjson's 265 countries/territories have a match).</p>
   </section>
 
   <!-- ── Examples ── -->

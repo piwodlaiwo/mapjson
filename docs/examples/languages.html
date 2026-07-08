@@ -194,15 +194,16 @@
   <a class="back-link" href="/examples/">← Examples</a>
 
   <header>
-    <div class="tag">countries · languages · choropleth · categorical</div>
+    <div class="tag">countries · languages · choropleth · multi-color</div>
     <h1>Languages</h1>
-    <p>World countries colored by primary language — the first entry in the opt-in <code>languages</code> property, sourced from <a href="https://github.com/mledoze/countries" style="color:var(--accent)">mledoze/countries</a>. The 8 most common primary languages each get their own color; everything else (~65 languages, from Aymara to Zulu) folds into <em>other</em> so the legend stays readable. Hover any country to see all of its official languages, not just the primary one.</p>
+    <p>World countries colored by official language, using the opt-in <code>languages</code> property. The 8 most common languages each get their own color; every other language (~65 of them, from Aymara to Zulu) folds into <em>other</em> so the legend stays readable. A country with one language gets a solid fill; a country with several — Switzerland, Singapore, most of West Africa — is striped, one band per distinct language color. Hover any country to see its full language list.</p>
   </header>
 
   <div class="map-wrap" id="map-wrap">
     <div class="tooltip" id="tooltip"></div>
   </div>
   <div class="legend" id="legend"></div>
+  <p style="margin-bottom:2.5rem; font-size:12px; color:var(--muted); max-width:640px; line-height:1.7;">Legend counts are countries that speak each language at all, not just countries where it's the only one — a striped country counts toward every language shown in its stripes.</p>
 
   <section>
     <h2>API Call</h2>
@@ -243,17 +244,55 @@
     const url = "https://api.mapjson.com/v1/geo?layer=countries&detail=medium&properties=name,languages";
 
     // Fixed hue order — never cycled — plus a neutral "other" bucket for the
-    // long tail. See mapjson.com's dataviz notes: 8 categorical slots max.
+    // long tail. 8 categorical slots max; the rest fold into gray.
     const TOP_LANGUAGES = ["English", "French", "Arabic", "Spanish", "Portuguese", "Russian", "German", "Italian"];
     const COLORS = ["#2a78d6", "#1baf7a", "#eda100", "#008300", "#4a3aa7", "#e34948", "#e87ba4", "#eb6834"];
     const OTHER_COLOR = "#c7c3ba";
     const color = d3.scaleOrdinal().domain(TOP_LANGUAGES).range(COLORS).unknown(OTHER_COLOR);
 
-    const primaryLanguage = (d) => d.properties.languages?.[0]?.name || null;
+    // Distinct colors this country needs — dedup so several "other" languages
+    // collapse to one gray band instead of stacking duplicates.
+    function languageColors(d) {
+      const langs = d.properties.languages;
+      if (!langs || !langs.length) return [OTHER_COLOR];
+      const colors = [];
+      for (const l of langs) {
+        const c = color(l.name);
+        if (!colors.includes(c)) colors.push(c);
+      }
+      return colors;
+    }
+
+    // Solid fill for one color; a diagonal stripe pattern — one band per
+    // distinct language color, cached in &lt;defs&gt; — for two or more.
+    // objectBoundingBox (not userSpaceOnUse) so the stripe tile scales to each
+    // country's own size — a fixed pixel tile is bigger than Switzerland or
+    // Belgium at world-map scale, so only one color would ever show.
+    const patternIds = new Map();
+    const TILE = 0.22; // fraction of each country's own bounding box
+    function fillFor(defs, colors) {
+      if (colors.length === 1) return colors[0];
+      const key = colors.join(",");
+      if (patternIds.has(key)) return `url(#${patternIds.get(key)})`;
+      const id = `lang-stripe-${patternIds.size}`;
+      const band = TILE / colors.length;
+      const pattern = defs.append("pattern")
+        .attr("id", id)
+        .attr("patternUnits", "objectBoundingBox")
+        .attr("patternContentUnits", "objectBoundingBox")
+        .attr("width", TILE).attr("height", TILE)
+        .attr("patternTransform", "rotate(45)");
+      colors.forEach((c, i) => {
+        pattern.append("rect").attr("x", 0).attr("y", i * band).attr("width", TILE).attr("height", band).attr("fill", c);
+      });
+      patternIds.set(key, id);
+      return `url(#${id})`;
+    }
 
     const width = 960, height = 500;
     const tooltip = document.getElementById("tooltip");
     const svg = d3.select("#map").attr("viewBox", `0 0 ${width} ${height}`);
+    const defs = svg.append("defs");
     const projection = d3.geoEqualEarth().scale(160).translate([width / 2, height / 2 + 20]);
     const path = d3.geoPath(projection);
 
@@ -269,10 +308,7 @@
         .join("path")
         .attr("class", "country")
         .attr("d", path)
-        .attr("fill", (d) =&gt; {
-          const lang = primaryLanguage(d);
-          return lang ? color(lang) : OTHER_COLOR;
-        })
+        .attr("fill", (d) =&gt; fillFor(defs, languageColors(d)))
         .on("mousemove", function(event, d) {
           const langs = d.properties.languages;
           tooltip.style.left = (event.clientX + 12) + "px";
@@ -301,7 +337,44 @@
   const OTHER_COLOR = "#c7c3ba";
   const color = d3.scaleOrdinal().domain(TOP_LANGUAGES).range(COLORS).unknown(OTHER_COLOR);
 
-  const primaryLanguage = (d) => d.properties.languages && d.properties.languages[0] ? d.properties.languages[0].name : null;
+  // Distinct colors this country needs — dedup so e.g. 10 minor languages that
+  // all fall into "other" become one gray band, not ten.
+  function languageColors(d) {
+    const langs = d.properties.languages;
+    if (!langs || !langs.length) return [OTHER_COLOR];
+    const colors = [];
+    for (const l of langs) {
+      const c = color(l.name);
+      if (!colors.includes(c)) colors.push(c);
+    }
+    return colors;
+  }
+
+  // One solid fill for a single color; a diagonal stripe pattern — one band
+  // per distinct language color, in a shared <defs> — for two or more.
+  // objectBoundingBox so the stripe tile scales to each country's own size —
+  // a fixed pixel tile is bigger than Switzerland or Belgium at world-map
+  // scale, so only one color would ever show.
+  const patternIds = new Map();
+  const TILE = 0.22; // fraction of each country's own bounding box
+  function fillFor(defs, colors) {
+    if (colors.length === 1) return colors[0];
+    const key = colors.join(",");
+    if (patternIds.has(key)) return `url(#${patternIds.get(key)})`;
+    const id = `lang-stripe-${patternIds.size}`;
+    const band = TILE / colors.length;
+    const pattern = defs.append("pattern")
+      .attr("id", id)
+      .attr("patternUnits", "objectBoundingBox")
+      .attr("patternContentUnits", "objectBoundingBox")
+      .attr("width", TILE).attr("height", TILE)
+      .attr("patternTransform", "rotate(45)");
+    colors.forEach((c, i) => {
+      pattern.append("rect").attr("x", 0).attr("y", i * band).attr("width", TILE).attr("height", band).attr("fill", c);
+    });
+    patternIds.set(key, id);
+    return `url(#${id})`;
+  }
 
   const width = 960, height = 500;
   const wrap = document.getElementById("map-wrap");
@@ -312,6 +385,7 @@
     .style("width", "100%")
     .style("height", "auto");
 
+  const defs = svg.append("defs");
   const g = svg.append("g");
 
   const projection = d3.geoEqualEarth().scale(160).translate([width / 2, height / 2 + 20]);
@@ -328,10 +402,7 @@
       .data(geojson.features)
       .join("path")
       .attr("class", "country")
-      .attr("fill", (d) => {
-        const lang = primaryLanguage(d);
-        return lang ? color(lang) : OTHER_COLOR;
-      })
+      .attr("fill", (d) => fillFor(defs, languageColors(d)))
       .attr("stroke", "#b8ad9e")
       .attr("stroke-width", 0.4)
       .attr("d", path)
@@ -347,12 +418,14 @@
       })
       .on("mouseleave", () => { tooltip.style.opacity = 0; });
 
-    // Legend — counts computed from the live response, not hardcoded
+    // Legend — counts computed from the live response, not hardcoded. A
+    // multilingual country counts toward every language it speaks, not just one.
     const counts = new Map();
     for (const f of geojson.features) {
-      const lang = primaryLanguage(f);
-      const key = lang && TOP_LANGUAGES.includes(lang) ? lang : "Other";
-      counts.set(key, (counts.get(key) || 0) + 1);
+      const langs = f.properties.languages;
+      const names = langs && langs.length ? langs.map((l) => l.name) : [null];
+      const buckets = new Set(names.map((n) => (n && TOP_LANGUAGES.includes(n) ? n : "Other")));
+      for (const b of buckets) counts.set(b, (counts.get(b) || 0) + 1);
     }
     const legendEntries = [...TOP_LANGUAGES, "Other"].map((lang) => ({
       lang, color: lang === "Other" ? OTHER_COLOR : color(lang), n: counts.get(lang) || 0,

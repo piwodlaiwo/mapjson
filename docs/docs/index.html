@@ -489,69 +489,6 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
     </div>
   </section>
 
-  <!-- ── Points ── -->
-  <section>
-    <h2>Points</h2>
-    <p>Point datasets — places rather than boundaries — are served from a separate endpoint, always as GeoJSON (points have no shared geometry, so <code>topojson</code> and <code>detail</code> don't apply). Today the only <code>type</code> is <code>city</code>; more point types will follow.</p>
-
-    <div class="endpoint">
-      <span class="method">GET</span><span class="path">https://api.mapjson.com/v1/points</span><br>
-      &nbsp;&nbsp;<span class="param">?type</span><span class="sep">=</span><span class="value">city</span><br>
-      &nbsp;&nbsp;<span class="param">&amp;filter</span><span class="sep">=</span><span class="value">world</span>
-    </div>
-
-    <div class="tablewrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Parameter</th>
-          <th>Default</th>
-          <th>Options</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code class="param-name">type</code></td>
-          <td><code class="default">city</code></td>
-          <td>
-            <div class="options">
-              <span class="opt default-val">city</span>
-            </div>
-          </td>
-          <td>Which point dataset to return. <code>city</code> covers the world's most populous cities plus every national capital — capitals carry a <code>capital: true</code> property.</td>
-        </tr>
-        <tr>
-          <td><code class="param-name">filter</code></td>
-          <td><code class="default">world</code></td>
-          <td>
-            <div class="options">
-              <span class="opt default-val">world</span>
-              <span class="opt">{continent}</span>
-              <span class="opt">{ISO2}</span>
-              <span class="opt">{ISO 3166-2}</span>
-              <span class="opt">{name}</span>
-            </div>
-          </td>
-          <td>Restrict to a continent, country, or region — same values as <code>/v1/geo</code>: a continent slug, ISO alpha-2 country code (<code>FR</code>), ISO 3166-2 region code (<code>US-MA</code>), or country name (<code>France</code>). Every point is pre-tagged with its country and admin1 region, so <code>filter=US-MA</code> returns only the points in Massachusetts.</td>
-        </tr>
-        <tr>
-          <td><code class="param-name">format</code></td>
-          <td><code class="default">geojson</code></td>
-          <td>
-            <div class="options">
-              <span class="opt default-val">geojson</span>
-            </div>
-          </td>
-          <td>Points are GeoJSON only.</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-    <p class="note" style="margin-top:1rem;">Each feature carries <code>name</code>, <code>countryIso2</code>, <code>countryName</code>, <code>continent</code>, <code>region</code> (ISO 3166-2 — <code>null</code> for a few disputed areas Natural Earth doesn't code), <code>pop</code>, and <code>capital: true</code> on national capitals.</p>
-  </section>
-
   <!-- ── Detail Levels ── -->
   <section>
     <h2>Detail Levels</h2>
@@ -1068,6 +1005,96 @@ GET /v1/catalog?layer=districts&amp;filter=US-MA</pre>
       </table>
     </div>
     </details>
+  </section>
+
+  <!-- ── Points ── -->
+  <section>
+    <h2>Points</h2>
+    <p>Point datasets — places rather than boundaries — are served from a separate endpoint, always as GeoJSON (points have no shared geometry, so <code>topojson</code> and <code>detail</code> don't apply). Today the only <code>type</code> is <code>city</code>; more point types will follow.</p>
+
+    <div class="endpoint">
+      <span class="method">GET</span><span class="path">https://api.mapjson.com/v1/points</span><br>
+      &nbsp;&nbsp;<span class="param">?type</span><span class="sep">=</span><span class="value">city</span><br>
+      &nbsp;&nbsp;<span class="param">&amp;filter</span><span class="sep">=</span><span class="value">world</span>
+    </div>
+
+    <div class="tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Parameter</th>
+          <th>Default</th>
+          <th>Options</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="param-name">type</code></td>
+          <td><code class="default">city</code></td>
+          <td>
+            <div class="options">
+              <span class="opt default-val">city</span>
+            </div>
+          </td>
+          <td>Which point dataset to return. <code>city</code> covers the world's most populous cities plus every national capital — capitals carry a <code>capital: true</code> property.</td>
+        </tr>
+        <tr>
+          <td><code class="param-name">filter</code></td>
+          <td><code class="default">world</code></td>
+          <td>
+            <div class="options">
+              <span class="opt default-val">world</span>
+              <span class="opt">{continent}</span>
+              <span class="opt">{ISO2}</span>
+              <span class="opt">{ISO 3166-2}</span>
+              <span class="opt">{name}</span>
+            </div>
+          </td>
+          <td>Restrict to a continent, country, or region — same values as <code>/v1/geo</code>: a continent slug, ISO alpha-2 country code (<code>FR</code>), ISO 3166-2 region code (<code>US-MA</code>), or country name (<code>France</code>). Every point is pre-tagged with its country and admin1 region, so <code>filter=US-MA</code> returns only the points in Massachusetts.</td>
+        </tr>
+        <tr>
+          <td><code class="param-name">format</code></td>
+          <td><code class="default">geojson</code></td>
+          <td>
+            <div class="options">
+              <span class="opt default-val">geojson</span>
+            </div>
+          </td>
+          <td>Points are GeoJSON only.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p class="note" style="margin-top:1rem;">Each feature carries <code>name</code>, <code>countryIso2</code>, <code>countryName</code>, <code>continent</code>, <code>region</code> (ISO 3166-2 — <code>null</code> for a few disputed areas Natural Earth doesn't code), <code>pop</code>, and <code>capital: true</code> on national capitals.</p>
+
+    <h3 style="margin-top:2rem; margin-bottom:0.75rem; font-size:14px; letter-spacing:0.05em; text-transform:uppercase; color:var(--muted);">Sample response</h3>
+    <p style="margin-bottom:1rem;"><code>GET /v1/points?type=city&amp;filter=FR</code> — a standard GeoJSON <code>FeatureCollection</code> of <code>Point</code> features:</p>
+    <div class="response-tabs">
+      <div class="tab active">geojson</div>
+    </div>
+    <pre><code>{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [2.353, 48.8581] },
+      "properties": {
+        "name": "Paris",
+        "nameLocal": null,
+        "countryIso2": "FR",
+        "countryName": "France",
+        "continent": "Europe",
+        "region": "FR-75",
+        "pop": 9904000,
+        "capital": true
+      }
+    }
+    // ...
+  ]
+}</code></pre>
+    <p style="margin-top:1rem; color:var(--muted); font-size:12px;">Non-capital cities omit the <code>capital</code> key entirely. <code>coordinates</code> are <code>[longitude, latitude]</code>, per GeoJSON.</p>
   </section>
 
 </div>

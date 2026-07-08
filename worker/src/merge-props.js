@@ -27,6 +27,9 @@ export function mergeProperties(topo, objectKey, lookup, requestedProps) {
     // gid is always present — it is the stable join key for every feature
     const base = { gid: p.gid };
     if (isDisputed) base.disputed = true;
+    // landlocked is an always-on flag sourced from properties.json (like disputed),
+    // not an opt-in ?properties= key
+    if (entry && entry.landlocked === true) base.landlocked = true;
 
     if (wantedKeys.length === 0) {
       g.properties = base;

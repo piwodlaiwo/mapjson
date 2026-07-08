@@ -1,5 +1,5 @@
 // All available property keys and how they map to entries in properties.json
-const ALL_PROP_KEYS = ['name', 'nameOfficial', 'iso2', 'iso3', 'isoNum', 'continent', 'subregion', 'areakm2', 'capital', 'capitalLat', 'capitalLng'];
+const ALL_PROP_KEYS = ['name', 'nameOfficial', 'iso2', 'iso3', 'isoNum', 'continent', 'subregion', 'areakm2', 'capital', 'capitalLat', 'capitalLng', 'currencies', 'languages', 'idd', 'demonym'];
 
 /**
  * Merges attributes from the properties lookup onto each topojson feature.

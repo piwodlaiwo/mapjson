@@ -428,7 +428,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
         <tr>
           <td><code class="param-name">properties</code></td>
           <td><code class="default">none</code></td>
-          <td><code>name, nameOfficial, iso2, iso3, isoNum, continent, subregion, areakm2, capital, capitalLat, capitalLng</code></td>
+          <td><code>name, nameOfficial, iso2, iso3, isoNum, continent, subregion, areakm2, capital, capitalLat, capitalLng, currencies, languages, idd, demonym</code></td>
           <td>Comma-separated list of properties to attach to each feature. Only applies to the <code>countries</code> layer — the worker merges these from a lookup table at request time. Omit entirely for geometry-only output (smallest response). Districts and regions include <code>gid</code>, <code>name</code>, <code>parent_gid</code>, and <code>iso2</code> by default; the <code>properties</code> parameter is ignored for those layers.</td>
         </tr>
         <tr>
@@ -551,7 +551,12 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
     </div>
     <div style="margin-top:1rem; border-top:1px solid var(--border); padding-top:1rem;">
       <div class="prop-row"><span class="prop-key">areakm2</span><span class="prop-desc">Land area in km², computed from 10m Natural Earth geometry. Approximate — within ~2% of authoritative values for most countries. Useful as a denominator for density calculations (e.g. population ÷ areakm2). Returns <code>null</code> for very small territories below 10m resolution (e.g. Vatican City).</span></div>
+      <div class="prop-row"><span class="prop-key">currencies</span><span class="prop-desc">Array of <code>{code, name, symbol}</code> (ISO 4217) — most countries have one, a few have two.</span></div>
+      <div class="prop-row"><span class="prop-key">languages</span><span class="prop-desc">Array of <code>{code, name}</code> — official/national languages, ISO 639-3 code plus English name.</span></div>
+      <div class="prop-row"><span class="prop-key">idd</span><span class="prop-desc"><code>{root, suffixes}</code> — international dialing prefix. Concatenate root + a suffix for a full calling code (e.g. root <code>"+1"</code>, suffix <code>"212"</code> → +1-212, New York).</span></div>
+      <div class="prop-row"><span class="prop-key">demonym</span><span class="prop-desc">What to call a person from this country, in English (e.g. <code>"French"</code>).</span></div>
     </div>
+    <p class="note" style="margin-top:1rem;"><code>currencies</code>, <code>languages</code>, <code>idd</code>, and <code>demonym</code> are sourced from <a href="https://github.com/mledoze/countries" style="color:var(--accent)">mledoze/countries</a> (public domain), joined by ISO alpha-2. They return <code>null</code> for territories without an official ISO 3166-1 assignment (disputed territories, Antarctica, etc. — 249 of mapjson's 265 countries/territories have a match).</p>
   </section>
 
   <!-- ── Examples ── -->

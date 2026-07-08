@@ -3,7 +3,13 @@ data/
 processed/
 .wrangler/
 worker/node_modules/
+ontology/node_modules/
 .DS_Store
+
+# ontology/data/ is hand-curated alias source (tracked), unlike the raw
+# downloaded data/ this repo's own pipeline uses
+!ontology/data/
+!ontology/data/**
 
 .dev.vars*
 !.dev.vars.example

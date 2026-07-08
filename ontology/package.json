@@ -1,0 +1,16 @@
+{
+  "name": "mapjson-ontology",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build-index": "node pipeline/build-index.js",
+    "test": "vitest run",
+    "dev": "npm run build-index && wrangler dev --config wrangler.toml",
+    "deploy": "npm run build-index && wrangler deploy --config wrangler.toml"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0",
+    "wrangler": "^4.0.0"
+  }
+}

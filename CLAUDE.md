@@ -2,7 +2,7 @@
 
 ## Deployment
 
-There are **two separate deployments**. Never confuse them.
+There are **three separate deployments**. Never confuse them.
 
 ### Docs site → GitHub Pages
 - URL: `https://mapjson.com`
@@ -16,6 +16,19 @@ There are **two separate deployments**. Never confuse them.
 - Source: `worker/src/`
 - **Deploy: `cd worker && npm run deploy`** (uses `worker/wrangler.toml`, name: `mapjson`)
 - Dev server: `cd worker && npm run dev`
+
+### Ontology Worker → Cloudflare Workers (key resolution)
+- No public hostname of its own — reached through `api.mapjson.com` via the geo
+  worker's `ONTOLOGY` service binding (see `worker/wrangler.toml`)
+- Source: `ontology/src/`
+- **Deploy: `cd ontology && npm run deploy`** (runs `build-index` first, then
+  `wrangler deploy` using `ontology/wrangler.toml`, name: `mapjson-ontology`)
+- Resolves messy keys ("Mass", "Deutschland", FIPS codes...) to gids for the
+  Clean/Explore/Build tools and `/v1/resolve`. Its build step
+  (`ontology/pipeline/build-index.js`) reads this repo's own
+  `processed/catalog/*.json`, `processed/properties.json`, and (optionally)
+  `data/mledoze/countries.json` — run the root pipeline first if those are stale
+- Has its own D1 database (`mapjson-ontology`) and test suite (`cd ontology && npm test`)
 
 ### Root `wrangler.jsonc` — pipeline worker only
 - Name: `mapjson-pipeline`, URL: `mapjson-pipeline.mapjson.workers.dev`
@@ -39,6 +52,12 @@ mapjson/
 │   │   ├── filter.js      # Feature filtering by layer/filter
 │   │   └── merge-props.js # Merges properties.json onto features
 │   └── wrangler.toml      # Worker config — always pass --config wrangler.toml
+├── ontology/              # Key-resolution worker (reached via api.mapjson.com)
+│   ├── src/index.js       # /v1/resolve, /v1/feedback, /v1/entities, /v1/curation
+│   ├── pipeline/build-index.js  # Builds src/generated/hot.json from this
+│   │                             # repo's processed/ catalog + properties.json
+│   ├── data/aliases/      # Hand-curated key aliases (countries/regions/US states)
+│   └── wrangler.toml      # Own D1 database; no public route (service binding only)
 ├── pipeline/              # Offline data processing (run locally)
 │   ├── download.sh        # Fetch Natural Earth shapefiles
 │   ├── process.js         # mapshaper: convert + simplify

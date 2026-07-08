@@ -1,0 +1,15 @@
+# mapjson-ontology worker — no public hostname of its own; reached through
+# api.mapjson.com via the geo worker's ONTOLOGY service binding.
+# Separate from the geo API worker (../mapjson/worker). Deploy: npm run deploy
+name = "mapjson-ontology"
+main = "src/index.js"
+compatibility_date = "2026-07-01"
+workers_dev = false
+
+# Resolution log + feedback flywheel. database_id is filled in at first deploy
+# (wrangler d1 create mapjson-ontology); local dev uses a local sqlite regardless.
+[[d1_databases]]
+binding = "DB"
+database_name = "mapjson-ontology"
+database_id = "cc728bda-950c-4262-8048-50a2ded08f2a"
+migrations_dir = "migrations"

@@ -1,0 +1,15 @@
+{
+  "_comment": "Curated admin-1 aliases keyed by gid (ISO 3166-2). The catalog stores German Länder as endonyms, so English exonyms live here. Other countries' exonym gaps get added via the feedback flywheel.",
+  "DE-BY": ["Bavaria"],
+  "DE-NI": ["Lower Saxony"],
+  "DE-NW": ["North Rhine-Westphalia", "NRW", "Northrhine-Westphalia"],
+  "DE-SN": ["Saxony"],
+  "DE-ST": ["Saxony-Anhalt"],
+  "DE-TH": ["Thuringia"],
+  "DE-RP": ["Rhineland-Palatinate", "RLP"],
+  "DE-MV": ["Mecklenburg-Western Pomerania", "Mecklenburg-West Pomerania"],
+  "DE-HE": ["Hesse", "Hessia"],
+  "DE-BW": ["Baden-Wurttemberg", "Baden-Wuerttemberg"],
+  "CA-QC": ["Quebec"],
+  "CA-BC": ["B.C."]
+}

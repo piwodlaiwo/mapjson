@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>USD Currency — mapjson examples</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1a1a1a;
+      --bg: #fafafa;
+      --accent: #b0402f;
+      --muted: #9b9a94;
+      --border: #e5e4df;
+      --code-bg: #efeeea;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 300;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link {
+      display: inline-block;
+      padding: 2.5rem 0 0;
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .back-link:hover { color: var(--ink); }
+    header {
+      border-bottom: 1.5px solid var(--ink);
+      padding: 1rem 0 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    header .tag {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.25rem;
+      font-weight: 400;
+      line-height: 1.1;
+    }
+    header p { color: var(--muted); margin-top: 0.6rem; font-size: 12px; max-width: 640px; line-height: 1.7; }
+    h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    section { margin-bottom: 2.5rem; }
+    .map-wrap {
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+      background: #cfe0ea;
+      line-height: 0;
+      position: relative;
+    }
+    .map-wrap svg { width: 100%; display: block; }
+    .legend {
+      display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem;
+      margin-bottom: 1rem; font-size: 11px; color: var(--muted);
+    }
+    .legend .item { display: flex; align-items: center; gap: 0.4rem; }
+    .legend .swatch { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+    .country-list {
+      font-size: 12px; color: #6a6962; line-height: 1.9;
+      margin-bottom: 2.5rem;
+    }
+    pre {
+      background: var(--code-bg);
+      border-left: 3px solid var(--ink);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.65;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 48px;
+    }
+    .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink); text-decoration: none; letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); }
+    .tooltip {
+      position: absolute;
+      background: #1a1a1a;
+      color: #fafafa;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      padding: 6px 10px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      white-space: nowrap;
+      line-height: 1.6;
+    }
+    .nav-brand { display: inline-flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink, #1a1a1a); text-decoration: none; }
+    .nav-brand .b { font-size: 19px; font-weight: 500; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 12px; height: 12px; background: var(--ink, #1a1a1a); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 4.5px; height: 4.5px; background: var(--bg, #fafafa); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 5px; }
+    /* type system: Space Grotesk display/body, IBM Plex Mono labels/params/code */
+    body { font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; }
+    .back-link, .tag, pre, code { font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; color: #a7a6a0; }
+    header p { font-size: 15px; line-height: 1.65; color: #4a4a45; max-width: 680px; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; }
+    section .note { font-size: 13px; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    /* type system: nav + lockup (TYPOGRAPHY.md) */
+    .nav-links a { font-size: 12px; letter-spacing: 0.18em; color: #9b9a94; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { gap: 4px; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; }
+    .nav-brand .pin { width: 14px; height: 14px; }
+    .nav-brand .pin i { width: 5px; height: 5px; }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  </style>
+<style>
+  /* nav type: definitive — IBM Plex Mono per TYPOGRAPHY.md, identical on every page */
+  .nav-links a, nav .nav-links a, .topnav .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; }
+  .nav-links a:hover, .topnav .nav-links a:hover { color: var(--ink, #1a1a1a); }
+  .nav-links a.here, .topnav .nav-links a.here { color: var(--ink, #1a1a1a); font-weight: 500; }
+  .nav-brand, .topnav .nav-brand { display: inline-flex; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; text-decoration: none; color: var(--ink, #1a1a1a); letter-spacing: -0.01em; }
+  .nav-brand .b, .topnav .nav-brand .b { font-size: 21px; font-weight: 400; color: #c8c6c0; line-height: 1; }
+  .nav-brand .pin, .topnav .nav-brand .pin { width: 14px; height: 14px; }
+  .nav-brand .pin i, .topnav .nav-brand .pin i { width: 5px; height: 5px; }
+  .nav-brand .word, .topnav .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
+</style>
+  <style>
+  /* mobile: nav + page headers (TYPOGRAPHY.md responsive pass) */
+  @media (max-width: 640px) {
+    html, body { overflow-x: hidden; }
+    nav, .topnav { padding: 0 0.6rem; }
+    .nav-links, .topnav .nav-links { gap: 0.55rem; }
+    .nav-links a, nav .nav-links a, .topnav .nav-links a { font-size: 11px !important; letter-spacing: 0.08em !important; }
+    .nav-brand .b, .topnav .nav-brand .b { font-size: 16px; }
+    .nav-brand .pin, .topnav .nav-brand .pin { width: 9px; height: 9px; }
+    .nav-brand .pin i, .topnav .nav-brand .pin i { width: 3.2px; height: 3.2px; }
+    .nav-brand .word, .topnav .nav-brand .word { font-size: 13px; margin-left: 4px; }
+
+    header h1, .hero h1 { font-size: 2rem !important; letter-spacing: -0.02em !important; line-height: 1.1 !important; }
+    header .tag, header .tagline, .hero-eyebrow, header p.tagline { font-size: 10px !important; letter-spacing: 0.18em !important; }
+    header p:not(.tagline), .hero p { font-size: 13px !important; }
+    .card { padding: 24px 20px 20px !important; }
+  }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <a class="back-link" href="/examples/">← Examples</a>
+
+  <header>
+    <div class="tag">countries · currencies · highlight · zoom</div>
+    <h1>USD Currency</h1>
+    <p>Every country and territory whose opt-in <code>currencies</code> property includes the US dollar — not just the United States, but Ecuador, El Salvador, Timor-Leste, Panama, Zimbabwe, Cambodia (dollarized or co-circulating), and a string of US and former-Dutch Caribbean/Pacific territories. Zoom and pan to see the small ones; hover any country for its actual currency list.</p>
+  </header>
+
+  <div class="map-wrap" id="map-wrap">
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+  <div class="legend">
+    <div class="item"><span class="swatch" style="background:#4a8f6b"></span>uses USD</div>
+    <div class="item"><span class="swatch" style="background:#ddd8cc"></span>other currency</div>
+  </div>
+  <div class="country-list" id="country-list"></div>
+
+  <section>
+    <h2>API Call</h2>
+    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;detail=medium&amp;properties=name,currencies</pre>
+  </section>
+
+  <section>
+    <h2>Code</h2>
+    <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;USD Currency&lt;/title&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"&gt;&lt;/script&gt;
+  &lt;style&gt;
+    body { margin: 0; background: #cfe0ea; }
+    svg { width: 100%; height: 100vh; display: block; }
+    .tooltip {
+      position: fixed;
+      background: #1a1a1a;
+      color: #fafafa;
+      font-family: monospace;
+      font-size: 11px;
+      padding: 6px 10px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      line-height: 1.6;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="tooltip" id="tooltip"&gt;&lt;/div&gt;
+  &lt;svg id="map"&gt;&lt;/svg&gt;
+  &lt;script&gt;
+    const url = "https://api.mapjson.com/v1/geo?layer=countries&detail=medium&properties=name,currencies";
+    const usesUSD = (d) => (d.properties.currencies || []).some((c) =&gt; c.code === "USD");
+
+    const width = 960, height = 500;
+    const tooltip = document.getElementById("tooltip");
+    const svg = d3.select("#map").attr("viewBox", `0 0 ${width} ${height}`);
+    const g = svg.append("g");
+    const projection = d3.geoEqualEarth().scale(160).translate([width / 2, height / 2 + 20]);
+    const path = d3.geoPath(projection);
+
+    g.append("path").datum({ type: "Sphere" }).attr("fill", "#22485e").attr("d", path);
+    g.append("path").datum(d3.geoGraticule()()).attr("fill", "none")
+      .attr("stroke", "#a9c3d1").attr("stroke-width", 0.3).attr("d", path);
+
+    function showTooltip(event, d) {
+      const currencies = d.properties.currencies;
+      tooltip.style.left = (event.clientX + 12) + "px";
+      tooltip.style.top  = (event.clientY - 10) + "px";
+      tooltip.style.opacity = 1;
+      tooltip.innerHTML =
+        `&lt;strong&gt;${d.properties.name || d.properties.gid}&lt;/strong&gt;&lt;br&gt;` +
+        (currencies?.length ? currencies.map((c) =&gt; `${c.name} (${c.code})`).join(", ") : "no currency data");
+    }
+
+    d3.json(url).then(topo =&gt; {
+      const features = topojson.feature(topo, topo.objects.geo).features;
+
+      g.selectAll(".bg").data(features.filter((d) =&gt; !usesUSD(d))).join("path")
+        .attr("d", path).attr("fill", "#ddd8cc").attr("stroke", "#f0ece6").attr("stroke-width", 0.5)
+        .on("mousemove", showTooltip).on("mouseleave", () =&gt; tooltip.style.opacity = 0);
+
+      g.selectAll(".usd").data(features.filter(usesUSD)).join("path")
+        .attr("d", path).attr("fill", "#4a8f6b").attr("stroke", "#2f6b4c").attr("stroke-width", 0.8)
+        .style("cursor", "pointer")
+        .on("mousemove", showTooltip).on("mouseleave", () =&gt; tooltip.style.opacity = 0);
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script>
+  const url = "https://api.mapjson.com/v1/geo?layer=countries&detail=medium&properties=name,currencies";
+  const usesUSD = (d) => (d.properties.currencies || []).some((c) => c.code === "USD");
+
+  const width = 960, height = 500;
+  const wrap = document.getElementById("map-wrap");
+  const tooltip = document.getElementById("tooltip");
+
+  const svg = d3.select(wrap).append("svg")
+    .attr("viewBox", `0 0 ${width} ${height}`)
+    .style("width", "100%")
+    .style("height", "auto");
+
+  const g = svg.append("g");
+  const projection = d3.geoEqualEarth().scale(160).translate([width / 2, height / 2 + 20]);
+  const path = d3.geoPath(projection);
+
+  g.append("path").datum({ type: "Sphere" }).attr("fill", "#22485e").attr("d", path);
+  g.append("path").datum(d3.geoGraticule()())
+    .attr("fill", "none").attr("stroke", "#a9c3d1").attr("stroke-width", 0.3).attr("d", path);
+
+  function showTooltip(event, d) {
+    const currencies = d.properties.currencies;
+    const rect = wrap.getBoundingClientRect();
+    tooltip.style.left = (event.clientX - rect.left + 12) + "px";
+    tooltip.style.top  = (event.clientY - rect.top  - 10) + "px";
+    tooltip.style.opacity = 1;
+    tooltip.innerHTML =
+      `<strong>${d.properties.name || d.properties.gid}</strong><br>` +
+      (currencies && currencies.length ? currencies.map((c) => `${c.name} (${c.code})`).join(", ") : "no currency data");
+  }
+  function hideTooltip() { tooltip.style.opacity = 0; }
+
+  d3.json(url).then(topo => {
+    const features = topojson.feature(topo, topo.objects.geo).features;
+    const usd = features.filter(usesUSD);
+    const bg = features.filter((d) => !usesUSD(d));
+
+    g.selectAll(".bg").data(bg).join("path")
+      .attr("d", path)
+      .attr("fill", "#ddd8cc")
+      .attr("stroke", "#f0ece6")
+      .attr("stroke-width", 0.5)
+      .on("mousemove", showTooltip)
+      .on("mouseleave", hideTooltip);
+
+    g.selectAll(".usd").data(usd).join("path")
+      .attr("d", path)
+      .attr("fill", "#4a8f6b")
+      .attr("stroke", "#2f6b4c")
+      .attr("stroke-width", 0.8)
+      .style("cursor", "pointer")
+      .on("mousemove", showTooltip)
+      .on("mouseleave", hideTooltip);
+
+    const names = usd.map((d) => d.properties.name || d.properties.gid).sort();
+    document.getElementById("country-list").textContent =
+      `${names.length} countries/territories: ${names.join(" · ")}`;
+  });
+
+  const zoom = d3.zoom().scaleExtent([1, 12]).on("zoom", (event) => g.attr("transform", event.transform));
+  svg.call(zoom);
+</script>
+<script src="example-widgets.js" defer></script>
+</body>
+</html>

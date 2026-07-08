@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Landlocked Countries — mapjson examples</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1a1a1a;
+      --bg: #fafafa;
+      --accent: #b0402f;
+      --muted: #9b9a94;
+      --border: #e5e4df;
+      --code-bg: #efeeea;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 300;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link {
+      display: inline-block;
+      padding: 2.5rem 0 0;
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .back-link:hover { color: var(--ink); }
+    header {
+      border-bottom: 1.5px solid var(--ink);
+      padding: 1rem 0 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    header .tag {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.25rem;
+      font-weight: 400;
+      line-height: 1.1;
+    }
+    header p { color: var(--muted); margin-top: 0.6rem; font-size: 12px; max-width: 640px; line-height: 1.7; }
+    h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    section { margin-bottom: 2.5rem; }
+    section p { max-width: 680px; }
+    section p + p { margin-top: 0.9rem; }
+    .map-wrap {
+      margin-bottom: 1.25rem;
+      border: 1px solid var(--border);
+      background: #1b3a4b;
+      line-height: 0;
+      position: relative;
+    }
+    .map-wrap svg { width: 100%; display: block; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.45rem; }
+    .legend-swatch { width: 14px; height: 14px; border: 1px solid var(--border); flex-shrink: 0; }
+    pre {
+      background: var(--code-bg);
+      border-left: 3px solid var(--ink);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.65;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 48px;
+    }
+    .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink); text-decoration: none; letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); }
+    .tooltip {
+      position: absolute;
+      background: #1a1a1a;
+      color: #fafafa;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      padding: 6px 10px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      white-space: nowrap;
+      line-height: 1.6;
+    }
+    .nav-brand { display: inline-flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink, #1a1a1a); text-decoration: none; }
+    .nav-brand .b { font-size: 19px; font-weight: 500; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 12px; height: 12px; background: var(--ink, #1a1a1a); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 4.5px; height: 4.5px; background: var(--bg, #fafafa); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 5px; }
+    /* type system: Space Grotesk display/body, IBM Plex Mono labels/params/code */
+    body { font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; }
+    .back-link, .tag, pre, code { font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; color: #a7a6a0; }
+    header p { font-size: 15px; line-height: 1.65; color: #4a4a45; max-width: 680px; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; }
+    section .note { font-size: 13px; }
+    section p { font-size: 15px; line-height: 1.65; color: #4a4a45; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    /* type system: nav + lockup (TYPOGRAPHY.md) */
+    .nav-links a { font-size: 12px; letter-spacing: 0.18em; color: #9b9a94; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { gap: 4px; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; }
+    .nav-brand .pin { width: 14px; height: 14px; }
+    .nav-brand .pin i { width: 5px; height: 5px; }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  </style>
+<style>
+  /* nav type: definitive — IBM Plex Mono per TYPOGRAPHY.md, identical on every page */
+  .nav-links a, nav .nav-links a, .topnav .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; }
+  .nav-links a:hover, .topnav .nav-links a:hover { color: var(--ink, #1a1a1a); }
+  .nav-links a.here, .topnav .nav-links a.here { color: var(--ink, #1a1a1a); font-weight: 500; }
+  .nav-brand, .topnav .nav-brand { display: inline-flex; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; text-decoration: none; color: var(--ink, #1a1a1a); letter-spacing: -0.01em; }
+  .nav-brand .b, .topnav .nav-brand .b { font-size: 21px; font-weight: 400; color: #c8c6c0; line-height: 1; }
+  .nav-brand .pin, .topnav .nav-brand .pin { width: 14px; height: 14px; }
+  .nav-brand .pin i, .topnav .nav-brand .pin i { width: 5px; height: 5px; }
+  .nav-brand .word, .topnav .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
+</style>
+  <style>
+  /* mobile: nav + page headers (TYPOGRAPHY.md responsive pass) */
+  @media (max-width: 640px) {
+    html, body { overflow-x: hidden; }
+    nav, .topnav { padding: 0 0.6rem; }
+    .nav-links, .topnav .nav-links { gap: 0.55rem; }
+    .nav-links a, nav .nav-links a, .topnav .nav-links a { font-size: 11px !important; letter-spacing: 0.08em !important; }
+    .nav-brand .b, .topnav .nav-brand .b { font-size: 16px; }
+    .nav-brand .pin, .topnav .nav-brand .pin { width: 9px; height: 9px; }
+    .nav-brand .pin i, .topnav .nav-brand .pin i { width: 3.2px; height: 3.2px; }
+    .nav-brand .word, .topnav .nav-brand .word { font-size: 13px; margin-left: 4px; }
+
+    header h1, .hero h1 { font-size: 2rem !important; letter-spacing: -0.02em !important; line-height: 1.1 !important; }
+    header .tag, header .tagline, .hero-eyebrow, header p.tagline { font-size: 10px !important; letter-spacing: 0.18em !important; }
+    header p:not(.tagline), .hero p { font-size: 13px !important; }
+    .card { padding: 24px 20px 20px !important; }
+  }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <a class="back-link" href="/examples/">← Examples</a>
+
+  <header>
+    <div class="tag">countries · world · landlocked · topology · Equal Earth</div>
+    <h1>Landlocked Countries</h1>
+    <p>Every country with no coastline carries a <code>landlocked: true</code> property — the same always-on flag as <code>disputed</code>, set for all 44 landlocked sovereign states. This map shades them in amber. Two go a step further: <strong>doubly landlocked</strong> countries, where <em>every</em> neighbour is also landlocked, so you must cross at least two borders to reach the sea. They aren't hardcoded here — they're found live by walking the shared-border topology with <code>topojson.neighbors()</code>.</p>
+  </header>
+
+  <div class="map-wrap" id="map-wrap">
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-swatch" style="background: #d8cfbc;"></div>
+      <span>has a coastline</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background: #e39a3c;"></div>
+      <span>landlocked (44)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background: #b23a1e;"></div>
+      <span>doubly landlocked (2)</span>
+    </div>
+  </div>
+
+  <section>
+    <h2>Doubly landlocked</h2>
+    <p>A country is <em>doubly landlocked</em> when all of its neighbours are landlocked too — reaching open ocean means crossing at least two international borders. Rather than list them by hand, the map derives them from its own geometry: <code>topojson.neighbors()</code> reports which countries share an arc (a land border), then we keep the landlocked ones whose neighbours are <em>all</em> landlocked.</p>
+    <p>Computed live from the topology, the only two on Earth are <strong><span id="double-result">…</span></strong>.</p>
+  </section>
+
+  <section>
+    <h2>API Call</h2>
+    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=medium&amp;properties=name</pre>
+  </section>
+
+  <section>
+    <h2>Code</h2>
+    <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;Landlocked Countries&lt;/title&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"&gt;&lt;/script&gt;
+  &lt;style&gt;
+    body { margin: 0; background: #1b3a4b; }
+    svg { width: 100%; height: 100vh; display: block; }
+    .country { transition: opacity 0.1s; }
+    .country:hover { opacity: 0.82; }
+    #tooltip {
+      position: fixed; background: #1a1a1a; color: #fafafa;
+      font-family: monospace; font-size: 11px; padding: 6px 10px;
+      pointer-events: none; opacity: 0; line-height: 1.6;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id="tooltip"&gt;&lt;/div&gt;
+  &lt;svg id="map"&gt;&lt;/svg&gt;
+  &lt;script&gt;
+    const OCEAN = "#1b3a4b", GRAT = "#2c5468", LAND = "#d8cfbc",
+          SINGLE = "#e39a3c", DOUBLE = "#b23a1e", STROKE = "#9c8f73";
+
+    const width = 960, height = 500;
+    const tooltip = document.getElementById("tooltip");
+    const svg = d3.select("#map").attr("viewBox", `0 0 ${width} ${height}`);
+    const projection = d3.geoEqualEarth().scale(168).translate([width / 2, height / 2 + 12]);
+    const path = d3.geoPath(projection);
+
+    svg.append("path").datum({ type: "Sphere" }).attr("fill", OCEAN).attr("d", path);
+    svg.append("path").datum(d3.geoGraticule()())
+      .attr("fill", "none").attr("stroke", GRAT).attr("stroke-width", 0.3).attr("d", path);
+
+    d3.json("https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=medium&amp;properties=name")
+      .then(topo =&gt; {
+        const obj = topo.objects.geo;
+        const features  = topojson.feature(topo, obj).features; // same order as geometries
+        const neighbors = topojson.neighbors(obj.geometries);   // shared-border adjacency
+
+        // landlocked is an always-on flag; doubly landlocked = every neighbour landlocked too
+        const isLandlocked = features.map(f =&gt; f.properties.landlocked === true);
+        features.forEach((f, i) =&gt; {
+          f.properties._landlocked = isLandlocked[i];
+          f.properties._doubly = isLandlocked[i]
+            &amp;&amp; neighbors[i].length &gt; 0
+            &amp;&amp; neighbors[i].every(j =&gt; isLandlocked[j]);
+          f.properties._nbr = neighbors[i].length;
+        });
+
+        svg.append("g").selectAll("path").data(features).join("path")
+          .attr("class", "country")
+          .attr("d", path)
+          .attr("fill", d =&gt; d.properties._doubly ? DOUBLE : d.properties._landlocked ? SINGLE : LAND)
+          .attr("stroke", STROKE)
+          .attr("stroke-width", d =&gt; d.properties._doubly ? 0.8 : 0.3)
+          .on("mousemove", function (event, d) {
+            const s = d.properties._doubly ? `doubly landlocked · all ${d.properties._nbr} neighbours landlocked`
+                    : d.properties._landlocked ? "landlocked" : "has a coastline";
+            tooltip.style.left = (event.clientX + 12) + "px";
+            tooltip.style.top  = (event.clientY - 10) + "px";
+            tooltip.style.opacity = 1;
+            tooltip.innerHTML = `&lt;strong&gt;${d.properties.name || d.properties.gid}&lt;/strong&gt;&lt;br&gt;${s}`;
+          })
+          .on("mouseleave", () =&gt; { tooltip.style.opacity = 0; });
+
+        // Label the doubly-landlocked pair — Liechtenstein is a pixel at world scale
+        const OFFSET = { UZ: [0, -8, "middle"], LI: [-46, -22, "end"] };
+        const g = svg.append("g");
+        features.filter(d =&gt; d.properties._doubly).forEach(d =&gt; {
+          const c = path.centroid(d);
+          const [dx, dy, anchor] = OFFSET[d.properties.gid] || [0, -10, "middle"];
+          g.append("line").attr("x1", c[0]).attr("y1", c[1]).attr("x2", c[0] + dx).attr("y2", c[1] + dy + 3)
+            .attr("stroke", "#f2ece0").attr("stroke-width", 0.6).attr("opacity", 0.7);
+          g.append("circle").attr("cx", c[0]).attr("cy", c[1]).attr("r", 2.6)
+            .attr("fill", DOUBLE).attr("stroke", "#f2ece0").attr("stroke-width", 0.8);
+          g.append("text").attr("x", c[0] + dx).attr("y", c[1] + dy).attr("text-anchor", anchor)
+            .attr("font-family", "monospace").attr("font-size", "10px").attr("fill", "#f6efe0")
+            .attr("paint-order", "stroke").attr("stroke", OCEAN).attr("stroke-width", 2.4).attr("stroke-linejoin", "round")
+            .text(d.properties.name);
+        });
+      });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script>
+  const OCEAN = "#1b3a4b", GRAT = "#2c5468", LAND = "#d8cfbc",
+        SINGLE = "#e39a3c", DOUBLE = "#b23a1e", STROKE = "#9c8f73";
+
+  const width = 960, height = 500;
+  const wrap = document.getElementById("map-wrap");
+  const tooltip = document.getElementById("tooltip");
+  const resultEl = document.getElementById("double-result");
+
+  const svg = d3.select(wrap).append("svg")
+    .attr("viewBox", `0 0 ${width} ${height}`)
+    .style("width", "100%")
+    .style("height", "auto");
+
+  const projection = d3.geoEqualEarth().scale(168).translate([width / 2, height / 2 + 12]);
+  const path = d3.geoPath(projection);
+
+  svg.append("path").datum({ type: "Sphere" }).attr("fill", OCEAN).attr("d", path);
+  svg.append("path").datum(d3.geoGraticule()())
+    .attr("fill", "none").attr("stroke", GRAT).attr("stroke-width", 0.3).attr("d", path);
+
+  d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=medium&properties=name")
+    .then(topo => {
+      const obj = topo.objects.geo;
+      const features  = topojson.feature(topo, obj).features; // same order as geometries
+      const neighbors = topojson.neighbors(obj.geometries);   // shared-border adjacency
+
+      // landlocked is an always-on flag; doubly landlocked = every neighbour landlocked too
+      const isLandlocked = features.map(f => f.properties.landlocked === true);
+      features.forEach((f, i) => {
+        f.properties._landlocked = isLandlocked[i];
+        f.properties._doubly = isLandlocked[i]
+          && neighbors[i].length > 0
+          && neighbors[i].every(j => isLandlocked[j]);
+        f.properties._nbr = neighbors[i].length;
+      });
+
+      svg.append("g").selectAll("path").data(features).join("path")
+        .attr("class", "country")
+        .attr("d", path)
+        .attr("fill", d => d.properties._doubly ? DOUBLE : d.properties._landlocked ? SINGLE : LAND)
+        .attr("stroke", STROKE)
+        .attr("stroke-width", d => d.properties._doubly ? 0.8 : 0.3)
+        .style("transition", "opacity 0.1s")
+        .on("mouseenter", function () { d3.select(this).style("opacity", 0.82); })
+        .on("mousemove", function (event, d) {
+          const s = d.properties._doubly ? `doubly landlocked · all ${d.properties._nbr} neighbours landlocked`
+                  : d.properties._landlocked ? "landlocked" : "has a coastline";
+          const rect = wrap.getBoundingClientRect();
+          tooltip.style.left = (event.clientX - rect.left + 12) + "px";
+          tooltip.style.top  = (event.clientY - rect.top  - 10) + "px";
+          tooltip.style.opacity = 1;
+          tooltip.innerHTML = `<strong>${d.properties.name || d.properties.gid}</strong><br>${s}`;
+        })
+        .on("mouseleave", function () { d3.select(this).style("opacity", 1); tooltip.style.opacity = 0; });
+
+      // Label the doubly-landlocked pair — Liechtenstein is a pixel at world scale
+      const OFFSET = { UZ: [0, -8, "middle"], LI: [-46, -22, "end"] };
+      const g = svg.append("g");
+      const doubles = features.filter(d => d.properties._doubly);
+      doubles.forEach(d => {
+        const c = path.centroid(d);
+        const [dx, dy, anchor] = OFFSET[d.properties.gid] || [0, -10, "middle"];
+        g.append("line").attr("x1", c[0]).attr("y1", c[1]).attr("x2", c[0] + dx).attr("y2", c[1] + dy + 3)
+          .attr("stroke", "#f2ece0").attr("stroke-width", 0.6).attr("opacity", 0.7);
+        g.append("circle").attr("cx", c[0]).attr("cy", c[1]).attr("r", 2.6)
+          .attr("fill", DOUBLE).attr("stroke", "#f2ece0").attr("stroke-width", 0.8);
+        g.append("text").attr("x", c[0] + dx).attr("y", c[1] + dy).attr("text-anchor", anchor)
+          .attr("font-family", "'IBM Plex Mono', monospace").attr("font-size", "10px").attr("fill", "#f6efe0")
+          .attr("paint-order", "stroke").attr("stroke", OCEAN).attr("stroke-width", 2.4).attr("stroke-linejoin", "round")
+          .text(d.properties.name);
+      });
+
+      resultEl.textContent = doubles
+        .map(d => d.properties.name)
+        .sort()
+        .join(" and ") || "none found";
+    });
+</script>
+<script src="example-widgets.js" defer></script>
+</body>
+</html>

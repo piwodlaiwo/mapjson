@@ -383,6 +383,7 @@ async function render() {
   if (seq !== renderSeq) return;   // a newer render superseded this one
 
   const rows = state.rows ? state.rows.filter((r) => r.gid) : null;
+  const gids = rows ? new Set(rows.map((r) => r.gid)) : null;
   const value = rows && state.valueCol
     ? new Map(rows.filter((r) => r[state.valueCol] !== "" && !isNaN(+r[state.valueCol]))
                   .map((r) => [r.gid, +r[state.valueCol]]))
@@ -420,6 +421,7 @@ async function render() {
       .attr("class", "feat")
       .attr("d", path)
       .attr("fill", (d) => value && value.has(d.properties.gid) ? color(value.get(d.properties.gid))
+                          : gids && gids.has(d.properties.gid) ? interp(0.7)   // gid-only csv: flat highlight
                           : rows ? "#fbfaf7" : "#efeeea")
       .attr("stroke", "#b8ad9e")
       .attr("stroke-width", 0.5);
@@ -451,8 +453,9 @@ async function render() {
     $("lcol").textContent = `“${state.valueCol}”`;
   } else leg.style.display = "none";
 
+  const featGids = new Set(fc.features.map((f) => f.properties.gid));
   status(rows
-    ? `${rows.length} rows joined onto ${fc.features.length} features`
+    ? `${rows.filter((r) => featGids.has(r.gid)).length} of ${rows.length} rows matched onto ${fc.features.length} features`
     : `${fc.features.length} features — one API call, no data yet`);
 
   updateCode();
@@ -465,7 +468,7 @@ function genCode() {
   const projName = state.proj === "auto" ? currentProjName() : state.proj;
   const hasData = !!state.rows;
   const interpSrc = {
-    red: `t => d3.interpolateRgb("#fafafa", "#b22222")(t)`,
+    red: `t => d3.interpolateRgb("#fafafa", "#b0402f")(t)`,
     blues: "d3.interpolateBlues", greens: "d3.interpolateGreens", viridis: "d3.interpolateViridis",
   }[state.ramp];
 
@@ -506,13 +509,17 @@ function genCode() {
 
       ${projSrc}
       const path = d3.geoPath(projection);
-${hasData ? `
+${hasData ? (state.valueCol ? `
       // the join: feature gid -> your value
-      const value = new Map(rows.map(r => [r.gid, +r["${state.valueCol || "value"}"]]));
+      const value = new Map(rows.map(r => [r.gid, +r["${state.valueCol}"]]));
       const interp = ${interpSrc};
       const [lo, hi] = d3.extent([...value.values()]);
       const color = v => interp((v - lo) / (hi - lo));
-` : ""}${state.grat && projName !== "geoAlbersUsa" ? `
+` : `
+      // the join: highlight features whose gid appears in your csv
+      const marked = new Set(rows.map(r => r.gid));
+      const highlight = (${interpSrc})(0.7);
+`) : ""}${state.grat && projName !== "geoAlbersUsa" ? `
       g.append("path").datum({ type: "Sphere" }).attr("d", path)
         .attr("fill", "none").attr("stroke", "#ccc");
       g.append("path").datum(d3.geoGraticule10()).attr("d", path)
@@ -524,7 +531,9 @@ ${hasData ? `
           .attr("class", "feat")
           .attr("d", path)
           .attr("fill", d => ${hasData
-            ? `value.has(d.properties.gid) ? color(value.get(d.properties.gid)) : "#eee"`
+            ? state.valueCol
+              ? `value.has(d.properties.gid) ? color(value.get(d.properties.gid)) : "#eee"`
+              : `marked.has(d.properties.gid) ? highlight : "#eee"`
             : `"#e8e4dc"`})
           .attr("stroke", "#999")
           .attr("stroke-width", 0.5)${state.hover ? `

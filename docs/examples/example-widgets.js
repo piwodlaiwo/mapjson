@@ -1,5 +1,5 @@
 // Shared widgets for every example page:
-//  - "png" + "share" buttons overlaid bottom-right of the rendered map
+//  - "save" (PNG) + "share" buttons overlaid bottom-right of the rendered map
 //  - a "copy" button on the Code section heading
 // Included with <script src="example-widgets.js" defer> after the page markup.
 (function () {
@@ -53,9 +53,9 @@
 
     const dl = document.createElement("button");
     dl.className = "mj-btn";
-    dl.textContent = "download png";
+    dl.textContent = "save";
     dl.addEventListener("click", () => {
-      downloadPng().catch(() => { dl.textContent = "export failed"; revert(dl, "download png"); });
+      downloadPng().catch(() => { dl.textContent = "export failed"; revert(dl, "save"); });
     });
 
     const share = document.createElement("div");

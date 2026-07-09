@@ -20,63 +20,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --ink: #1a1a1a;
-      --bg: #fafafa;
-      --accent: #b0402f;
-      --muted: #9b9a94;
-      --border: #e5e4df;
-      --code-bg: #efeeea;
-    }
-    body {
-      background: var(--bg);
-      color: var(--ink);
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 400;
-      font-size: 15px;
-      line-height: 1.7;
-    }
+    :root { --ink: #1a1a1a; --bg: #fafafa; --accent: #b0402f; --muted: #9b9a94; --border: #e5e4df; --code-bg: #efeeea; }
+    body { background: var(--bg); color: var(--ink); font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; line-height: 1.7; }
     .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
-    .back-link {
-      display: inline-block;
-      padding: 2.5rem 0 0;
-      font-size: 11px;
-      color: var(--muted);
-      text-decoration: none;
-      letter-spacing: 0.1em;
-      font-family: 'IBM Plex Mono', monospace;
-    }
+    .back-link { display: inline-block; padding: 2.5rem 0 0; font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; font-family: 'IBM Plex Mono', monospace; }
     .back-link:hover { color: var(--ink); }
-    header {
-      border-bottom: 1.5px solid var(--ink);
-      padding: 1rem 0 1.5rem;
-      margin-bottom: 2rem;
-    }
-    header .tag {
-      font-size: 12px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: #a7a6a0;
-      margin-bottom: 0.5rem;
-      font-family: 'IBM Plex Mono', monospace;
-    }
-    header h1 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 500;
-      font-size: 2.5rem;
-      letter-spacing: -0.03em;
-      line-height: 1.05;
-    }
+    header { border-bottom: 1.5px solid var(--ink); padding: 1rem 0 1.5rem; margin-bottom: 2rem; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #a7a6a0; margin-bottom: 0.5rem; font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
     header p { color: #4a4a45; margin-top: 0.6rem; font-size: 15px; max-width: 680px; line-height: 1.65; }
-    h2 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 500;
-      font-size: 1.35rem;
-      letter-spacing: -0.02em;
-      margin-bottom: 0.75rem;
-      padding-bottom: 0.4rem;
-      border-bottom: 1px solid var(--border);
-    }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; margin-bottom: 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
     section { margin-bottom: 2.5rem; }
 
     /* ── Controls ── */
@@ -88,57 +41,22 @@
     .swatch:hover { transform: scale(1.12); }
     .swatch.active { border-color: var(--ink); box-shadow: 0 0 0 2px #fff inset; }
     .swatch-custom { width: 30px; height: 30px; padding: 0; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; background: none; }
-    select, .btn {
-      font-family: 'IBM Plex Mono', monospace; font-size: 13px;
-      padding: 0.5rem 0.8rem; border: 1px solid var(--border); border-radius: 6px;
-      background: #fff; color: var(--ink); cursor: pointer;
-    }
+    select, .btn { font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 0.5rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; }
     select { min-width: 200px; max-width: 260px; }
     .btn:hover { border-color: var(--ink); }
-    .btn-primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-    .btn-primary:hover { background: #000; }
     .count { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); margin-left: auto; }
 
-    .map-wrap {
-      margin-bottom: 1rem;
-      border: 1px solid var(--border);
-      background: #eaf0f2;
-      line-height: 0;
-      position: relative;
-      border-radius: 4px;
-      overflow: hidden;
-    }
+    .map-wrap { margin-bottom: 1rem; border: 1px solid var(--border); background: #eaf0f2; line-height: 0; position: relative; border-radius: 4px; overflow: hidden; cursor: grab; }
+    .map-wrap:active { cursor: grabbing; }
     .map-wrap svg { width: 100%; display: block; }
+    .map-wrap svg g path { vector-effect: non-scaling-stroke; }  /* keep borders crisp when zoomed */
+    /* detail indicator, bottom-left overlay */
+    .detail-tag { position: absolute; left: 10px; bottom: 10px; z-index: 5; background: rgba(26,26,26,0.82); color: #fff; font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 5px 10px; border-radius: 14px; letter-spacing: 0.02em; }
     .hint { font-size: 13px; color: var(--muted); margin-bottom: 2.5rem; }
-    pre {
-      background: var(--code-bg);
-      border-left: 3px solid var(--ink);
-      padding: 1rem 1.25rem;
-      overflow-x: auto;
-      font-size: 12px;
-      line-height: 1.65;
-      font-family: 'IBM Plex Mono', monospace;
-    }
-    .tooltip {
-      position: absolute;
-      background: #1a1a1a;
-      color: #fafafa;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 11px;
-      padding: 5px 9px;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.1s;
-      white-space: nowrap;
-      border-radius: 3px;
-    }
-    nav {
-      position: sticky; top: 0; z-index: 100;
-      background: var(--bg); border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 2rem; height: 48px;
-    }
+    pre { background: var(--code-bg); border-left: 3px solid var(--ink); padding: 1rem 1.25rem; overflow-x: auto; font-size: 12px; line-height: 1.65; font-family: 'IBM Plex Mono', monospace; }
+    nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 48px; }
     :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    .tooltip { position: absolute; background: #1a1a1a; color: #fafafa; font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 5px 9px; pointer-events: none; opacity: 0; transition: opacity 0.1s; white-space: nowrap; border-radius: 3px; z-index: 6; }
     .nav-links a, nav .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; text-decoration: none; }
     .nav-links { display: flex; gap: 2rem; }
     .nav-links a:hover { color: var(--ink); }
@@ -177,9 +95,9 @@
   <a class="back-link" href="/examples/">← Examples</a>
 
   <header>
-    <div class="tag">countries · Natural Earth · interactive · PNG export</div>
+    <div class="tag">countries · Natural Earth · progressive detail · PNG export</div>
     <h1>Been - Visited Countries</h1>
-    <p>Pick a color, then click countries — or choose them from the dropdown — to mark everywhere you've been. Use different colors for different meanings (visited, lived, want to go), then download your map as a PNG. Built on one <code>/v1/geo</code> call and rendered with a Natural Earth projection; all the interaction is plain SVG.</p>
+    <p>Pick a color, then click countries — or choose them from the dropdown — to mark everywhere you've been, then download your map as a PNG. The map loads at <strong>low detail</strong> for a fast first paint; <strong>zoom in</strong> (scroll or pinch) and it upgrades to <strong>high detail</strong>, unlocking all 265 territories — right down to the micro-states you pick from the list.</p>
   </header>
 
   <div class="controls">
@@ -194,18 +112,21 @@
         <option value="">Choose a country…</option>
       </select>
       <button class="btn" id="clear" type="button">Clear all</button>
+      <button class="btn" id="reset-view" type="button">Reset view</button>
       <span class="count" id="count">0 marked</span>
     </div>
   </div>
 
   <div class="map-wrap" id="map-wrap">
     <div class="tooltip" id="tooltip"></div>
+    <div class="detail-tag" id="detail-tag">low detail — zoom in for all 265</div>
   </div>
-  <p class="hint">Tip: click a country again with the same color to un-mark it. Switch colors any time — each country keeps whatever color you last gave it. When you're done, hit <strong>download png</strong> in the bottom-right corner of the map.</p>
+  <p class="hint">Tip: click a country again with the same color to un-mark it. Scroll or pinch to zoom (drag to pan) — the map sharpens to full detail once you zoom in, open the country list, or (on a phone or tablet) first touch the map. On touch, tapping a country marks it and flashes its name. When you're done, hit <strong>download png</strong> in the bottom-right of the map.</p>
 
   <section>
     <h2>API Call</h2>
-    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;detail=medium&amp;properties=name,iso2&amp;format=geojson</pre>
+    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;detail=low&amp;properties=name,iso2&amp;format=geojson
+https://api.mapjson.com/v1/geo?layer=countries&amp;detail=high&amp;properties=name,iso2&amp;format=geojson   // loaded on zoom</pre>
   </section>
 
   <section>
@@ -221,10 +142,13 @@
     .controls { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
     .swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
     .swatch.active { border-color: #1a1a1a; box-shadow: 0 0 0 2px #fff inset; }
-    #map-wrap { position: relative; background: #eaf0f2; max-width: 960px; }
+    #map-wrap { position: relative; background: #eaf0f2; max-width: 960px; cursor: grab; }
     #map-wrap svg { width: 100%; display: block; }
+    #map-wrap svg g path { vector-effect: non-scaling-stroke; }
     #tooltip { position: absolute; background: #1a1a1a; color: #fff; font: 11px monospace;
                padding: 4px 8px; border-radius: 3px; pointer-events: none; opacity: 0; }
+    #detail-tag { position: absolute; left: 8px; bottom: 8px; background: #1a1a1a; color: #fff;
+                  font: 11px monospace; padding: 4px 9px; border-radius: 12px; }
   &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
@@ -233,59 +157,98 @@
     &lt;input type="color" id="custom-color" value="#2f9e6f"&gt;
     &lt;select id="country-select"&gt;&lt;option value=""&gt;Choose a country…&lt;/option&gt;&lt;/select&gt;
     &lt;button id="clear" type="button"&gt;Clear all&lt;/button&gt;
-    &lt;button id="download" type="button"&gt;Download PNG&lt;/button&gt;
+    &lt;button id="reset-view" type="button"&gt;Reset view&lt;/button&gt;
     &lt;span id="count"&gt;0 marked&lt;/span&gt;
   &lt;/div&gt;
-  &lt;div id="map-wrap"&gt;&lt;div id="tooltip"&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div id="map-wrap"&gt;&lt;div id="tooltip"&gt;&lt;/div&gt;&lt;div id="detail-tag"&gt;low detail — zoom in for all 265&lt;/div&gt;&lt;/div&gt;
 
   &lt;script&gt;
     const OCEAN = "#eaf0f2", LAND = "#d6d0c4", STROKE = "#ffffff";
     const PRESETS = ["#e8663d", "#e2b13a", "#4caf7d", "#3d8ee8", "#8a63d2", "#d13b52"];
+    const LOW  = "https://api.mapjson.com/v1/geo?layer=countries&amp;detail=low&amp;properties=name,iso2&amp;format=geojson";
+    const HIGH = "https://api.mapjson.com/v1/geo?layer=countries&amp;detail=high&amp;properties=name,iso2&amp;format=geojson";
+    const ZOOM_TRIGGER = 2.2;   // upgrade to high detail past this zoom scale
+
     let currentColor = PRESETS[0];
-    const state = {};        // gid -&gt; color
-    const pathByGid = {};
+    const state = {};           // gid -&gt; color (survives the low→high swap)
+    let active = null;          // the visible path selection (low, then high)
+    let highLoaded = false, highPending = false, touchMode = false;
 
     const width = 960, height = 500;
     const wrap = document.getElementById("map-wrap");
     const tooltip = document.getElementById("tooltip");
+    const detailTag = document.getElementById("detail-tag");
+    const select = document.getElementById("country-select");
+
     const svg = d3.select(wrap).append("svg")
       .attr("viewBox", `0 0 ${width} ${height}`).style("width", "100%").style("height", "auto");
     svg.append("rect").attr("width", width).attr("height", height).attr("fill", OCEAN);
-    const g = svg.append("g");
+    const gZoom = svg.append("g");
+    const gLow = gZoom.append("g");
+    const gHigh = gZoom.append("g");
     const projection = d3.geoNaturalEarth1();
     const path = d3.geoPath(projection);
     const gid = (d) =&gt; d.properties.gid || d.properties.iso2;
 
-    d3.json("https://api.mapjson.com/v1/geo?layer=countries&amp;detail=medium&amp;properties=name,iso2&amp;format=geojson")
-      .then((geo) =&gt; {
-        projection.fitExtent([[6, 6], [width - 6, height - 6]], geo);
+    const zoom = d3.zoom().scaleExtent([1, 12]).on("zoom", (e) =&gt; {
+      gZoom.attr("transform", e.transform);
+      if (e.transform.k &gt;= ZOOM_TRIGGER) ensureHigh();
+    });
+    svg.call(zoom);
+    // Mobile / iPad: there's no hover, and a tap-to-mark may never zoom — so the first
+    // touch of the map upgrades to full detail (and taps flash the country name).
+    svg.on("touchstart.load", () =&gt; { touchMode = true; ensureHigh(); });
 
-        const select = document.getElementById("country-select");
-        geo.features.filter((d) =&gt; d.properties.name)
-          .sort((a, b) =&gt; a.properties.name.localeCompare(b.properties.name))
-          .forEach((d) =&gt; {
-            const o = document.createElement("option");
-            o.value = gid(d); o.textContent = d.properties.name;
-            select.appendChild(o);
-          });
+    d3.json(LOW).then((geo) =&gt; {
+      projection.fitExtent([[6, 6], [width - 6, height - 6]], { type: "Sphere" });
+      active = drawLayer(gLow, geo.features);
+      fillDropdown(geo.features);
+    });
 
-        g.selectAll("path").data(geo.features).join("path")
-          .attr("d", path).attr("fill", LAND).attr("stroke", STROKE).attr("stroke-width", 0.6)
-          .style("cursor", "pointer")
-          .each(function (d) { pathByGid[gid(d)] = this; })
-          .on("mouseenter", function () { d3.select(this).attr("stroke", "#555").attr("stroke-width", 1).raise(); })
-          .on("mousemove", function (event, d) {
-            const r = wrap.getBoundingClientRect();
-            tooltip.style.left = (event.clientX - r.left + 12) + "px";
-            tooltip.style.top = (event.clientY - r.top - 10) + "px";
-            tooltip.style.opacity = 1;
-            tooltip.textContent = d.properties.name || gid(d);
-          })
-          .on("mouseleave", function () { d3.select(this).attr("stroke", STROKE).attr("stroke-width", 0.6); tooltip.style.opacity = 0; })
-          .on("click", function (event, d) { toggle(gid(d)); });
-      });
+    function drawLayer(layer, feats) {
+      return layer.selectAll("path").data(feats).join("path")
+        .attr("d", path).attr("fill", (d) =&gt; state[gid(d)] || LAND)
+        .attr("stroke", STROKE).attr("stroke-width", 0.6).style("cursor", "pointer")
+        .on("mouseenter", function () { d3.select(this).attr("stroke", "#555").attr("stroke-width", 1.4).raise(); })
+        .on("mousemove", function (event, d) { tip(event, d); })
+        .on("mouseleave", function () { d3.select(this).attr("stroke", STROKE).attr("stroke-width", 0.6); if (!touchMode) tooltip.style.opacity = 0; })
+        .on("click", function (event, d) { toggle(gid(d)); tip(event, d, true); });
+    }
 
-    function repaint(k) { const n = pathByGid[k]; if (n) n.setAttribute("fill", state[k] || LAND); }
+    // On touch there's no hover, so a tap (tap=true) flashes the name and auto-hides it.
+    function tip(event, d, tap) {
+      const r = wrap.getBoundingClientRect();
+      tooltip.style.left = (event.clientX - r.left + 12) + "px";
+      tooltip.style.top = (event.clientY - r.top - 10) + "px";
+      tooltip.style.opacity = 1;
+      tooltip.textContent = d.properties.name || gid(d);
+      if (tap && touchMode) { clearTimeout(tip.t); tip.t = setTimeout(() =&gt; { tooltip.style.opacity = 0; }, 1500); }
+    }
+
+    function ensureHigh() {
+      if (highLoaded || highPending) return;
+      highPending = true; detailTag.textContent = "loading full detail…";
+      d3.json(HIGH).then((geo) =&gt; {
+        highLoaded = true; highPending = false;
+        const hs = drawLayer(gHigh, geo.features);
+        gHigh.style("opacity", 0).transition().duration(600).style("opacity", 1);
+        gLow.transition().duration(600).style("opacity", 0).on("end", () =&gt; gLow.remove());
+        active = hs;
+        fillDropdown(geo.features);
+        detailTag.textContent = "full detail · 265 territories";
+      }).catch(() =&gt; { highPending = false; detailTag.textContent = "detail unavailable"; });
+    }
+
+    function fillDropdown(feats) {
+      const cur = select.value;
+      select.innerHTML = '&lt;option value=""&gt;Choose a country…&lt;/option&gt;';
+      feats.filter((d) =&gt; d.properties.name)
+        .sort((a, b) =&gt; a.properties.name.localeCompare(b.properties.name))
+        .forEach((d) =&gt; { const o = document.createElement("option"); o.value = gid(d); o.textContent = d.properties.name; select.appendChild(o); });
+      select.value = cur;
+    }
+
+    function repaint(k) { if (active) active.filter((d) =&gt; gid(d) === k).attr("fill", state[k] || LAND); }
     function updateCount() { document.getElementById("count").textContent = Object.keys(state).length + " marked"; }
     function toggle(k) { if (state[k] === currentColor) delete state[k]; else state[k] = currentColor; repaint(k); updateCount(); }
     function mark(k) { state[k] = currentColor; repaint(k); updateCount(); }
@@ -307,37 +270,17 @@
       currentColor = e.target.value;
       document.querySelectorAll(".swatch").forEach((s) =&gt; s.classList.remove("active"));
     });
-    document.getElementById("country-select").addEventListener("change", (e) =&gt; {
-      if (e.target.value) { mark(e.target.value); e.target.value = ""; }
-    });
+    // Opening the country list also upgrades to full detail, so every territory is selectable.
+    select.addEventListener("focus", ensureHigh);
+    select.addEventListener("change", (e) =&gt; { if (e.target.value) { mark(e.target.value); e.target.value = ""; } });
     document.getElementById("clear").addEventListener("click", () =&gt; {
-      Object.keys(state).forEach((k) =&gt; { delete state[k]; const n = pathByGid[k]; if (n) n.setAttribute("fill", LAND); });
+      for (const k in state) delete state[k];
+      if (active) active.attr("fill", LAND);
       updateCount();
     });
-    document.getElementById("download").addEventListener("click", downloadPNG);
-
-    function downloadPNG() {
-      const clone = svg.node().cloneNode(true);
-      clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-      clone.removeAttribute("style"); // drop width:100% so the standalone SVG rasterizes at its real size
-      clone.setAttribute("width", width); clone.setAttribute("height", height);
-      const str = new XMLSerializer().serializeToString(clone);
-      const url = URL.createObjectURL(new Blob([str], { type: "image/svg+xml;charset=utf-8" }));
-      const img = new Image();
-      img.onload = () =&gt; {
-        const scale = 2, canvas = document.createElement("canvas");
-        canvas.width = width * scale; canvas.height = height * scale;
-        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-        URL.revokeObjectURL(url);
-        canvas.toBlob((b) =&gt; {
-          const a = document.createElement("a");
-          a.href = URL.createObjectURL(b); a.download = "travel-map.png";
-          document.body.appendChild(a); a.click(); a.remove();
-          URL.revokeObjectURL(a.href);
-        }, "image/png");
-      };
-      img.src = url;
-    }
+    document.getElementById("reset-view").addEventListener("click", () =&gt; {
+      svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+    });
   &lt;/script&gt;
 &lt;/body&gt;
 &lt;/html&gt;</pre>
@@ -349,51 +292,91 @@
 <script>
   const OCEAN = "#eaf0f2", LAND = "#d6d0c4", STROKE = "#ffffff";
   const PRESETS = ["#e8663d", "#e2b13a", "#4caf7d", "#3d8ee8", "#8a63d2", "#d13b52"];
+  const LOW  = "https://api.mapjson.com/v1/geo?layer=countries&detail=low&properties=name,iso2&format=geojson";
+  const HIGH = "https://api.mapjson.com/v1/geo?layer=countries&detail=high&properties=name,iso2&format=geojson";
+  const ZOOM_TRIGGER = 2.2;   // upgrade to high detail past this zoom scale
+
   let currentColor = PRESETS[0];
-  const state = {};        // gid -> color
-  const pathByGid = {};
+  const state = {};           // gid -> color (survives the low→high swap)
+  let active = null;          // the visible path selection (low, then high)
+  let highLoaded = false, highPending = false, touchMode = false;
 
   const width = 960, height = 500;
   const wrap = document.getElementById("map-wrap");
   const tooltip = document.getElementById("tooltip");
+  const detailTag = document.getElementById("detail-tag");
+  const select = document.getElementById("country-select");
+
   const svg = d3.select(wrap).append("svg")
     .attr("viewBox", `0 0 ${width} ${height}`).style("width", "100%").style("height", "auto");
   svg.append("rect").attr("width", width).attr("height", height).attr("fill", OCEAN);
-  const g = svg.append("g");
+  const gZoom = svg.append("g");
+  const gLow = gZoom.append("g");
+  const gHigh = gZoom.append("g");
   const projection = d3.geoNaturalEarth1();
   const path = d3.geoPath(projection);
   const gid = (d) => d.properties.gid || d.properties.iso2;
 
-  d3.json("https://api.mapjson.com/v1/geo?layer=countries&detail=medium&properties=name,iso2&format=geojson")
-    .then((geo) => {
-      projection.fitExtent([[6, 6], [width - 6, height - 6]], geo);
+  const zoom = d3.zoom().scaleExtent([1, 12]).on("zoom", (e) => {
+    gZoom.attr("transform", e.transform);
+    if (e.transform.k >= ZOOM_TRIGGER) ensureHigh();
+  });
+  svg.call(zoom);
+  // Mobile / iPad: there's no hover, and a tap-to-mark may never zoom — so the first
+  // touch of the map upgrades to full detail (and taps flash the country name).
+  svg.on("touchstart.load", () => { touchMode = true; ensureHigh(); });
 
-      const select = document.getElementById("country-select");
-      geo.features.filter((d) => d.properties.name)
-        .sort((a, b) => a.properties.name.localeCompare(b.properties.name))
-        .forEach((d) => {
-          const o = document.createElement("option");
-          o.value = gid(d); o.textContent = d.properties.name;
-          select.appendChild(o);
-        });
+  d3.json(LOW).then((geo) => {
+    projection.fitExtent([[6, 6], [width - 6, height - 6]], { type: "Sphere" });
+    active = drawLayer(gLow, geo.features);
+    fillDropdown(geo.features);
+  });
 
-      g.selectAll("path").data(geo.features).join("path")
-        .attr("d", path).attr("fill", LAND).attr("stroke", STROKE).attr("stroke-width", 0.6)
-        .style("cursor", "pointer")
-        .each(function (d) { pathByGid[gid(d)] = this; })
-        .on("mouseenter", function () { d3.select(this).attr("stroke", "#555").attr("stroke-width", 1).raise(); })
-        .on("mousemove", function (event, d) {
-          const r = wrap.getBoundingClientRect();
-          tooltip.style.left = (event.clientX - r.left + 12) + "px";
-          tooltip.style.top = (event.clientY - r.top - 10) + "px";
-          tooltip.style.opacity = 1;
-          tooltip.textContent = d.properties.name || gid(d);
-        })
-        .on("mouseleave", function () { d3.select(this).attr("stroke", STROKE).attr("stroke-width", 0.6); tooltip.style.opacity = 0; })
-        .on("click", function (event, d) { toggle(gid(d)); });
-    });
+  function drawLayer(layer, feats) {
+    return layer.selectAll("path").data(feats).join("path")
+      .attr("d", path).attr("fill", (d) => state[gid(d)] || LAND)
+      .attr("stroke", STROKE).attr("stroke-width", 0.6).style("cursor", "pointer")
+      .on("mouseenter", function () { d3.select(this).attr("stroke", "#555").attr("stroke-width", 1.4).raise(); })
+      .on("mousemove", function (event, d) { tip(event, d); })
+      .on("mouseleave", function () { d3.select(this).attr("stroke", STROKE).attr("stroke-width", 0.6); if (!touchMode) tooltip.style.opacity = 0; })
+      .on("click", function (event, d) { toggle(gid(d)); tip(event, d, true); });
+  }
 
-  function repaint(k) { const n = pathByGid[k]; if (n) n.setAttribute("fill", state[k] || LAND); }
+  // Position + show the name tooltip. On touch there's no hover, so a tap (tap=true)
+  // flashes the name and auto-hides it after a moment.
+  function tip(event, d, tap) {
+    const r = wrap.getBoundingClientRect();
+    tooltip.style.left = (event.clientX - r.left + 12) + "px";
+    tooltip.style.top = (event.clientY - r.top - 10) + "px";
+    tooltip.style.opacity = 1;
+    tooltip.textContent = d.properties.name || gid(d);
+    if (tap && touchMode) { clearTimeout(tip.t); tip.t = setTimeout(() => { tooltip.style.opacity = 0; }, 1500); }
+  }
+
+  function ensureHigh() {
+    if (highLoaded || highPending) return;
+    highPending = true; detailTag.textContent = "loading full detail…";
+    d3.json(HIGH).then((geo) => {
+      highLoaded = true; highPending = false;
+      const hs = drawLayer(gHigh, geo.features);
+      gHigh.style("opacity", 0).transition().duration(600).style("opacity", 1);
+      gLow.transition().duration(600).style("opacity", 0).on("end", () => gLow.remove());
+      active = hs;
+      fillDropdown(geo.features);
+      detailTag.textContent = "full detail · 265 territories";
+    }).catch(() => { highPending = false; detailTag.textContent = "detail unavailable"; });
+  }
+
+  function fillDropdown(feats) {
+    const cur = select.value;
+    select.innerHTML = '<option value="">Choose a country…</option>';
+    feats.filter((d) => d.properties.name)
+      .sort((a, b) => a.properties.name.localeCompare(b.properties.name))
+      .forEach((d) => { const o = document.createElement("option"); o.value = gid(d); o.textContent = d.properties.name; select.appendChild(o); });
+    select.value = cur;
+  }
+
+  function repaint(k) { if (active) active.filter((d) => gid(d) === k).attr("fill", state[k] || LAND); }
   function updateCount() { document.getElementById("count").textContent = Object.keys(state).length + " marked"; }
   function toggle(k) { if (state[k] === currentColor) delete state[k]; else state[k] = currentColor; repaint(k); updateCount(); }
   function mark(k) { state[k] = currentColor; repaint(k); updateCount(); }
@@ -415,16 +398,17 @@
     currentColor = e.target.value;
     document.querySelectorAll(".swatch").forEach((s) => s.classList.remove("active"));
   });
-  document.getElementById("country-select").addEventListener("change", (e) => {
-    if (e.target.value) { mark(e.target.value); e.target.value = ""; }
-  });
+  // Opening the country list also upgrades to full detail, so every territory is selectable.
+  select.addEventListener("focus", ensureHigh);
+  select.addEventListener("change", (e) => { if (e.target.value) { mark(e.target.value); e.target.value = ""; } });
   document.getElementById("clear").addEventListener("click", () => {
-    Object.keys(state).forEach((k) => { delete state[k]; const n = pathByGid[k]; if (n) n.setAttribute("fill", LAND); });
+    for (const k in state) delete state[k];
+    if (active) active.attr("fill", LAND);
     updateCount();
   });
-  // The "download png" button (bottom-right of the map) comes from the shared
-  // example-widgets.js — it serializes this SVG and rasterizes it to a 2x PNG,
-  // so the example itself needs no export code.
+  document.getElementById("reset-view").addEventListener("click", () => {
+    svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+  });
 </script>
 <script src="example-widgets.js" defer></script>
 </body>

@@ -99,13 +99,16 @@ async function processCountries(res, inFile, mapUnitsFile, outFile) {
     `-o format=topojson ${tmpFra}`
   );
 
-  // 3. Norway — split into Norway proper + Svalbard (+ Jan Mayen at 50m/10m).
-  //    Svalbard and Jan Mayen share ISO code SJ / 744.
+  // 3. Norway — split into Norway proper (NO) + Svalbard & Jan Mayen (SJ, shared ISO 744).
+  //    Key on SUBUNIT: it is the only field stable across resolutions. SU_A3 is 'NOR' at
+  //    110m/50m but 'NOW' at 10m, and ISO_A2 is '-99' for the mainland at 110m/50m but
+  //    'NO' at 10m — keying on either dropped Norway proper and produced SJ ×4 at 10m.
+  //    Bouvet Island (ISO 'BV', a NOR map_unit at 10m only) is excluded — not a tracked territory.
   await run(
     `-i ${mapUnitsFile} ` +
-    `-filter "ADM0_A3.trim() == 'NOR'" ` +
+    `-filter "ADM0_A3.trim() == 'NOR' && SUBUNIT.trim() != 'Bouvet Island'" ` +
     `-each "disputed = false; ` +
-           `iso2 = (SU_A3.trim() == 'NOR' ? 'NO' : 'SJ'); ` +
+           `iso2 = (SUBUNIT.trim() == 'Norway' ? 'NO' : 'SJ'); ` +
            `gid = iso2; ` +
            `cont = 'Europe'" ` +
     `-filter-fields gid,disputed,cont,iso2 ` +
@@ -368,4 +371,8 @@ async function main() {
   console.log('Done. Run: npm run build-props');
 }
 
-main().catch((err) => { console.error(err); process.exit(1); });
+if (require.main === module) {
+  main().catch((err) => { console.error(err); process.exit(1); });
+}
+
+module.exports = { processCountries };

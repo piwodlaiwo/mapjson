@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Been - Visited Countries — mapjson examples</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1a1a1a;
+      --bg: #fafafa;
+      --accent: #b0402f;
+      --muted: #9b9a94;
+      --border: #e5e4df;
+      --code-bg: #efeeea;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 400;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link {
+      display: inline-block;
+      padding: 2.5rem 0 0;
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .back-link:hover { color: var(--ink); }
+    header {
+      border-bottom: 1.5px solid var(--ink);
+      padding: 1rem 0 1.5rem;
+      margin-bottom: 2rem;
+    }
+    header .tag {
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #a7a6a0;
+      margin-bottom: 0.5rem;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 500;
+      font-size: 2.5rem;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+    header p { color: #4a4a45; margin-top: 0.6rem; font-size: 15px; max-width: 680px; line-height: 1.65; }
+    h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 500;
+      font-size: 1.35rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    section { margin-bottom: 2.5rem; }
+
+    /* ── Controls ── */
+    .controls { display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1rem; }
+    .control-group { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+    .control-label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-right: 0.2rem; }
+    .swatches { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+    .swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; outline: none; transition: transform 0.08s; }
+    .swatch:hover { transform: scale(1.12); }
+    .swatch.active { border-color: var(--ink); box-shadow: 0 0 0 2px #fff inset; }
+    .swatch-custom { width: 30px; height: 30px; padding: 0; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; background: none; }
+    select, .btn {
+      font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+      padding: 0.5rem 0.8rem; border: 1px solid var(--border); border-radius: 6px;
+      background: #fff; color: var(--ink); cursor: pointer;
+    }
+    select { min-width: 200px; max-width: 260px; }
+    .btn:hover { border-color: var(--ink); }
+    .btn-primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+    .btn-primary:hover { background: #000; }
+    .count { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); margin-left: auto; }
+
+    .map-wrap {
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+      background: #eaf0f2;
+      line-height: 0;
+      position: relative;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .map-wrap svg { width: 100%; display: block; }
+    .hint { font-size: 13px; color: var(--muted); margin-bottom: 2.5rem; }
+    pre {
+      background: var(--code-bg);
+      border-left: 3px solid var(--ink);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.65;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .tooltip {
+      position: absolute;
+      background: #1a1a1a;
+      color: #fafafa;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      padding: 5px 9px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      white-space: nowrap;
+      border-radius: 3px;
+    }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 48px;
+    }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    .nav-links a, nav .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; text-decoration: none; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { display: inline-flex; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; text-decoration: none; color: var(--ink); letter-spacing: -0.01em; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 14px; height: 14px; background: var(--ink); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; background: var(--bg); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
+    @media (max-width: 640px) {
+      html, body { overflow-x: hidden; }
+      nav { padding: 0 0.6rem; }
+      .nav-links { gap: 0.55rem; }
+      .nav-links a { font-size: 11px !important; letter-spacing: 0.08em !important; }
+      header h1 { font-size: 2rem; letter-spacing: -0.02em; line-height: 1.1; }
+      .count { margin-left: 0; }
+      select { min-width: 150px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <a class="back-link" href="/examples/">← Examples</a>
+
+  <header>
+    <div class="tag">countries · Natural Earth · interactive · PNG export</div>
+    <h1>Been - Visited Countries</h1>
+    <p>Pick a color, then click countries — or choose them from the dropdown — to mark everywhere you've been. Use different colors for different meanings (visited, lived, want to go), then download your map as a PNG. Built on one <code>/v1/geo</code> call and rendered with a Natural Earth projection; all the interaction is plain SVG.</p>
+  </header>
+
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Color</span>
+      <div class="swatches" id="swatches"></div>
+      <input type="color" class="swatch-custom" id="custom-color" value="#2f9e6f" title="Custom color">
+    </div>
+    <div class="control-group">
+      <span class="control-label">Add</span>
+      <select id="country-select" aria-label="Add a country">
+        <option value="">Choose a country…</option>
+      </select>
+      <button class="btn" id="clear" type="button">Clear all</button>
+      <span class="count" id="count">0 marked</span>
+    </div>
+  </div>
+
+  <div class="map-wrap" id="map-wrap">
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+  <p class="hint">Tip: click a country again with the same color to un-mark it. Switch colors any time — each country keeps whatever color you last gave it. When you're done, hit <strong>download png</strong> in the bottom-right corner of the map.</p>
+
+  <section>
+    <h2>API Call</h2>
+    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;detail=medium&amp;properties=name,iso2&amp;format=geojson</pre>
+  </section>
+
+  <section>
+    <h2>Code</h2>
+    <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;Been - Visited Countries&lt;/title&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+  &lt;style&gt;
+    body { font-family: sans-serif; margin: 2rem; }
+    .controls { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+    .swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+    .swatch.active { border-color: #1a1a1a; box-shadow: 0 0 0 2px #fff inset; }
+    #map-wrap { position: relative; background: #eaf0f2; max-width: 960px; }
+    #map-wrap svg { width: 100%; display: block; }
+    #tooltip { position: absolute; background: #1a1a1a; color: #fff; font: 11px monospace;
+               padding: 4px 8px; border-radius: 3px; pointer-events: none; opacity: 0; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="controls"&gt;
+    &lt;div id="swatches" style="display:flex; gap:6px;"&gt;&lt;/div&gt;
+    &lt;input type="color" id="custom-color" value="#2f9e6f"&gt;
+    &lt;select id="country-select"&gt;&lt;option value=""&gt;Choose a country…&lt;/option&gt;&lt;/select&gt;
+    &lt;button id="clear" type="button"&gt;Clear all&lt;/button&gt;
+    &lt;button id="download" type="button"&gt;Download PNG&lt;/button&gt;
+    &lt;span id="count"&gt;0 marked&lt;/span&gt;
+  &lt;/div&gt;
+  &lt;div id="map-wrap"&gt;&lt;div id="tooltip"&gt;&lt;/div&gt;&lt;/div&gt;
+
+  &lt;script&gt;
+    const OCEAN = "#eaf0f2", LAND = "#d6d0c4", STROKE = "#ffffff";
+    const PRESETS = ["#e8663d", "#e2b13a", "#4caf7d", "#3d8ee8", "#8a63d2", "#d13b52"];
+    let currentColor = PRESETS[0];
+    const state = {};        // gid -&gt; color
+    const pathByGid = {};
+
+    const width = 960, height = 500;
+    const wrap = document.getElementById("map-wrap");
+    const tooltip = document.getElementById("tooltip");
+    const svg = d3.select(wrap).append("svg")
+      .attr("viewBox", `0 0 ${width} ${height}`).style("width", "100%").style("height", "auto");
+    svg.append("rect").attr("width", width).attr("height", height).attr("fill", OCEAN);
+    const g = svg.append("g");
+    const projection = d3.geoNaturalEarth1();
+    const path = d3.geoPath(projection);
+    const gid = (d) =&gt; d.properties.gid || d.properties.iso2;
+
+    d3.json("https://api.mapjson.com/v1/geo?layer=countries&amp;detail=medium&amp;properties=name,iso2&amp;format=geojson")
+      .then((geo) =&gt; {
+        projection.fitExtent([[6, 6], [width - 6, height - 6]], geo);
+
+        const select = document.getElementById("country-select");
+        geo.features.filter((d) =&gt; d.properties.name)
+          .sort((a, b) =&gt; a.properties.name.localeCompare(b.properties.name))
+          .forEach((d) =&gt; {
+            const o = document.createElement("option");
+            o.value = gid(d); o.textContent = d.properties.name;
+            select.appendChild(o);
+          });
+
+        g.selectAll("path").data(geo.features).join("path")
+          .attr("d", path).attr("fill", LAND).attr("stroke", STROKE).attr("stroke-width", 0.6)
+          .style("cursor", "pointer")
+          .each(function (d) { pathByGid[gid(d)] = this; })
+          .on("mouseenter", function () { d3.select(this).attr("stroke", "#555").attr("stroke-width", 1).raise(); })
+          .on("mousemove", function (event, d) {
+            const r = wrap.getBoundingClientRect();
+            tooltip.style.left = (event.clientX - r.left + 12) + "px";
+            tooltip.style.top = (event.clientY - r.top - 10) + "px";
+            tooltip.style.opacity = 1;
+            tooltip.textContent = d.properties.name || gid(d);
+          })
+          .on("mouseleave", function () { d3.select(this).attr("stroke", STROKE).attr("stroke-width", 0.6); tooltip.style.opacity = 0; })
+          .on("click", function (event, d) { toggle(gid(d)); });
+      });
+
+    function repaint(k) { const n = pathByGid[k]; if (n) n.setAttribute("fill", state[k] || LAND); }
+    function updateCount() { document.getElementById("count").textContent = Object.keys(state).length + " marked"; }
+    function toggle(k) { if (state[k] === currentColor) delete state[k]; else state[k] = currentColor; repaint(k); updateCount(); }
+    function mark(k) { state[k] = currentColor; repaint(k); updateCount(); }
+
+    const swatches = document.getElementById("swatches");
+    PRESETS.forEach((c, i) =&gt; {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "swatch" + (i === 0 ? " active" : "");
+      b.style.background = c; b.dataset.color = c; b.title = c;
+      swatches.appendChild(b);
+    });
+    swatches.addEventListener("click", (e) =&gt; {
+      const b = e.target.closest(".swatch"); if (!b) return;
+      currentColor = b.dataset.color;
+      document.querySelectorAll(".swatch").forEach((s) =&gt; s.classList.remove("active"));
+      b.classList.add("active");
+    });
+    document.getElementById("custom-color").addEventListener("input", (e) =&gt; {
+      currentColor = e.target.value;
+      document.querySelectorAll(".swatch").forEach((s) =&gt; s.classList.remove("active"));
+    });
+    document.getElementById("country-select").addEventListener("change", (e) =&gt; {
+      if (e.target.value) { mark(e.target.value); e.target.value = ""; }
+    });
+    document.getElementById("clear").addEventListener("click", () =&gt; {
+      Object.keys(state).forEach((k) =&gt; { delete state[k]; const n = pathByGid[k]; if (n) n.setAttribute("fill", LAND); });
+      updateCount();
+    });
+    document.getElementById("download").addEventListener("click", downloadPNG);
+
+    function downloadPNG() {
+      const clone = svg.node().cloneNode(true);
+      clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      clone.removeAttribute("style"); // drop width:100% so the standalone SVG rasterizes at its real size
+      clone.setAttribute("width", width); clone.setAttribute("height", height);
+      const str = new XMLSerializer().serializeToString(clone);
+      const url = URL.createObjectURL(new Blob([str], { type: "image/svg+xml;charset=utf-8" }));
+      const img = new Image();
+      img.onload = () =&gt; {
+        const scale = 2, canvas = document.createElement("canvas");
+        canvas.width = width * scale; canvas.height = height * scale;
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((b) =&gt; {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(b); a.download = "travel-map.png";
+          document.body.appendChild(a); a.click(); a.remove();
+          URL.revokeObjectURL(a.href);
+        }, "image/png");
+      };
+      img.src = url;
+    }
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+  const OCEAN = "#eaf0f2", LAND = "#d6d0c4", STROKE = "#ffffff";
+  const PRESETS = ["#e8663d", "#e2b13a", "#4caf7d", "#3d8ee8", "#8a63d2", "#d13b52"];
+  let currentColor = PRESETS[0];
+  const state = {};        // gid -> color
+  const pathByGid = {};
+
+  const width = 960, height = 500;
+  const wrap = document.getElementById("map-wrap");
+  const tooltip = document.getElementById("tooltip");
+  const svg = d3.select(wrap).append("svg")
+    .attr("viewBox", `0 0 ${width} ${height}`).style("width", "100%").style("height", "auto");
+  svg.append("rect").attr("width", width).attr("height", height).attr("fill", OCEAN);
+  const g = svg.append("g");
+  const projection = d3.geoNaturalEarth1();
+  const path = d3.geoPath(projection);
+  const gid = (d) => d.properties.gid || d.properties.iso2;
+
+  d3.json("https://api.mapjson.com/v1/geo?layer=countries&detail=medium&properties=name,iso2&format=geojson")
+    .then((geo) => {
+      projection.fitExtent([[6, 6], [width - 6, height - 6]], geo);
+
+      const select = document.getElementById("country-select");
+      geo.features.filter((d) => d.properties.name)
+        .sort((a, b) => a.properties.name.localeCompare(b.properties.name))
+        .forEach((d) => {
+          const o = document.createElement("option");
+          o.value = gid(d); o.textContent = d.properties.name;
+          select.appendChild(o);
+        });
+
+      g.selectAll("path").data(geo.features).join("path")
+        .attr("d", path).attr("fill", LAND).attr("stroke", STROKE).attr("stroke-width", 0.6)
+        .style("cursor", "pointer")
+        .each(function (d) { pathByGid[gid(d)] = this; })
+        .on("mouseenter", function () { d3.select(this).attr("stroke", "#555").attr("stroke-width", 1).raise(); })
+        .on("mousemove", function (event, d) {
+          const r = wrap.getBoundingClientRect();
+          tooltip.style.left = (event.clientX - r.left + 12) + "px";
+          tooltip.style.top = (event.clientY - r.top - 10) + "px";
+          tooltip.style.opacity = 1;
+          tooltip.textContent = d.properties.name || gid(d);
+        })
+        .on("mouseleave", function () { d3.select(this).attr("stroke", STROKE).attr("stroke-width", 0.6); tooltip.style.opacity = 0; })
+        .on("click", function (event, d) { toggle(gid(d)); });
+    });
+
+  function repaint(k) { const n = pathByGid[k]; if (n) n.setAttribute("fill", state[k] || LAND); }
+  function updateCount() { document.getElementById("count").textContent = Object.keys(state).length + " marked"; }
+  function toggle(k) { if (state[k] === currentColor) delete state[k]; else state[k] = currentColor; repaint(k); updateCount(); }
+  function mark(k) { state[k] = currentColor; repaint(k); updateCount(); }
+
+  const swatches = document.getElementById("swatches");
+  PRESETS.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "swatch" + (i === 0 ? " active" : "");
+    b.style.background = c; b.dataset.color = c; b.title = c;
+    swatches.appendChild(b);
+  });
+  swatches.addEventListener("click", (e) => {
+    const b = e.target.closest(".swatch"); if (!b) return;
+    currentColor = b.dataset.color;
+    document.querySelectorAll(".swatch").forEach((s) => s.classList.remove("active"));
+    b.classList.add("active");
+  });
+  document.getElementById("custom-color").addEventListener("input", (e) => {
+    currentColor = e.target.value;
+    document.querySelectorAll(".swatch").forEach((s) => s.classList.remove("active"));
+  });
+  document.getElementById("country-select").addEventListener("change", (e) => {
+    if (e.target.value) { mark(e.target.value); e.target.value = ""; }
+  });
+  document.getElementById("clear").addEventListener("click", () => {
+    Object.keys(state).forEach((k) => { delete state[k]; const n = pathByGid[k]; if (n) n.setAttribute("fill", LAND); });
+    updateCount();
+  });
+  // The "download png" button (bottom-right of the map) comes from the shared
+  // example-widgets.js — it serializes this SVG and rasterizes it to a 2x PNG,
+  // so the example itself needs no export code.
+</script>
+<script src="example-widgets.js" defer></script>
+</body>
+</html>

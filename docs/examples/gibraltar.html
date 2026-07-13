@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Simple World — mapjson examples</title>
+  <title>Strait of Gibraltar — mapjson examples</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="The minimal mapjson call. GET /v1/geo with no parameters returns 110m world countries as geometry-only topojson — no properties attached. Copy the code below…">
+  <meta name="description" content="A reference map of the Strait of Gibraltar built from three mapjson filter calls — Spain, Morocco, and Gibraltar (ISO GI) at high detail — with Ceuta shown as a marker.">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
   <script>
@@ -78,10 +78,9 @@
     .map-wrap {
       margin-bottom: 2.5rem;
       border: 1px solid var(--border);
-      background: #cfe0ea;
+      background: #7ab4cc;
       line-height: 0;
     }
-    .map-wrap svg { width: 100%; display: block; }
     pre {
       background: var(--code-bg);
       border-left: 3px solid var(--ink);
@@ -90,6 +89,19 @@
       font-size: 12px;
       line-height: 1.65;
       font-family: 'IBM Plex Mono', monospace;
+    }
+    .tooltip {
+      position: fixed;
+      background: var(--ink);
+      color: var(--bg);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 300;
+      padding: 0.3rem 0.6rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      white-space: nowrap;
     }
     nav {
       position: sticky; top: 0; z-index: 100;
@@ -168,21 +180,25 @@
     <a href="/build/">Build</a>
   </div>
 </nav>
+
 <div class="page">
 
   <a class="back-link" href="/examples/">← Examples</a>
 
   <header>
-    <div class="tag">countries · low detail</div>
-    <h1>Simple World</h1>
-    <p>The minimal mapjson call. <code>GET /v1/geo</code> with no parameters returns 110m world countries as geometry-only topojson — no properties attached. Copy the code below into any HTML file to get a working world map.</p>
+    <div class="tag">countries · high detail · multiple filters</div>
+    <h1>Strait of Gibraltar</h1>
+    <p>Gibraltar (ISO <code>GI</code>) is about 7&nbsp;km² — it only exists in the data at <code>detail=high</code>, and vanishes at lower resolutions. Three <code>filter</code> calls — Spain, Morocco, and Gibraltar — are drawn together to frame the strait, each as its own polygon with its ISO 3166-1 code. Ceuta is a Spanish city with no ISO 3166-1 code, so it can't be a polygon here — it's a marker. Hover to see names.</p>
   </header>
 
   <div class="map-wrap" id="map"></div>
+  <div class="tooltip" id="tooltip"></div>
 
   <section>
-    <h2>API Call</h2>
-    <pre>https://api.mapjson.com/v1/geo</pre>
+    <h2>API Calls</h2>
+    <pre>https://api.mapjson.com/v1/geo?filter=Spain&amp;detail=high&amp;properties=name,iso2
+https://api.mapjson.com/v1/geo?filter=Morocco&amp;detail=high&amp;properties=name,iso2
+https://api.mapjson.com/v1/geo?filter=Gibraltar&amp;detail=high&amp;properties=name,iso2</pre>
   </section>
 
   <section>
@@ -192,22 +208,57 @@
 &lt;head&gt;
   &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
   &lt;script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"&gt;&lt;/script&gt;
-  &lt;style&gt;svg { width: 100%; display: block; }&lt;/style&gt;
+  &lt;style&gt;
+    svg { width: 100%; display: block; background: #7ab4cc; }
+    #tooltip { position: fixed; background: #000; color: #fff; font-size: 12px; padding: 4px 8px; pointer-events: none; opacity: 0; }
+  &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
   &lt;div id="map"&gt;&lt;/div&gt;
+  &lt;div id="tooltip"&gt;&lt;/div&gt;
   &lt;script&gt;
-    const svg = d3.select("#map").append("svg").attr("viewBox", "0 0 960 500");
-    const path = d3.geoPath().projection(d3.geoNaturalEarth1());
+    const width = 960, height = 560;
+    const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${width} ${height}`);
+    const tooltip = d3.select("#tooltip");
 
-    d3.json("https://api.mapjson.com/v1/geo").then(topo =&gt; {
-      svg.selectAll("path")
-        .data(topojson.feature(topo, topo.objects.geo).features)
-        .join("path")
+    // A tight Mercator on the strait (no fitExtent — the countries themselves are much larger).
+    const projection = d3.geoMercator().center([-5.45, 35.95]).scale(22000).translate([width / 2, height / 2]);
+    const path = d3.geoPath(projection);
+
+    const base = "https://api.mapjson.com/v1/geo?detail=high&properties=name,iso2&filter=";
+    const fill = { ES: "#b8c9a8", MA: "#d9c39a", GI: "#c0392b" };   // Spain, Morocco, Gibraltar
+
+    Promise.all(["Spain", "Morocco", "Gibraltar"].map(f =&gt; d3.json(base + f))).then(topos =&gt; {
+      const feats = topos.flatMap(t =&gt; topojson.feature(t, t.objects.geo).features);
+      svg.append("g").selectAll("path").data(feats).join("path")
         .attr("d", path)
-        .attr("fill", "#d9d0be")
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 0.5);
+        .attr("fill", d =&gt; fill[d.properties.iso2] || "#d9d0be")
+        .attr("stroke", "#fff").attr("stroke-width", 0.7)
+        .style("cursor", "pointer")
+        .on("mouseover", function (e, d) {
+          d3.select(this).attr("stroke", "#1a1a1a").raise();
+          tooltip.style("opacity", 1).text(d.properties.name + " (" + d.properties.iso2 + ")");
+        })
+        .on("mousemove", e =&gt; tooltip.style("left", (e.clientX + 12) + "px").style("top", (e.clientY - 8) + "px"))
+        .on("mouseout", function () { d3.select(this).attr("stroke", "#fff"); tooltip.style("opacity", 0); });
+
+      // Ceuta has no ISO 3166-1 code (it's a city of Spain), so it's a marker, not a polygon.
+      const places = [
+        { name: "Gibraltar", lng: -5.3536, lat: 36.1408 },
+        { name: "Ceuta",     lng: -5.3213, lat: 35.8894, marker: true },
+        { name: "Tangier",   lng: -5.8129, lat: 35.7595, small: true },
+        { name: "Tarifa",    lng: -5.6045, lat: 36.0143, small: true },
+      ];
+      const g = svg.append("g").attr("font-family", "monospace");
+      places.forEach(p =&gt; {
+        const [x, y] = projection([p.lng, p.lat]);
+        g.append("circle").attr("cx", x).attr("cy", y).attr("r", p.marker ? 6 : p.small ? 2.5 : 3)
+          .attr("fill", p.marker ? "#2f6fb0" : "#444").attr("stroke", "#fff").attr("stroke-width", p.marker ? 1.5 : 0.8);
+        g.append("text").attr("x", x).attr("y", y - 9).attr("text-anchor", "middle")
+          .attr("font-size", p.small ? 10 : 12).attr("font-weight", 600)
+          .attr("fill", "#1a1a1a").attr("stroke", "#fff").attr("stroke-width", 3).attr("paint-order", "stroke")
+          .text(p.name);
+      });
     });
   &lt;/script&gt;
 &lt;/body&gt;
@@ -219,17 +270,46 @@
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <script>
-  const svg = d3.select("#map").append("svg").attr("viewBox", "0 0 960 500");
-  const path = d3.geoPath().projection(d3.geoNaturalEarth1());
+  const width = 960, height = 560;
+  const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${width} ${height}`);
+  const tooltip = d3.select("#tooltip");
 
-  d3.json("https://mapjson.mapjson.workers.dev/v1/geo").then(topo => {
-    svg.selectAll("path")
-      .data(topojson.feature(topo, topo.objects.geo).features)
-      .join("path")
+  const projection = d3.geoMercator().center([-5.45, 35.95]).scale(22000).translate([width / 2, height / 2]);
+  const path = d3.geoPath(projection);
+
+  const base = "https://api.mapjson.com/v1/geo?detail=high&properties=name,iso2&filter=";
+  const fill = { ES: "#b8c9a8", MA: "#d9c39a", GI: "#c0392b" };
+
+  Promise.all(["Spain", "Morocco", "Gibraltar"].map(f => d3.json(base + f))).then(topos => {
+    const feats = topos.flatMap(t => topojson.feature(t, t.objects.geo).features);
+    svg.append("g").selectAll("path").data(feats).join("path")
       .attr("d", path)
-      .attr("fill", "#d9d0be")
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 0.5);
+      .attr("fill", d => fill[d.properties.iso2] || "#d9d0be")
+      .attr("stroke", "#fff").attr("stroke-width", 0.7)
+      .style("cursor", "pointer")
+      .on("mouseover", function (e, d) {
+        d3.select(this).attr("stroke", "#1a1a1a").raise();
+        tooltip.style("opacity", 1).text(d.properties.name + " (" + d.properties.iso2 + ")");
+      })
+      .on("mousemove", e => tooltip.style("left", (e.clientX + 12) + "px").style("top", (e.clientY - 8) + "px"))
+      .on("mouseout", function () { d3.select(this).attr("stroke", "#fff"); tooltip.style("opacity", 0); });
+
+    const places = [
+      { name: "Gibraltar", lng: -5.3536, lat: 36.1408 },
+      { name: "Ceuta",     lng: -5.3213, lat: 35.8894, marker: true },
+      { name: "Tangier",   lng: -5.8129, lat: 35.7595, small: true },
+      { name: "Tarifa",    lng: -5.6045, lat: 36.0143, small: true },
+    ];
+    const g = svg.append("g").attr("font-family", "monospace");
+    places.forEach(p => {
+      const [x, y] = projection([p.lng, p.lat]);
+      g.append("circle").attr("cx", x).attr("cy", y).attr("r", p.marker ? 6 : p.small ? 2.5 : 3)
+        .attr("fill", p.marker ? "#2f6fb0" : "#444").attr("stroke", "#fff").attr("stroke-width", p.marker ? 1.5 : 0.8);
+      g.append("text").attr("x", x).attr("y", y - 9).attr("text-anchor", "middle")
+        .attr("font-size", p.small ? 10 : 12).attr("font-weight", 600)
+        .attr("fill", "#1a1a1a").attr("stroke", "#fff").attr("stroke-width", 3).attr("paint-order", "stroke")
+        .text(p.name);
+    });
   });
 </script>
 <script src="example-widgets.js" defer></script>

@@ -188,7 +188,7 @@
   <header>
     <div class="tag">countries · high detail · multiple filters</div>
     <h1>Strait of Gibraltar</h1>
-    <p>Gibraltar (ISO <code>GI</code>) is about 7&nbsp;km² — it only exists in the data at <code>detail=high</code>, and vanishes at lower resolutions. Three <code>filter</code> calls — Spain, Morocco, and Gibraltar — are drawn together to frame the strait, each as its own polygon with its ISO 3166-1 code. Ceuta is a Spanish city with no ISO 3166-1 code, so it can't be a polygon here — it's a marker. Hover to see names.</p>
+    <p>Gibraltar (ISO <code>GI</code>) is about 7&nbsp;km² — it only exists in the data at <code>detail=high</code>, and vanishes at lower resolutions. Three <code>filter</code> calls — Spain, Morocco, and Gibraltar — are drawn together to frame the strait, each as its own polygon with its ISO 3166-1 code. Ceuta is a Spanish city with no ISO 3166-1 code, so it can't be a polygon here — it's a marker. Hover to see names; scroll to zoom in on the Rock.</p>
   </header>
 
   <div class="map-wrap" id="map"></div>
@@ -228,12 +228,37 @@ https://api.mapjson.com/v1/geo?filter=Gibraltar&amp;detail=high&amp;properties=n
     const base = "https://api.mapjson.com/v1/geo?detail=high&properties=name,iso2&filter=";
     const fill = { ES: "#b8c9a8", MA: "#d9c39a", GI: "#c0392b" };   // Spain, Morocco, Gibraltar
 
+    const gLand = svg.append("g");     // zoomed (CSS transform)
+    const gMarks = svg.append("g");    // NOT zoomed — repositioned each frame so markers stay a fixed size
+
+    // Ceuta has no ISO 3166-1 code (it's a city of Spain), so it's a marker, not a polygon.
+    const places = [
+      { name: "Gibraltar", lng: -5.3536, lat: 36.1408 },
+      { name: "Ceuta",     lng: -5.3213, lat: 35.8894, marker: true },
+      { name: "Tangier",   lng: -5.8129, lat: 35.7595, small: true },
+      { name: "Tarifa",    lng: -5.6045, lat: 36.0143, small: true },
+    ];
+    function renderMarks(t) {
+      const mk = gMarks.selectAll("g.mk").data(places);
+      const ent = mk.enter().append("g").attr("class", "mk");
+      ent.append("circle").attr("stroke", "#fff");
+      ent.append("text").attr("text-anchor", "middle").attr("font-family", "monospace").attr("font-weight", 600)
+        .attr("fill", "#1a1a1a").attr("stroke", "#fff").attr("stroke-width", 3).attr("paint-order", "stroke");
+      const m = ent.merge(mk).attr("transform", d =&gt; {
+        const p = projection([d.lng, d.lat]); return `translate(${t.applyX(p[0])},${t.applyY(p[1])})`;
+      });
+      m.select("circle").attr("r", d =&gt; d.marker ? 6 : d.small ? 2.5 : 3)
+        .attr("fill", d =&gt; d.marker ? "#2f6fb0" : "#444").attr("stroke-width", d =&gt; d.marker ? 1.5 : 0.8);
+      m.select("text").attr("y", d =&gt; (d.marker ? 6 : d.small ? 2.5 : 3) * -1 - 6)
+        .attr("font-size", d =&gt; d.small ? 10 : 12).text(d =&gt; d.name);
+    }
+
     Promise.all(["Spain", "Morocco", "Gibraltar"].map(f =&gt; d3.json(base + f))).then(topos =&gt; {
       const feats = topos.flatMap(t =&gt; topojson.feature(t, t.objects.geo).features);
-      svg.append("g").selectAll("path").data(feats).join("path")
+      gLand.selectAll("path").data(feats).join("path")
         .attr("d", path)
         .attr("fill", d =&gt; fill[d.properties.iso2] || "#d9d0be")
-        .attr("stroke", "#fff").attr("stroke-width", 0.7)
+        .attr("stroke", "#fff").attr("stroke-width", 0.7).attr("vector-effect", "non-scaling-stroke")
         .style("cursor", "pointer")
         .on("mouseover", function (e, d) {
           d3.select(this).attr("stroke", "#1a1a1a").raise();
@@ -241,25 +266,15 @@ https://api.mapjson.com/v1/geo?filter=Gibraltar&amp;detail=high&amp;properties=n
         })
         .on("mousemove", e =&gt; tooltip.style("left", (e.clientX + 12) + "px").style("top", (e.clientY - 8) + "px"))
         .on("mouseout", function () { d3.select(this).attr("stroke", "#fff"); tooltip.style("opacity", 0); });
-
-      // Ceuta has no ISO 3166-1 code (it's a city of Spain), so it's a marker, not a polygon.
-      const places = [
-        { name: "Gibraltar", lng: -5.3536, lat: 36.1408 },
-        { name: "Ceuta",     lng: -5.3213, lat: 35.8894, marker: true },
-        { name: "Tangier",   lng: -5.8129, lat: 35.7595, small: true },
-        { name: "Tarifa",    lng: -5.6045, lat: 36.0143, small: true },
-      ];
-      const g = svg.append("g").attr("font-family", "monospace");
-      places.forEach(p =&gt; {
-        const [x, y] = projection([p.lng, p.lat]);
-        g.append("circle").attr("cx", x).attr("cy", y).attr("r", p.marker ? 6 : p.small ? 2.5 : 3)
-          .attr("fill", p.marker ? "#2f6fb0" : "#444").attr("stroke", "#fff").attr("stroke-width", p.marker ? 1.5 : 0.8);
-        g.append("text").attr("x", x).attr("y", y - 9).attr("text-anchor", "middle")
-          .attr("font-size", p.small ? 10 : 12).attr("font-weight", 600)
-          .attr("fill", "#1a1a1a").attr("stroke", "#fff").attr("stroke-width", 3).attr("paint-order", "stroke")
-          .text(p.name);
-      });
     });
+
+    renderMarks(d3.zoomIdentity);
+
+    // scroll / pinch to zoom in on the Rock; drag to pan. Land scales; markers stay a fixed size.
+    svg.call(d3.zoom().scaleExtent([1, 60]).on("zoom", (e) =&gt; {
+      gLand.attr("transform", e.transform);
+      renderMarks(e.transform);
+    }));
   &lt;/script&gt;
 &lt;/body&gt;
 &lt;/html&gt;</pre>
@@ -280,12 +295,36 @@ https://api.mapjson.com/v1/geo?filter=Gibraltar&amp;detail=high&amp;properties=n
   const base = "https://api.mapjson.com/v1/geo?detail=high&properties=name,iso2&filter=";
   const fill = { ES: "#b8c9a8", MA: "#d9c39a", GI: "#c0392b" };
 
+  const gLand = svg.append("g");     // zoomed (CSS transform)
+  const gMarks = svg.append("g");    // NOT zoomed — repositioned each frame so markers stay a fixed size
+
+  const places = [
+    { name: "Gibraltar", lng: -5.3536, lat: 36.1408 },
+    { name: "Ceuta",     lng: -5.3213, lat: 35.8894, marker: true },
+    { name: "Tangier",   lng: -5.8129, lat: 35.7595, small: true },
+    { name: "Tarifa",    lng: -5.6045, lat: 36.0143, small: true },
+  ];
+  function renderMarks(t) {
+    const mk = gMarks.selectAll("g.mk").data(places);
+    const ent = mk.enter().append("g").attr("class", "mk");
+    ent.append("circle").attr("stroke", "#fff");
+    ent.append("text").attr("text-anchor", "middle").attr("font-family", "monospace").attr("font-weight", 600)
+      .attr("fill", "#1a1a1a").attr("stroke", "#fff").attr("stroke-width", 3).attr("paint-order", "stroke");
+    const m = ent.merge(mk).attr("transform", d => {
+      const p = projection([d.lng, d.lat]); return `translate(${t.applyX(p[0])},${t.applyY(p[1])})`;
+    });
+    m.select("circle").attr("r", d => d.marker ? 6 : d.small ? 2.5 : 3)
+      .attr("fill", d => d.marker ? "#2f6fb0" : "#444").attr("stroke-width", d => d.marker ? 1.5 : 0.8);
+    m.select("text").attr("y", d => (d.marker ? 6 : d.small ? 2.5 : 3) * -1 - 6)
+      .attr("font-size", d => d.small ? 10 : 12).text(d => d.name);
+  }
+
   Promise.all(["Spain", "Morocco", "Gibraltar"].map(f => d3.json(base + f))).then(topos => {
     const feats = topos.flatMap(t => topojson.feature(t, t.objects.geo).features);
-    svg.append("g").selectAll("path").data(feats).join("path")
+    gLand.selectAll("path").data(feats).join("path")
       .attr("d", path)
       .attr("fill", d => fill[d.properties.iso2] || "#d9d0be")
-      .attr("stroke", "#fff").attr("stroke-width", 0.7)
+      .attr("stroke", "#fff").attr("stroke-width", 0.7).attr("vector-effect", "non-scaling-stroke")
       .style("cursor", "pointer")
       .on("mouseover", function (e, d) {
         d3.select(this).attr("stroke", "#1a1a1a").raise();
@@ -293,24 +332,15 @@ https://api.mapjson.com/v1/geo?filter=Gibraltar&amp;detail=high&amp;properties=n
       })
       .on("mousemove", e => tooltip.style("left", (e.clientX + 12) + "px").style("top", (e.clientY - 8) + "px"))
       .on("mouseout", function () { d3.select(this).attr("stroke", "#fff"); tooltip.style("opacity", 0); });
-
-    const places = [
-      { name: "Gibraltar", lng: -5.3536, lat: 36.1408 },
-      { name: "Ceuta",     lng: -5.3213, lat: 35.8894, marker: true },
-      { name: "Tangier",   lng: -5.8129, lat: 35.7595, small: true },
-      { name: "Tarifa",    lng: -5.6045, lat: 36.0143, small: true },
-    ];
-    const g = svg.append("g").attr("font-family", "monospace");
-    places.forEach(p => {
-      const [x, y] = projection([p.lng, p.lat]);
-      g.append("circle").attr("cx", x).attr("cy", y).attr("r", p.marker ? 6 : p.small ? 2.5 : 3)
-        .attr("fill", p.marker ? "#2f6fb0" : "#444").attr("stroke", "#fff").attr("stroke-width", p.marker ? 1.5 : 0.8);
-      g.append("text").attr("x", x).attr("y", y - 9).attr("text-anchor", "middle")
-        .attr("font-size", p.small ? 10 : 12).attr("font-weight", 600)
-        .attr("fill", "#1a1a1a").attr("stroke", "#fff").attr("stroke-width", 3).attr("paint-order", "stroke")
-        .text(p.name);
-    });
   });
+
+  renderMarks(d3.zoomIdentity);
+
+  // scroll / pinch to zoom in on the Rock; drag to pan. Land scales; markers stay a fixed size.
+  svg.call(d3.zoom().scaleExtent([1, 60]).on("zoom", (e) => {
+    gLand.attr("transform", e.transform);
+    renderMarks(e.transform);
+  }));
 </script>
 <script src="example-widgets.js" defer></script>
 </body>

@@ -197,6 +197,24 @@
       font-size: 11px;
     }
 
+    button.btn { cursor: pointer; }
+
+    /* ── Top examples strip ── */
+    .top-examples { max-width: 1060px; margin: 0 auto; padding: 3.5rem 2rem 4rem; border-top: 1px solid var(--border); }
+    .top-examples-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .top-examples-head h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; letter-spacing: -0.02em; font-size: 1.4rem; }
+    .top-examples-head a { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--muted); text-decoration: none; }
+    .top-examples-head a:hover { color: var(--ink); }
+    .ex-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+    .ex-card { background: var(--bg); padding: 1.4rem 1.3rem 1.2rem; text-decoration: none; color: var(--ink); display: flex; flex-direction: column; gap: 0.45rem; }
+    .ex-card:hover { background: var(--code-bg); }
+    .ex-card .ex-tag { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+    .ex-card h3 { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 1rem; }
+    .ex-card p { color: #4a4a45; font-size: 12px; line-height: 1.65; flex: 1; }
+    .ex-card .ex-arrow { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--accent); }
+    .ex-card-pen h3 { color: var(--accent); }
+    .ex-card-pen .ex-tag { color: var(--accent); opacity: 0.75; }
+
     /* ── Footer ── */
     .nav-brand { display: inline-flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink, #1a1a1a); text-decoration: none; }
     .nav-brand .b { font-size: 19px; font-weight: 500; color: #c8c6c0; line-height: 1; }
@@ -283,7 +301,10 @@
   <div class="quickstart-text">
     <h2>One call, any map</h2>
     <p>Pass a URL to <code>d3.json()</code> and get back a topojson topology ready to render. No API key, no account, no rate limits.</p>
-    <a class="btn btn-ghost" href="/examples/">See all examples →</a>
+    <div class="hero-actions">
+      <button class="btn" id="codepen-btn" type="button">Open in CodePen</button>
+      <a class="btn btn-ghost" href="/examples/">See all examples →</a>
+    </div>
   </div>
   <pre><span style="color:#9b9a94">&lt;!-- include d3 + topojson --&gt;</span>
 &lt;script src="cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
@@ -322,6 +343,39 @@ d3.json("https://api.mapjson.com/v1/geo")
     <div class="feature-label">Properties</div>
     <h3>Only what you need</h3>
     <p>Omit <code>properties</code> for geometry-only output. Add <code>properties=name,iso2,capital</code> to get exactly the fields you need and nothing more.</p>
+  </div>
+</div>
+
+<div class="top-examples">
+  <div class="top-examples-head">
+    <h2>Top examples</h2>
+    <a href="/examples/">All examples →</a>
+  </div>
+  <div class="ex-grid">
+    <a class="ex-card" href="/examples/us-counties.html">
+      <div class="ex-tag">districts · choropleth · external data</div>
+      <h3>US Depression Rates</h3>
+      <p>All 3,000+ US counties shaded by live CDC survey data, joined to the geometry by FIPS code at request time.</p>
+      <span class="ex-arrow">→</span>
+    </a>
+    <a class="ex-card" href="/examples/globe.html">
+      <div class="ex-tag">countries · orthographic · interactive</div>
+      <h3>Globe</h3>
+      <p>An orthographic globe you can drag to spin — one API call, a projection swap, and a d3-drag handler.</p>
+      <span class="ex-arrow">→</span>
+    </a>
+    <a class="ex-card" href="/examples/cities.html">
+      <div class="ex-tag">points · type=city · capitals</div>
+      <h3>Cities &amp; Capitals</h3>
+      <p>The points endpoint — major cities and every national capital as GeoJSON, sized by population, capitals in gold.</p>
+      <span class="ex-arrow">→</span>
+    </a>
+    <a class="ex-card ex-card-pen" href="#" id="codepen-card" role="button">
+      <div class="ex-tag">codepen · live editor</div>
+      <h3>Edit on CodePen</h3>
+      <p>Open the quickstart as a live pen — change the <code>filter</code>, recolor the land, and have your own map in seconds.</p>
+      <span class="ex-arrow">↗</span>
+    </a>
   </div>
 </div>
 
@@ -387,6 +441,60 @@ d3.json("https://api.mapjson.com/v1/geo")
     });
 
   svg.call(zoom);
+
+  // "Open in CodePen" — CodePen's prefill API: POST a JSON payload to codepen.io/pen/define
+  // and it opens a new (unsaved) pen with the quickstart code ready to run.
+  function openQuickstartPen() {
+    const pen = {
+      title: "mapjson — a world map in one call",
+      html: '<div id="map"></div>\n<div id="tip"></div>',
+      css: [
+        "body{margin:0}",
+        "#map svg{display:block;width:100%;height:auto;background:#eaf0f2}",
+        "#tip{position:fixed;background:#1a1a1a;color:#fff;font:12px/1.4 monospace;padding:4px 8px;pointer-events:none;opacity:0}",
+      ].join("\n"),
+      js: [
+        'const svg = d3.select("#map").append("svg").attr("viewBox", "0 0 960 500");',
+        'const path = d3.geoPath().projection(d3.geoNaturalEarth1());',
+        'const tip = d3.select("#tip");',
+        '',
+        'd3.json("https://api.mapjson.com/v1/geo?properties=name").then(topo => {',
+        '  svg.selectAll("path")',
+        '    .data(topojson.feature(topo, topo.objects.geo).features)',
+        '    .join("path")',
+        '    .attr("d", path)',
+        '    .attr("fill", "#d9d0be")',
+        '    .attr("stroke", "#fff")',
+        '    .attr("stroke-width", 0.5)',
+        '    .on("mouseover", function (e, d) {',
+        '      d3.select(this).attr("fill", "#c4b89e");',
+        '      tip.style("opacity", 1).text(d.properties.name);',
+        '    })',
+        '    .on("mousemove", e => tip.style("left", e.clientX + 12 + "px").style("top", e.clientY - 8 + "px"))',
+        '    .on("mouseout", function () {',
+        '      d3.select(this).attr("fill", "#d9d0be");',
+        '      tip.style("opacity", 0);',
+        '    });',
+        '});',
+      ].join("\n"),
+      js_external: "https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js;https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js",
+      editors: "0010",   // show only the JS editor + preview
+    };
+    const form = document.createElement("form");
+    form.action = "https://codepen.io/pen/define";
+    form.method = "POST";
+    form.target = "_blank";
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "data";
+    input.value = JSON.stringify(pen);
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+    form.remove();
+  }
+  document.getElementById("codepen-btn").addEventListener("click", openQuickstartPen);
+  document.getElementById("codepen-card").addEventListener("click", (e) => { e.preventDefault(); openQuickstartPen(); });
 </script>
 </body>
 </html>

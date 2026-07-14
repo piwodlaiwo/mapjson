@@ -140,6 +140,14 @@
     body { font-family: 'Space Grotesk', sans-serif; font-weight: 400; }
     .page { max-width: 1100px; }
     header { border-bottom: 2px solid var(--ink); }
+    /* tag filter + counter */
+    .filter-bar { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-top: 1.25rem; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chips button { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 10px; background: transparent; border: 1px solid var(--border); color: var(--muted); cursor: pointer; border-radius: 999px; }
+    .chips button:hover { border-color: var(--ink); color: var(--ink); }
+    .chips button.on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+    .ex-count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: var(--muted); white-space: nowrap; padding-top: 5px; }
+    @media (max-width: 640px) { .filter-bar { flex-direction: column; } .ex-count { padding-top: 0; } }
     header h1 { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 500; font-size: clamp(3rem, 6vw, 4rem); letter-spacing: -0.03em; line-height: 0.98; }
     header p { font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.2em; color: #9b9a94; }
     .card { padding: 40px 44px 34px; min-height: 280px; }
@@ -208,6 +216,10 @@
   <header>
     <h1>Examples</h1>
     <p class="tagline">D3.js maps built with the mapjson API</p>
+    <div class="filter-bar">
+      <div class="chips" id="chips" role="group" aria-label="Filter examples by tag"></div>
+      <div class="ex-count" id="ex-count"></div>
+    </div>
   </header>
 
   <div class="grid">
@@ -465,5 +477,53 @@
   </div>
 
 </div>
+
+<script>
+  // Counter + client-side tag filter. Chips are derived from each card's own tag line
+  // (the "countries · high detail · …" strings), so new examples pick up filtering for free.
+  (function () {
+    const cards = Array.from(document.querySelectorAll(".grid .card"));
+    const tagsOf = (c) => (c.querySelector(".card-tag")?.textContent || "")
+      .split("·").map((s) => s.trim()).filter(Boolean);
+
+    const counts = new Map();
+    cards.forEach((c) => tagsOf(c).forEach((t) => counts.set(t, (counts.get(t) || 0) + 1)));
+    // only tags shared by 2+ examples become chips — one-off tags would just be noise
+    const tags = [...counts.entries()]
+      .filter(([, n]) => n >= 2)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+    const chipsEl = document.getElementById("chips");
+    const countEl = document.getElementById("ex-count");
+    let active = null;
+
+    function chip(label, tag) {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = label; b.dataset.tag = tag;
+      chipsEl.appendChild(b);
+    }
+    chip("all", "");
+    tags.forEach(([t, n]) => chip(`${t} (${n})`, t));
+
+    function render() {
+      let shown = 0;
+      cards.forEach((c) => {
+        const on = !active || tagsOf(c).includes(active);
+        c.style.display = on ? "" : "none";
+        if (on) shown++;
+      });
+      countEl.textContent = active ? `${shown} of ${cards.length} examples` : `${cards.length} examples`;
+      chipsEl.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.tag === (active || "")));
+    }
+
+    chipsEl.addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      active = b.dataset.tag || null;
+      render();
+    });
+    render();
+  })();
+</script>
 </body>
 </html>

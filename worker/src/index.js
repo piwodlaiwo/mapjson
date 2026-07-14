@@ -2,6 +2,7 @@ import { parseAndValidate } from './validate.js';
 import { filterFeatures } from './filter.js';
 import { mergeProperties } from './merge-props.js';
 import { pruneArcs } from './prune-arcs.js';
+import { checkGuards, meter, enforceBudgets } from './guard.js';
 import { feature } from 'topojson-client';
 
 // Cache properties.json in memory for the lifetime of the Worker instance
@@ -19,9 +20,11 @@ const CORS = {
 };
 
 function json(data, status = 200, extra = {}) {
-  return new Response(JSON.stringify(data), {
+  const body = JSON.stringify(data);
+  return new Response(body, {
     status,
-    headers: { 'Content-Type': 'application/json', ...CORS, ...extra },
+    // X-Content-Bytes feeds the usage metering (see guard.js) — body size before compression
+    headers: { 'Content-Type': 'application/json', 'X-Content-Bytes': String(body.length), ...CORS, ...extra },
   });
 }
 
@@ -255,15 +258,20 @@ async function handlePoints(request, env) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const p = url.pathname;
 
     // Key-resolution endpoints live in the separate mapjson-ontology worker,
     // reached via service binding. Forwarded before the OPTIONS handler so
     // preflight responses advertise POST (this worker's CORS is GET-only).
+    // Non-preflight ontology requests go through the same abuse guards.
     if (p === '/v1/resolve' || p === '/v1/feedback' || p === '/v1/health' ||
         p.startsWith('/v1/entities/') || p.startsWith('/v1/curation/')) {
+      if (request.method !== 'OPTIONS') {
+        const blocked = await checkGuards(request, env, ctx);
+        if (blocked) return blocked;
+      }
       return env.ONTOLOGY.fetch(request);
     }
 
@@ -271,31 +279,34 @@ export default {
       return new Response(null, { status: 204, headers: CORS });
     }
 
-    if (url.pathname === '/v1/geo') {
-      return handleGeo(request, env).catch((err) => {
+    // Abuse guards: kill switch → ban list → per-IP rate limit (see guard.js).
+    // OPTIONS is exempt (cheap, and browsers need preflights to succeed).
+    const blocked = await checkGuards(request, env, ctx);
+    if (blocked) return blocked;
+
+    const route =
+      p === '/v1/geo' ? handleGeo :
+      p === '/v1/catalog' ? handleCatalog :
+      p === '/v1/points' ? handlePoints : null;
+
+    if (route) {
+      const res = await route(request, env).catch((err) => {
         console.error(err);
         return error('Internal server error', 500);
       });
+      meter(env, request, res);   // usage analytics: ip, endpoint, bytes (see guard.js)
+      return res;
     }
 
-    if (url.pathname === '/v1/catalog') {
-      return handleCatalog(request, env).catch((err) => {
-        console.error(err);
-        return error('Internal server error', 500);
-      });
-    }
-
-    if (url.pathname === '/v1/points') {
-      return handlePoints(request, env).catch((err) => {
-        console.error(err);
-        return error('Internal server error', 500);
-      });
-    }
-
-    if (url.pathname === '/') {
+    if (p === '/') {
       return new Response('mapjson API — see https://mapjson.com', { headers: CORS });
     }
 
     return error('Not found', 404);
+  },
+
+  // Budget enforcement from the metering data (per-IP bans + service auto-pause).
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(enforceBudgets(env).catch((e) => console.error('budget cron failed', e)));
   },
 };

@@ -7,10 +7,36 @@ workers_dev = true
 binding = "GEO_BUCKET"
 bucket_name = "mapjson"
 
-# KV not needed — properties.json is served from R2 and cached in memory
-
 # The key-resolution API (resolve/feedback/entities) is the mapjson-ontology
 # worker, exposed through this worker so developers see one API host.
 [[services]]
 binding = "ONTOLOGY"
 service = "mapjson-ontology"
+
+# ── abuse protection + usage metering (see src/guard.js) ──
+
+# Ban list + kill switch. Keys: ban:<ip> (TTL 24h), strike:<ip> (TTL 1h), service:paused.
+[[kv_namespaces]]
+binding = "GUARD"
+id = "73f71b0c43da4415a04672d19873fd8b"
+
+# Per-request usage points (ip, endpoint, bytes) — query with report-usage.js
+# NOTE: requires the one-time account toggle at
+# https://dash.cloudflare.com/3eb9f10534f2e8e208b3bd7fc44c9355/workers/analytics-engine
+# — uncomment and redeploy once enabled (guard.js no-ops while the binding is absent).
+#[[analytics_engine_datasets]]
+#binding = "USAGE"
+#dataset = "mapjson_usage"
+
+# Per-IP rate limit: 300 requests / 60s per colo. Exceeding returns 429; repeat
+# offenders (30+ 429s in an hour) get a 24h KV ban via guard.js strike escalation.
+[[ratelimits]]
+name = "LIMITER"
+namespace_id = "1001"
+simple = { limit = 300, period = 60 }
+
+# Budget cron: bans IPs over the 24h call/byte budget, pauses the service if the
+# whole API exceeds its daily budget. No-ops until CF_ACCOUNT_ID/CF_ANALYTICS_TOKEN
+# secrets are set (wrangler secret put …).
+[triggers]
+crons = ["*/10 * * * *"]

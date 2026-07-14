@@ -7,7 +7,7 @@
     "deploy": "wrangler deploy --config wrangler.toml"
   },
   "devDependencies": {
-    "wrangler": "^3.0.0"
+    "wrangler": "^4.110.0"
   },
   "dependencies": {
     "topojson-client": "^3.1.0"

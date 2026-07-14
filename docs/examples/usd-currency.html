@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>USD Currency — mapjson examples</title>
+  <title>USD vs Euro — mapjson examples</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Every country and territory whose opt-in currencies property includes the US dollar — not just the United States, but Ecuador, El Salvador, Timor-Leste,…">
+  <meta name="description" content="The world's two biggest currency zones from one API call — every country using the US dollar in green and every euro user in blue, from mapjson's opt-in currencies property. Zimbabwe's basket includes both.">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
   <script>
@@ -198,9 +198,9 @@
   <a class="back-link" href="/examples/">← Examples</a>
 
   <header>
-    <div class="tag">countries · currencies · highlight · zoom</div>
-    <h1>USD Currency</h1>
-    <p>Every country and territory whose opt-in <code>currencies</code> property includes the US dollar — not just the United States, but Ecuador, El Salvador, Timor-Leste, Panama, Zimbabwe, Cambodia (dollarized or co-circulating), and a string of US and former-Dutch Caribbean/Pacific territories. Zoom and pan to see the small ones; hover any country for its actual currency list.</p>
+    <div class="tag">countries · currencies · two zones · zoom</div>
+    <h1>USD vs Euro</h1>
+    <p>The world's two biggest currency zones, from one opt-in <code>currencies</code> property. Dollar users in green — not just the United States, but Ecuador, El Salvador, Timor-Leste, Panama, Cambodia, and a string of Caribbean and Pacific territories. Euro users in blue — the eurozone plus microstates like San Marino and Vatican City, and two unilateral adopters that aren't in the EU at all: Kosovo and Montenegro. Zimbabwe's multi-currency basket includes both. Zoom to find the small ones; hover any country for its actual currency list.</p>
   </header>
 
   <div class="map-wrap" id="map-wrap">
@@ -208,6 +208,8 @@
   </div>
   <div class="legend">
     <div class="item"><span class="swatch" style="background:#4a8f6b"></span>uses USD</div>
+    <div class="item"><span class="swatch" style="background:#3d6fa8"></span>uses EUR</div>
+    <div class="item"><span class="swatch" style="background:#b08f3e"></span>both</div>
     <div class="item"><span class="swatch" style="background:#ddd8cc"></span>other currency</div>
   </div>
   <div class="country-list" id="country-list"></div>
@@ -223,7 +225,7 @@
 &lt;html lang="en"&gt;
 &lt;head&gt;
   &lt;meta charset="utf-8"&gt;
-  &lt;title&gt;USD Currency&lt;/title&gt;
+  &lt;title&gt;USD vs Euro&lt;/title&gt;
   &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
   &lt;script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"&gt;&lt;/script&gt;
   &lt;style&gt;
@@ -248,7 +250,10 @@
   &lt;svg id="map"&gt;&lt;/svg&gt;
   &lt;script&gt;
     const url = "https://api.mapjson.com/v1/geo?layer=countries&detail=medium&properties=name,currencies";
-    const usesUSD = (d) => (d.properties.currencies || []).some((c) =&gt; c.code === "USD");
+    const uses = (d, code) =&gt; (d.properties.currencies || []).some((c) =&gt; c.code === code);
+    const cls = (d) =&gt; uses(d, "USD") && uses(d, "EUR") ? "both" : uses(d, "USD") ? "usd" : uses(d, "EUR") ? "eur" : "bg";
+    const FILL   = { usd: "#4a8f6b", eur: "#3d6fa8", both: "#b08f3e", bg: "#ddd8cc" };
+    const STROKE = { usd: "#2f6b4c", eur: "#28517e", both: "#8a6b25", bg: "#f0ece6" };
 
     const width = 960, height = 500;
     const tooltip = document.getElementById("tooltip");
@@ -273,14 +278,15 @@
 
     d3.json(url).then(topo =&gt; {
       const features = topojson.feature(topo, topo.objects.geo).features;
+      const order = { bg: 0, eur: 1, usd: 2, both: 3 };
+      features.sort((a, b) =&gt; order[cls(a)] - order[cls(b)]);   // colored zones draw over the neutral base
 
-      g.selectAll(".bg").data(features.filter((d) =&gt; !usesUSD(d))).join("path")
-        .attr("d", path).attr("fill", "#ddd8cc").attr("stroke", "#f0ece6").attr("stroke-width", 0.5)
-        .on("mousemove", showTooltip).on("mouseleave", () =&gt; tooltip.style.opacity = 0);
-
-      g.selectAll(".usd").data(features.filter(usesUSD)).join("path")
-        .attr("d", path).attr("fill", "#4a8f6b").attr("stroke", "#2f6b4c").attr("stroke-width", 0.8)
-        .style("cursor", "pointer")
+      g.selectAll(".country").data(features).join("path")
+        .attr("d", path)
+        .attr("fill", (d) =&gt; FILL[cls(d)])
+        .attr("stroke", (d) =&gt; STROKE[cls(d)])
+        .attr("stroke-width", (d) =&gt; cls(d) === "bg" ? 0.5 : 0.8)
+        .style("cursor", (d) =&gt; cls(d) === "bg" ? null : "pointer")
         .on("mousemove", showTooltip).on("mouseleave", () =&gt; tooltip.style.opacity = 0);
     });
   &lt;/script&gt;
@@ -294,7 +300,11 @@
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <script>
   const url = "https://api.mapjson.com/v1/geo?layer=countries&detail=medium&properties=name,currencies";
-  const usesUSD = (d) => (d.properties.currencies || []).some((c) => c.code === "USD");
+  const uses = (d, code) => (d.properties.currencies || []).some((c) => c.code === code);
+  // classify each country: usd / eur / both (Zimbabwe's basket) / bg
+  const cls = (d) => uses(d, "USD") && uses(d, "EUR") ? "both" : uses(d, "USD") ? "usd" : uses(d, "EUR") ? "eur" : "bg";
+  const FILL   = { usd: "#4a8f6b", eur: "#3d6fa8", both: "#b08f3e", bg: "#ddd8cc" };
+  const STROKE = { usd: "#2f6b4c", eur: "#28517e", both: "#8a6b25", bg: "#f0ece6" };
 
   const width = 960, height = 500;
   const wrap = document.getElementById("map-wrap");
@@ -327,29 +337,24 @@
 
   d3.json(url).then(topo => {
     const features = topojson.feature(topo, topo.objects.geo).features;
-    const usd = features.filter(usesUSD);
-    const bg = features.filter((d) => !usesUSD(d));
+    const order = { bg: 0, eur: 1, usd: 2, both: 3 };
+    features.sort((a, b) => order[cls(a)] - order[cls(b)]);   // colored zones draw over the neutral base
 
-    g.selectAll(".bg").data(bg).join("path")
+    g.selectAll(".country").data(features).join("path")
       .attr("d", path)
-      .attr("fill", "#ddd8cc")
-      .attr("stroke", "#f0ece6")
-      .attr("stroke-width", 0.5)
+      .attr("fill", (d) => FILL[cls(d)])
+      .attr("stroke", (d) => STROKE[cls(d)])
+      .attr("stroke-width", (d) => cls(d) === "bg" ? 0.5 : 0.8)
+      .style("cursor", (d) => cls(d) === "bg" ? null : "pointer")
       .on("mousemove", showTooltip)
       .on("mouseleave", hideTooltip);
 
-    g.selectAll(".usd").data(usd).join("path")
-      .attr("d", path)
-      .attr("fill", "#4a8f6b")
-      .attr("stroke", "#2f6b4c")
-      .attr("stroke-width", 0.8)
-      .style("cursor", "pointer")
-      .on("mousemove", showTooltip)
-      .on("mouseleave", hideTooltip);
-
-    const names = usd.map((d) => d.properties.name || d.properties.gid).sort();
-    document.getElementById("country-list").textContent =
-      `${names.length} countries/territories: ${names.join(" · ")}`;
+    const names = (f) => f.map((d) => d.properties.name || d.properties.gid).sort().join(" · ");
+    const usd = features.filter((d) => uses(d, "USD"));
+    const eur = features.filter((d) => uses(d, "EUR"));
+    document.getElementById("country-list").innerHTML =
+      `<strong>USD (${usd.length}):</strong> ${names(usd)}<br><br>` +
+      `<strong>EUR (${eur.length}):</strong> ${names(eur)}`;
   });
 
   const zoom = d3.zoom().scaleExtent([1, 12]).on("zoom", (event) => g.attr("transform", event.transform));

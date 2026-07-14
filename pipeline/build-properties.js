@@ -266,10 +266,12 @@ async function loadAdmin1Regions() {
   const regions = [];
   for (const f of feats) {
     if (!f.geometry) continue;
-    const iso = clean(f.properties.iso_3166_2);
-    const hasc = clean(f.properties.code_hasc);
-    // Accept only well-formed ISO 3166-2 (US-MA) or HASC (US.CA); Natural Earth uses
-    // junk like "-99-X11~" for some unrecognized/disputed regions — skip those.
+    // NE marks self-invented placeholder codes with a trailing '~' (Kosovo's XK-X20~) —
+    // strip it, matching the gid rule in process.js, so those regions still tag cities.
+    const iso = (clean(f.properties.iso_3166_2) || '').replace(/~+$/, '');
+    const hasc = (clean(f.properties.code_hasc) || '').replace(/~+$/, '');
+    // Accept only well-formed ISO 3166-2 (US-MA) or HASC (US.CA); leftover junk like
+    // "-99-X11" (Somaliland) still fails the pattern and is skipped.
     const gid = (iso && /^[A-Z]{2}-[A-Z0-9]+$/.test(iso)) ? iso
               : (hasc && /^[A-Z]{2}\.[A-Z0-9.]+$/.test(hasc)) ? hasc
               : null;
@@ -288,15 +290,10 @@ function regionForPoint(regions, lng, lat) {
   return null;
 }
 
-// A few countries have no admin-1 polygons in Natural Earth at all, so point-in-polygon
-// tagging leaves their cities region:null even where ISO 3166-2 defines a code. Patch the
-// ones with real ISO codes. The rest stay legitimately null: Vatican City has no ISO 3166-2
-// subdivisions, and Kosovo (XK) / Somaliland (XS) are not ISO country codes, so no
-// subdivision code exists to assign.
-const REGION_PATCHES = {
-  'TV:Funafuti': 'TV-FUN', // Tuvalu — ISO 3166-2:TV
-  'KI:Tarawa':   'KI-G',   // Kiribati — Gilbert Islands, ISO 3166-2:KI
-};
+// Every city is tagged by point-in-polygon against the admin1 layer above (including NE's
+// cleaned placeholder codes like XK-X20, so the gid always matches the regions layer).
+// The single remaining null is Hargeysa: NE codes all of Somaliland as junk ("-99-X11~")
+// and no ISO/HASC scheme exists for it — there is nothing consistent to assign.
 
 async function main() {
   console.log('Reading country attributes...');
@@ -400,7 +397,7 @@ async function main() {
         countryIso2: country?.iso2 || null,
         countryName: country?.name || null,
         continent: country?.continent || null,
-        region: regionForPoint(admin1Regions, lng, lat) || REGION_PATCHES[`${country?.iso2}:${p.NAMEASCII}`] || null,
+        region: regionForPoint(admin1Regions, lng, lat),
         popMetro: p.POP_MAX || null, // Natural Earth POP_MAX — metropolitan/urban-agglomeration population
         capital: isCapital, // true for national capitals, false otherwise — always present
       },

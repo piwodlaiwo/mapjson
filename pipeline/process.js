@@ -199,10 +199,13 @@ async function processAdmin1(res, inFile, outFile) {
   const tmpESH1 = `/tmp/pj_adm1_esh_${res}.topojson`;
 
   // gid: ISO 3166-2 (e.g. US-CA) where available in NE data; fall back to HASC (e.g. US.CA).
+  // NE marks its self-invented placeholder codes with a trailing '~' (e.g. Kosovo's XK-X20~) —
+  // strip it so those regions get clean, filterable gids instead of junk-looking ones.
   // parent_gid: ISO alpha-2 country code — joins directly to countries layer gid.
   await run(
     `-i ${inFile} ` +
-    `-each "gid = (iso_3166_2 && iso_3166_2 !== '-99') ? iso_3166_2 : hasc_1; parent_gid = iso_a2; iso2 = iso_a2" ` +
+    `-each "var _i = String(iso_3166_2 || '').replace(/~+$/, ''), _h = String(hasc_1 || '').replace(/~+$/, ''); ` +
+    `gid = (_i && _i !== '-99') ? _i : _h; parent_gid = iso_a2; iso2 = iso_a2" ` +
     `-filter-fields gid,parent_gid,iso2,name ` +
     `-o format=topojson ${tmpNE}`
   );

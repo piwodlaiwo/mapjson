@@ -288,6 +288,16 @@ function regionForPoint(regions, lng, lat) {
   return null;
 }
 
+// A few countries have no admin-1 polygons in Natural Earth at all, so point-in-polygon
+// tagging leaves their cities region:null even where ISO 3166-2 defines a code. Patch the
+// ones with real ISO codes. The rest stay legitimately null: Vatican City has no ISO 3166-2
+// subdivisions, and Kosovo (XK) / Somaliland (XS) are not ISO country codes, so no
+// subdivision code exists to assign.
+const REGION_PATCHES = {
+  'TV:Funafuti': 'TV-FUN', // Tuvalu — ISO 3166-2:TV
+  'KI:Tarawa':   'KI-G',   // Kiribati — Gilbert Islands, ISO 3166-2:KI
+};
+
 async function main() {
   console.log('Reading country attributes...');
   const countryRecords = await readDbf('data/10m/ne_10m_admin_0_countries.dbf');
@@ -390,7 +400,7 @@ async function main() {
         countryIso2: country?.iso2 || null,
         countryName: country?.name || null,
         continent: country?.continent || null,
-        region: regionForPoint(admin1Regions, lng, lat),
+        region: regionForPoint(admin1Regions, lng, lat) || REGION_PATCHES[`${country?.iso2}:${p.NAMEASCII}`] || null,
         popMetro: p.POP_MAX || null, // Natural Earth POP_MAX — metropolitan/urban-agglomeration population
         capital: isCapital, // true for national capitals, false otherwise — always present
       },

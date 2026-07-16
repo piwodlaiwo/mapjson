@@ -15,7 +15,9 @@ const BUCKET = 'mapjson';
 
 function upload(localPath, r2Key) {
   console.log(`  → r2://${BUCKET}/${r2Key}`);
-  execSync(`${WRANGLER} r2 object put ${BUCKET}/${r2Key} --file="${localPath}"`, {
+  // --remote is required: wrangler v4 defaults `r2 object put` to the LOCAL simulated
+  // bucket, so without it the production bucket is never updated.
+  execSync(`${WRANGLER} r2 object put ${BUCKET}/${r2Key} --file="${localPath}" --remote`, {
     cwd: path.join(__dirname, '../worker'),
     stdio: 'pipe',
   });

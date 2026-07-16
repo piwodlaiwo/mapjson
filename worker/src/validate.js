@@ -7,8 +7,10 @@ const VALID_FORMAT  = new Set(['topojson', 'geojson']);
 const ISO2_RE = /^[A-Z]{2}$/;
 // ISO 3166-2 region code: two uppercase letters, hyphen, one or more alphanumeric (e.g. US-MA, DE-BY)
 const ISO3166_2_RE = /^[A-Z]{2}-[A-Z0-9]+$/;
-// Country name: letters, spaces, hyphens, apostrophes — resolved to iso2 at runtime
-const NAME_RE = /^[A-Za-z][A-Za-z\s'.()-]*$/;
+// Country name: any Unicode letter (so native/accented names like "Türkiye", "Côte
+// d'Ivoire" pass), plus combining marks, spaces, hyphens, apostrophes, dots, parens.
+// Resolved to iso2 at runtime (exact match, then the ontology resolver).
+const NAME_RE = /^\p{L}[\p{L}\p{M}\s'.()-]*$/u;
 
 export function parseAndValidate(url) {
   const q = new URL(url).searchParams;

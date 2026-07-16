@@ -30,7 +30,36 @@ function readTopoProperties(file) {
   return (topo.objects[key].geometries || []).map((g) => g.properties || {});
 }
 
+// Lowest detail tier (low → medium → high) whose geometry actually contains each
+// country. Small nations (e.g. Cabo Verde) are absent from Natural Earth 110m and only
+// appear at medium/high; per-country hi-res files under countries/iso/ are served at
+// detail=high. Exposed as `minDetail` so clients know which detail to request instead of
+// getting a silently-empty response.
+const DETAIL_TIERS = ['low', 'medium', 'high'];
+
+function makeMinDetailResolver() {
+  const tierSets = {};
+  for (const tier of DETAIL_TIERS) {
+    const file = path.join(PROCESSED, `countries/${tier}.topojson`);
+    if (!fs.existsSync(file)) { tierSets[tier] = null; continue; }
+    tierSets[tier] = new Set(readTopoProperties(file).map((p) => p.iso2).filter(Boolean));
+  }
+  const isoDir = path.join(PROCESSED, 'countries/iso');
+  const isoFiles = fs.existsSync(isoDir)
+    ? new Set(fs.readdirSync(isoDir).filter((f) => f.endsWith('.topojson')).map((f) => f.replace('.topojson', '').toUpperCase()))
+    : new Set();
+
+  return (iso2) => {
+    if (!iso2) return null;
+    if (tierSets.low?.has(iso2)) return 'low';
+    if (tierSets.medium?.has(iso2)) return 'medium';
+    if (tierSets.high?.has(iso2) || isoFiles.has(iso2)) return 'high';
+    return null;   // no geometry at any detail (properties-only entry)
+  };
+}
+
 function buildCountries(props) {
+  const minDetailOf = makeMinDetailResolver();
   const entries = [];
   for (const [gid, p] of Object.entries(props)) {
     entries.push({
@@ -43,6 +72,7 @@ function buildCountries(props) {
       isoNum:     p.isoNum     || null,
       continent:  p.continent  || null,
       subregion:  p.subregion  || null,
+      minDetail:  minDetailOf(p.iso2 || gid),
     });
   }
   entries.sort((a, b) => (a.name || '').localeCompare(b.name || ''));

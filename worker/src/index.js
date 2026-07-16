@@ -9,8 +9,17 @@ import { feature } from 'topojson-client';
 let propsCache = null;
 // Cache each points FeatureCollection (points/{type}.json) per Worker instance
 const pointsCache = {};
+// Cache the countries catalog (with minDetail) for the detail-discoverability hints
+let countryCatalogCache = null;
 
 const DETAIL_TO_FILE = { low: 'low', medium: 'medium', high: 'high', ultra: 'high' };
+const DETAIL_RANK    = { low: 0, medium: 1, high: 2, ultra: 2 };
+// Continent filter slug → the continent name stored in the catalog (scopes `omitted`)
+const CONTINENT_NAME = {
+  europe: 'Europe', asia: 'Asia', africa: 'Africa',
+  'north-america': 'North America', 'south-america': 'South America',
+  oceania: 'Oceania', antarctica: 'Antarctica',
+};
 
 
 const CORS = {
@@ -52,15 +61,82 @@ const POINT_CONTINENT = {
   oceania: 'Oceania', antarctica: 'Antarctica',
 };
 
-// Resolve a country name (e.g. "Poland") to its ISO alpha-2 code using properties.json.
-// Returns the iso2 string if found, or null if the name is unknown.
-async function resolveNameToIso2(name, bucket) {
-  const props = await getProps(bucket);
+// Resolve a country name (e.g. "Poland") to its ISO alpha-2 code.
+// Fast path: exact match on properties.json name/nameOfficial (no subrequest).
+// Fallback: the ontology resolver, which knows the exonyms and aliases the two-field
+// match misses ("Cape Verde", "Holland", "Türkiye", "South Korea"…). Null if unknown.
+async function resolveNameToIso2(name, env) {
+  const props = await getProps(env.GEO_BUCKET);
   const lower = name.toLowerCase();
   for (const entry of Object.values(props)) {
     if (entry.name?.toLowerCase() === lower || entry.nameOfficial?.toLowerCase() === lower) {
       return entry.iso2;
     }
+  }
+  return resolveViaOntology(name, env);
+}
+
+// Ask the ontology worker (service binding) to resolve a place name to a country iso2.
+// Only accepts a confident country match so a fuzzy guess can't silently swap the map.
+async function resolveViaOntology(name, env) {
+  if (!env.ONTOLOGY) return null;
+  try {
+    const res = await env.ONTOLOGY.fetch(new Request('https://ontology.internal/v1/resolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keys: [name], context: { layer: 'countries' } }),
+    }));
+    if (!res.ok) return null;
+    const data = await res.json();
+    const r = data.results?.[0];
+    if (r && r.status === 'resolved' && r.layer === 'countries' && r.confidence >= 0.8) {
+      return r.crosswalk?.iso2 || (/^[A-Z]{2}$/.test(r.gid) ? r.gid : null);
+    }
+  } catch (err) {
+    console.error('ontology resolve failed', err);
+  }
+  return null;
+}
+
+// Countries catalog keyed by iso2 — carries minDetail for the detail-discoverability hints.
+async function getCountryCatalog(bucket) {
+  if (!countryCatalogCache) {
+    const obj = await bucket.get('catalog/countries.json');
+    if (!obj) return null;
+    const list = await obj.json();
+    countryCatalogCache = { list, byIso2: new Map(list.map((e) => [e.iso2, e])) };
+  }
+  return countryCatalogCache;
+}
+
+// Build notice/omitted for a countries request, given the resolved filter, requested
+// detail, and how many features the response ended up with.
+//   notice   — a single-country filter that resolved but came back empty at this detail;
+//              always on (tiny, only appears on empty responses, points clients to the fix)
+//   omitted  — a world/continent request; lists countries that only exist deeper. Opt-in
+//              via ?omitted=1, since it rides on the common world/low call otherwise.
+async function detailHints(bucket, filter, detail, featureCount, includeOmitted) {
+  const cat = await getCountryCatalog(bucket);
+  if (!cat) return null;
+  const reqRank = DETAIL_RANK[detail];
+  const deeper = (e) => e.minDetail && DETAIL_RANK[e.minDetail] > reqRank;
+
+  if (/^[A-Z]{2}$/.test(filter)) {
+    if (featureCount > 0) return null;
+    const e = cat.byIso2.get(filter);
+    if (e && deeper(e)) {
+      return { notice: { code: 'detail_too_low', iso2: e.iso2, name: e.name, minDetail: e.minDetail,
+                         hint: `${e.name} is only available at detail=${e.minDetail} or higher` } };
+    }
+    return null;
+  }
+
+  const cont = CONTINENT_NAME[filter];
+  if (includeOmitted && (filter === 'world' || cont)) {
+    const omitted = cat.list
+      .filter((e) => deeper(e) && (filter === 'world' || e.continent === cont))
+      .map((e) => ({ iso2: e.iso2, name: e.name, minDetail: e.minDetail }));
+    if (omitted.length) return { omitted };
   }
   return null;
 }
@@ -112,7 +188,7 @@ async function handleGeo(request, env) {
   // Resolve country name → ISO2. Region codes (US-MA) pass through as-is.
   const ISO3166_2_RE_LOCAL = /^[A-Z]{2}-[A-Z0-9]+$/;
   if (!CONTINENT_SLUGS.has(filter) && !ISO2_RE_LOCAL.test(filter) && !ISO3166_2_RE_LOCAL.test(filter)) {
-    const iso2 = await resolveNameToIso2(filter, env.GEO_BUCKET);
+    const iso2 = await resolveNameToIso2(filter, env);
     if (!iso2) return error(`Unknown filter '${filter}' — use a continent slug, ISO alpha-2 code, ISO 3166-2 region code (e.g. US-MA), or country name`, 400);
     filter = iso2;
   }
@@ -196,13 +272,20 @@ async function handleGeo(request, env) {
     delete topo.objects[objectKey];
   }
 
-  // Convert to GeoJSON if requested
-  if (format === 'geojson') {
-    const geojson = feature(topo, topo.objects.geo);
-    return json(geojson, 200, { 'Cache-Control': 'public, max-age=3600' });
-  }
+  // Detail-discoverability hints (countries only): attach a top-level `notice` when a
+  // resolved single-country request is empty at this detail, or `omitted` on world/continent
+  // requests listing countries that only exist deeper. Foreign members are valid in both
+  // TopoJSON and GeoJSON, so they ride along on whichever root we return.
+  const featureCount = (topo.objects.geo.geometries || []).length;
+  const includeOmitted = /^(1|true)$/i.test(new URL(request.url).searchParams.get('omitted') || '');
+  const hints = layer === 'countries'
+    ? await detailHints(env.GEO_BUCKET, filter, detail, featureCount, includeOmitted)
+    : null;
 
-  return json(topo, 200, { 'Cache-Control': 'public, max-age=3600' });
+  const out = format === 'geojson' ? feature(topo, topo.objects.geo) : topo;
+  if (hints?.notice) out.notice = hints.notice;
+  if (hints?.omitted) out.omitted = hints.omitted;
+  return json(out, 200, { 'Cache-Control': 'public, max-age=3600' });
 }
 
 // Point features (cities, and later airports/hospitals/…). Served as GeoJSON only —
@@ -231,7 +314,7 @@ async function handlePoints(request, env) {
   // Resolve a country name → ISO2. world/continents/region codes/iso2 pass through.
   let iso2Filter = fUpper;
   if (!isWorld && !isContinent && !isRegion && !isIso2) {
-    const resolved = await resolveNameToIso2(filter, env.GEO_BUCKET);
+    const resolved = await resolveNameToIso2(filter, env);
     if (!resolved) {
       return error(`Unknown filter '${filter}' — use world, a continent slug, ISO alpha-2 code, ISO 3166-2 region code (e.g. US-MA), or country name`);
     }

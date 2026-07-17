@@ -53,6 +53,10 @@
     .legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; margin: 0 0 2rem; font-size: 12px; color: #4a4a45; font-family: 'IBM Plex Mono', monospace; }
     .legend-item { display: flex; align-items: center; gap: 0.4rem; }
     .legend-swatch { width: 13px; height: 13px; border: 1px solid rgba(0,0,0,0.12); border-radius: 2px; flex-shrink: 0; }
+    .maprow { display: flex; align-items: center; gap: 0.9rem; margin: 0.6rem 0 0.4rem; flex-wrap: wrap; }
+    .btn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.04em; padding: 6px 12px; background: #fff; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; color: var(--ink); }
+    .btn:hover { border-color: var(--ink); }
+    .attribution { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); }
     @media (max-width: 640px) {
       html, body { overflow-x: hidden; }
       nav { padding: 0 0.6rem; }
@@ -80,12 +84,16 @@
   <a class="back-link" href="/examples/">← Examples</a>
 
   <header>
-    <div class="tag">countries · high detail · multiple filters</div>
+    <div class="tag">countries · high detail · multiple filters · satellite tiles</div>
     <h1>Strait of Hormuz</h1>
     <p>The Strait of Hormuz — the chokepoint between Iran and Oman's Musandam Peninsula, and the sea lane for roughly a fifth of the world's traded oil — is only about 21 nautical miles wide at its narrowest. This map draws all eight littoral states around it, each from its own high-detail <code>filter</code> call: Iran, Iraq, Kuwait, Saudi Arabia, Bahrain, Qatar, the UAE, and Oman. Two dashed lines measure the narrows; the note below explains why both “33&nbsp;km” and “39&nbsp;km” get quoted. Hover a country for its ISO code; scroll to zoom into the strait — the measurements appear as you do.</p>
   </header>
 
   <div class="map-wrap" id="map"></div>
+  <div class="maprow">
+    <button id="tiles-toggle" class="btn">Hide satellite</button>
+    <span class="attribution" id="attribution">Imagery © Esri, Maxar, Earthstar Geographics</span>
+  </div>
   <div class="hint">Scroll / pinch to zoom into the strait (bottom-right) — the two measurement labels fade in.</div>
   <div class="legend" id="legend"></div>
   <div class="tooltip" id="tooltip"></div>
@@ -113,10 +121,13 @@
   &lt;style&gt;
     svg { width: 100%; display: block; background: #7ab4cc; }
     #tooltip { position: fixed; background: #000; color: #fff; font-size: 12px; padding: 4px 8px; pointer-events: none; opacity: 0; }
+    #tiles-toggle { font: 11px monospace; padding: 6px 12px; margin: 8px 0; cursor: pointer; }
+    #attribution { font: 10px monospace; color: #888; }
   &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
   &lt;div id="map"&gt;&lt;/div&gt;
+  &lt;button id="tiles-toggle"&gt;Hide satellite&lt;/button&gt; &lt;span id="attribution"&gt;Imagery © Esri&lt;/span&gt;
   &lt;div id="tooltip"&gt;&lt;/div&gt;
   &lt;script&gt;
     const width = 960, height = 560;
@@ -137,15 +148,45 @@
     const LARAK_Q = [56.379, 26.839], GREAT_QUOIN = [56.517, 26.483];
     const LARAK_C = [56.341, 26.828], MUSANDAM_TIP = [56.364, 26.386];
 
-    const gLand  = svg.append("g");             // zoomed (CSS transform)
-    const gLines = gLand.append("g");           // measurement lines — scale with the land
-    const gMarks = svg.append("g");             // NOT zoomed — fixed-size dots & labels
+    const gLand      = svg.append("g");         // zoomed (CSS transform)
+    const gTiles     = gLand.append("g");       // satellite raster tiles (back)
+    const gCountries = gLand.append("g");       // country polygons
+    const gLines     = gLand.append("g");       // measurement lines (front)
+    const gMarks     = svg.append("g");         // NOT zoomed — fixed-size dots & labels
 
     [ { a: LARAK_Q, b: GREAT_QUOIN,  color: "#b0402f", dash: "6 4" },   // official narrowest → islet
       { a: LARAK_C, b: MUSANDAM_TIP, color: "#33475a", dash: "3 4" },   // coastline gap in the data
     ].forEach((L) =&gt; { const p1 = projection(L.a), p2 = projection(L.b);
       gLines.append("line").attr("x1", p1[0]).attr("y1", p1[1]).attr("x2", p2[0]).attr("y2", p2[1])
         .attr("stroke", L.color).attr("stroke-width", 1.4).attr("stroke-dasharray", L.dash).attr("vector-effect", "non-scaling-stroke"); });
+
+    // ---- satellite basemap (Esri World Imagery) — placed in map space so it scales with zoom ----
+    let tilesOn = true;
+    const TILE_Z = 7;
+    function drawTiles() {
+      const n = 1 &lt;&lt; TILE_Z, size = projection.scale() * 2 * Math.PI / n;
+      const c0 = projection.invert([0, 0]), c1 = projection.invert([width, height]);
+      const xT = (lng) =&gt; (lng + 180) / 360 * n;
+      const yT = (lat) =&gt; (1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2 * n;
+      for (let x = Math.floor(xT(Math.min(c0[0], c1[0]))); x &lt;= Math.floor(xT(Math.max(c0[0], c1[0]))); x++)
+        for (let y = Math.floor(yT(Math.max(c0[1], c1[1]))); y &lt;= Math.floor(yT(Math.min(c0[1], c1[1]))); y++) {
+          const lng = x / n * 360 - 180, lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI;
+          const p = projection([lng, lat]);
+          gTiles.append("image")
+            .attr("href", `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${TILE_Z}/${y}/${x}`)
+            .attr("x", p[0]).attr("y", p[1]).attr("width", size + 0.6).attr("height", size + 0.6)
+            .attr("preserveAspectRatio", "none");
+        }
+    }
+    function applyTiles() {
+      gTiles.style("display", tilesOn ? null : "none");
+      gCountries.selectAll("path").attr("fill-opacity", tilesOn ? 0.5 : 1);
+      document.getElementById("attribution").style.display = tilesOn ? "" : "none";
+      document.getElementById("tiles-toggle").textContent = tilesOn ? "Hide satellite" : "Show satellite";
+    }
+    drawTiles();
+    applyTiles();
+    document.getElementById("tiles-toggle").addEventListener("click", () =&gt; { tilesOn = !tilesOn; applyTiles(); });
 
     // Cities (dots), the Great Quoin islet (hollow dot — not in the data), seas & measurement
     // labels (no dot). Islet + measurement labels only appear once zoomed in (declutter).
@@ -194,9 +235,10 @@
 
     Promise.all(countries.map(f =&gt; d3.json(base + encodeURIComponent(f)))).then(topos =&gt; {
       const feats = topos.flatMap(t =&gt; topojson.feature(t, t.objects.geo).features);
-      gLand.insert("g", ":first-child").selectAll("path").data(feats).join("path")   // land under the lines
+      gCountries.selectAll("path").data(feats).join("path")
         .attr("d", path)
         .attr("fill", d =&gt; fill[d.properties.iso2] || "#d9d0be")
+        .attr("fill-opacity", tilesOn ? 0.5 : 1)
         .attr("stroke", "#fff").attr("stroke-width", 0.7).attr("vector-effect", "non-scaling-stroke")
         .style("cursor", "pointer")
         .on("mouseover", function (e, d) { d3.select(this).attr("stroke", "#1a1a1a").raise();
@@ -237,15 +279,45 @@
   const LARAK_Q = [56.379, 26.839], GREAT_QUOIN = [56.517, 26.483];
   const LARAK_C = [56.341, 26.828], MUSANDAM_TIP = [56.364, 26.386];
 
-  const gLand  = svg.append("g");
-  const gLines = gLand.append("g");
-  const gMarks = svg.append("g");
+  const gLand      = svg.append("g");
+  const gTiles     = gLand.append("g");   // satellite raster tiles (back)
+  const gCountries = gLand.append("g");   // country polygons
+  const gLines     = gLand.append("g");   // measurement lines (front)
+  const gMarks     = svg.append("g");     // NOT zoomed — fixed-size dots & labels
 
   [ { a: LARAK_Q, b: GREAT_QUOIN,  color: "#b0402f", dash: "6 4" },
     { a: LARAK_C, b: MUSANDAM_TIP, color: "#33475a", dash: "3 4" },
   ].forEach((L) => { const p1 = projection(L.a), p2 = projection(L.b);
     gLines.append("line").attr("x1", p1[0]).attr("y1", p1[1]).attr("x2", p2[0]).attr("y2", p2[1])
       .attr("stroke", L.color).attr("stroke-width", 1.4).attr("stroke-dasharray", L.dash).attr("vector-effect", "non-scaling-stroke"); });
+
+  // ---- satellite basemap (Esri World Imagery) — placed in map space so it scales with zoom ----
+  let tilesOn = true;
+  const TILE_Z = 7;
+  function drawTiles() {
+    const n = 1 << TILE_Z, size = projection.scale() * 2 * Math.PI / n;
+    const c0 = projection.invert([0, 0]), c1 = projection.invert([width, height]);
+    const xT = (lng) => (lng + 180) / 360 * n;
+    const yT = (lat) => (1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2 * n;
+    for (let x = Math.floor(xT(Math.min(c0[0], c1[0]))); x <= Math.floor(xT(Math.max(c0[0], c1[0]))); x++)
+      for (let y = Math.floor(yT(Math.max(c0[1], c1[1]))); y <= Math.floor(yT(Math.min(c0[1], c1[1]))); y++) {
+        const lng = x / n * 360 - 180, lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI;
+        const p = projection([lng, lat]);
+        gTiles.append("image")
+          .attr("href", `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${TILE_Z}/${y}/${x}`)
+          .attr("x", p[0]).attr("y", p[1]).attr("width", size + 0.6).attr("height", size + 0.6)
+          .attr("preserveAspectRatio", "none");
+      }
+  }
+  function applyTiles() {
+    gTiles.style("display", tilesOn ? null : "none");
+    gCountries.selectAll("path").attr("fill-opacity", tilesOn ? 0.5 : 1);
+    document.getElementById("attribution").style.display = tilesOn ? "" : "none";
+    document.getElementById("tiles-toggle").textContent = tilesOn ? "Hide satellite" : "Show satellite";
+  }
+  drawTiles();
+  applyTiles();
+  document.getElementById("tiles-toggle").addEventListener("click", () => { tilesOn = !tilesOn; applyTiles(); });
 
   const places = [
     { name: "Basra",        lng: 47.82, lat: 30.51, type: "city", small: true },
@@ -292,9 +364,10 @@
 
   Promise.all(countries.map(f => d3.json(base + encodeURIComponent(f)))).then(topos => {
     const feats = topos.flatMap(t => topojson.feature(t, t.objects.geo).features);
-    gLand.insert("g", ":first-child").selectAll("path").data(feats).join("path")   // land under the lines
+    gCountries.selectAll("path").data(feats).join("path")
       .attr("d", path)
       .attr("fill", d => fill[d.properties.iso2] || "#d9d0be")
+      .attr("fill-opacity", tilesOn ? 0.5 : 1)
       .attr("stroke", "#fff").attr("stroke-width", 0.7).attr("vector-effect", "non-scaling-stroke")
       .style("cursor", "pointer")
       .on("mouseover", function (e, d) { d3.select(this).attr("stroke", "#1a1a1a").raise();

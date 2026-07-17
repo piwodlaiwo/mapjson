@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Strait of Hormuz Map | MapJSON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A reference map of the Persian Gulf and the Strait of Hormuz built from eight high-detail mapjson filter calls — Iran, Iraq, Kuwait, Saudi Arabia, Bahrain, Qatar, the UAE, and Oman — measuring the strait's narrowest point between Larak and Great Quoin islands.">
+  <link rel="canonical" href="https://mapjson.com/examples/hormuz.html">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --ink: #1a1a1a; --bg: #fafafa; --accent: #b0402f; --muted: #9b9a94; --border: #e5e4df; --code-bg: #efeeea; }
+    body { background: var(--bg); color: var(--ink); font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; line-height: 1.7; }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link { display: inline-block; padding: 2.5rem 0 0; font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; font-family: 'IBM Plex Mono', monospace; }
+    .back-link:hover { color: var(--ink); }
+    header { border-bottom: 1.5px solid var(--ink); padding: 1rem 0 1.5rem; margin-bottom: 2.5rem; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #a7a6a0; margin-bottom: 0.5rem; font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
+    header p { color: #4a4a45; margin-top: 0.6rem; font-size: 15px; max-width: 680px; line-height: 1.65; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; margin-bottom: 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+    section { margin-bottom: 2.5rem; }
+    section p { color: #4a4a45; font-size: 14px; }
+    .map-wrap { margin-bottom: 0.75rem; border: 1px solid var(--border); background: #7ab4cc; line-height: 0; border-radius: 4px; overflow: hidden; }
+    .map-wrap svg { width: 100%; display: block; }
+    .hint { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 1.5rem; }
+    pre { background: var(--code-bg); border-left: 3px solid var(--ink); padding: 1rem 1.25rem; overflow-x: auto; font-size: 12px; line-height: 1.65; font-family: 'IBM Plex Mono', monospace; }
+    .tooltip { position: fixed; background: var(--ink); color: var(--bg); font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 0.3rem 0.6rem; pointer-events: none; opacity: 0; transition: opacity 0.1s; white-space: nowrap; border-radius: 3px; }
+    nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 48px; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    .nav-links a, nav .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; text-decoration: none; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { display: inline-flex; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; text-decoration: none; color: var(--ink); letter-spacing: -0.01em; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 14px; height: 14px; background: var(--ink); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; background: var(--bg); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
+    .legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; margin: 0 0 2rem; font-size: 12px; color: #4a4a45; font-family: 'IBM Plex Mono', monospace; }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+    .legend-swatch { width: 13px; height: 13px; border: 1px solid rgba(0,0,0,0.12); border-radius: 2px; flex-shrink: 0; }
+    @media (max-width: 640px) {
+      html, body { overflow-x: hidden; }
+      nav { padding: 0 0.6rem; }
+      .nav-links { gap: 0.55rem; }
+      .nav-links a { font-size: 11px !important; letter-spacing: 0.08em !important; }
+      header h1 { font-size: 2rem; letter-spacing: -0.02em; line-height: 1.1; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <a class="back-link" href="/examples/">← Examples</a>
+
+  <header>
+    <div class="tag">countries · high detail · multiple filters</div>
+    <h1>Strait of Hormuz</h1>
+    <p>The Strait of Hormuz — the chokepoint between Iran and Oman's Musandam Peninsula, and the sea lane for roughly a fifth of the world's traded oil — is only about 21 nautical miles wide at its narrowest. This map draws all eight littoral states around it, each from its own high-detail <code>filter</code> call: Iran, Iraq, Kuwait, Saudi Arabia, Bahrain, Qatar, the UAE, and Oman. Two dashed lines measure the narrows; the note below explains why both “33&nbsp;km” and “39&nbsp;km” get quoted. Hover a country for its ISO code; scroll to zoom into the strait — the measurements appear as you do.</p>
+  </header>
+
+  <div class="map-wrap" id="map"></div>
+  <div class="hint">Scroll / pinch to zoom into the strait (bottom-right) — the two measurement labels fade in.</div>
+  <div class="legend" id="legend"></div>
+  <div class="tooltip" id="tooltip"></div>
+
+  <section>
+    <h2>Measuring the chokepoint</h2>
+    <p>The strait's famous “narrowest point” is measured between <strong>Larak Island (Iran)</strong> and <strong>Great Quoin Island (Oman)</strong> — a tiny islet off the tip of Musandam — at <strong>21 nautical miles</strong>. That single figure gets quoted two ways: 21 <em>nautical</em> miles is ≈&nbsp;39&nbsp;km, but read as 21 <em>statute</em> miles it becomes ≈&nbsp;33&nbsp;km. Same distance, different mile (red line).</p>
+    <p>Great Quoin is too small for Natural Earth's 10m data, so it isn't in Oman's polygon at all — mapjson can't draw it, so it's a hand-placed marker. The nearest actual coastlines the data <em>does</em> carry — Larak to the Musandam mainland — sit about <strong>49&nbsp;km</strong> apart (grey line). The chokepoint everyone cites is measured to an island the base map doesn't even include.</p>
+  </section>
+
+  <section>
+    <h2>API Calls</h2>
+    <pre>https://api.mapjson.com/v1/geo?filter={country}&amp;detail=high&amp;properties=name,iso2
+
+// {country} = Iran · Iraq · Kuwait · Saudi Arabia · Bahrain · Qatar · United Arab Emirates · Oman</pre>
+  </section>
+
+  <section>
+    <h2>Code</h2>
+    <pre>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"&gt;&lt;/script&gt;
+  &lt;style&gt;
+    svg { width: 100%; display: block; background: #7ab4cc; }
+    #tooltip { position: fixed; background: #000; color: #fff; font-size: 12px; padding: 4px 8px; pointer-events: none; opacity: 0; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id="map"&gt;&lt;/div&gt;
+  &lt;div id="tooltip"&gt;&lt;/div&gt;
+  &lt;script&gt;
+    const width = 960, height = 560;
+    const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${width} ${height}`);
+    const tooltip = d3.select("#tooltip");
+
+    // Mercator framed by hand on the whole Persian Gulf.
+    const projection = d3.geoMercator().center([53.0, 26.9]).scale(3200).translate([width / 2, height / 2]);
+    const path = d3.geoPath(projection);
+
+    const base = "https://api.mapjson.com/v1/geo?detail=high&properties=name,iso2&filter=";
+    const fill = { IR:"#c1734e", IQ:"#8aa06a", KW:"#e2a13e", SA:"#cdbd82", BH:"#a97bb0", QA:"#d98b64", AE:"#d9c169", OM:"#7fa07c" };
+    const countries = ["Iran", "Iraq", "Kuwait", "Saudi Arabia", "Bahrain", "Qatar", "United Arab Emirates", "Oman"];
+
+    // Narrowest is Larak (Iran) → Great Quoin islet (Oman): 21 nmi ≈ 39 km (or 33 km read as
+    // statute miles). Great Quoin is absent from Natural Earth 10m. The nearest coastlines the
+    // data carries — Larak → Musandam mainland — are ~49 km apart.
+    const LARAK_Q = [56.379, 26.839], GREAT_QUOIN = [56.517, 26.483];
+    const LARAK_C = [56.341, 26.828], MUSANDAM_TIP = [56.364, 26.386];
+
+    const gLand  = svg.append("g");             // zoomed (CSS transform)
+    const gLines = gLand.append("g");           // measurement lines — scale with the land
+    const gMarks = svg.append("g");             // NOT zoomed — fixed-size dots & labels
+
+    [ { a: LARAK_Q, b: GREAT_QUOIN,  color: "#b0402f", dash: "6 4" },   // official narrowest → islet
+      { a: LARAK_C, b: MUSANDAM_TIP, color: "#33475a", dash: "3 4" },   // coastline gap in the data
+    ].forEach((L) =&gt; { const p1 = projection(L.a), p2 = projection(L.b);
+      gLines.append("line").attr("x1", p1[0]).attr("y1", p1[1]).attr("x2", p2[0]).attr("y2", p2[1])
+        .attr("stroke", L.color).attr("stroke-width", 1.4).attr("stroke-dasharray", L.dash).attr("vector-effect", "non-scaling-stroke"); });
+
+    // Cities (dots), the Great Quoin islet (hollow dot — not in the data), seas & measurement
+    // labels (no dot). Islet + measurement labels only appear once zoomed in (declutter).
+    const places = [
+      { name: "Basra",        lng: 47.82, lat: 30.51, type: "city", small: true },
+      { name: "Kuwait City",  lng: 47.98, lat: 29.37, type: "city" },
+      { name: "Dammam",       lng: 50.10, lat: 26.43, type: "city", small: true },
+      { name: "Manama",       lng: 50.58, lat: 26.23, type: "city" },
+      { name: "Doha",         lng: 51.53, lat: 25.29, type: "city" },
+      { name: "Abu Dhabi",    lng: 54.37, lat: 24.45, type: "city" },
+      { name: "Dubai",        lng: 55.27, lat: 25.20, type: "city" },
+      { name: "Bandar Abbas", lng: 56.27, lat: 27.18, type: "city" },
+      { name: "Khasab",       lng: 56.24, lat: 26.18, type: "city", small: true },
+      { name: "Muscat",       lng: 58.54, lat: 23.61, type: "city" },
+      { name: "Larak I.",     lng: 56.37, lat: 26.85, type: "island", zoom: 4 },
+      { name: "Great Quoin I.", lng: 56.517, lat: 26.483, type: "islet", zoom: 4 },
+      { name: "21 nmi · 39 km (33 mi)", lng: 56.448, lat: 26.661, type: "measure", dy: -6, accent: true, zoom: 4 },
+      { name: "≈ 49 km coastline",      lng: 56.353, lat: 26.607, type: "measure", dy: 15, zoom: 4 },
+      { name: "Strait of Hormuz", lng: 57.05, lat: 26.20, type: "sea", strait: true },
+      { name: "Persian Gulf", lng: 51.60, lat: 27.30, type: "sea" },
+      { name: "Gulf of Oman", lng: 58.30, lat: 24.70, type: "sea" },
+    ];
+    function renderMarks(t) {
+      const mk = gMarks.selectAll("g.mk").data(places);
+      const ent = mk.enter().append("g").attr("class", "mk");
+      ent.append("circle").attr("stroke", "#fff");
+      ent.append("text").attr("text-anchor", "middle").attr("font-family", "monospace")
+        .attr("stroke", "#fff").attr("stroke-width", 3).attr("paint-order", "stroke");
+      const m = ent.merge(mk)
+        .style("opacity", d =&gt; (d.zoom && t.k &lt; d.zoom) ? 0 : 1)
+        .attr("transform", d =&gt; { const p = projection([d.lng, d.lat]); return `translate(${t.applyX(p[0])},${t.applyY(p[1])})`; });
+      m.select("circle")
+        .attr("r", d =&gt; (d.type === "sea" || d.type === "measure") ? 0 : d.type === "islet" ? 2.4 : d.type === "island" ? 2.4 : (d.small ? 2.5 : 3.4))
+        .attr("fill", d =&gt; d.type === "islet" ? "#7ab4cc" : "#333")
+        .attr("stroke", d =&gt; d.type === "islet" ? "#b0402f" : "#fff")
+        .attr("stroke-width", d =&gt; (d.type === "sea" || d.type === "measure") ? 0 : d.type === "islet" ? 1.3 : 0.9);
+      m.select("text")
+        .attr("y", d =&gt; d.type === "sea" ? 4 : d.type === "measure" ? (d.dy || 0) : (-(d.small ? 2.5 : 3.4) - 6))
+        .attr("font-size", d =&gt; d.type === "measure" ? 11 : d.type === "sea" ? 12 : (d.small || d.type === "island" || d.type === "islet") ? 10 : 12)
+        .attr("font-weight", d =&gt; d.type === "sea" ? 400 : 600)
+        .attr("font-style", d =&gt; d.type === "sea" ? "italic" : "normal")
+        .attr("letter-spacing", d =&gt; d.type === "sea" ? "0.14em" : "0")
+        .attr("fill", d =&gt; (d.accent || d.strait) ? "#b0402f" : d.type === "sea" ? "#2f6fb0" : d.type === "measure" ? "#33475a" : "#1a1a1a")
+        .text(d =&gt; d.name);
+    }
+
+    Promise.all(countries.map(f =&gt; d3.json(base + encodeURIComponent(f)))).then(topos =&gt; {
+      const feats = topos.flatMap(t =&gt; topojson.feature(t, t.objects.geo).features);
+      gLand.insert("g", ":first-child").selectAll("path").data(feats).join("path")   // land under the lines
+        .attr("d", path)
+        .attr("fill", d =&gt; fill[d.properties.iso2] || "#d9d0be")
+        .attr("stroke", "#fff").attr("stroke-width", 0.7).attr("vector-effect", "non-scaling-stroke")
+        .style("cursor", "pointer")
+        .on("mouseover", function (e, d) { d3.select(this).attr("stroke", "#1a1a1a").raise();
+          tooltip.style("opacity", 1).text(d.properties.name + " (" + d.properties.iso2 + ")"); })
+        .on("mousemove", e =&gt; tooltip.style("left", (e.clientX + 12) + "px").style("top", (e.clientY - 8) + "px"))
+        .on("mouseout", function () { d3.select(this).attr("stroke", "#fff"); tooltip.style("opacity", 0); });
+    });
+
+    const zoom = d3.zoom().scaleExtent([1, 80]).on("zoom", (e) =&gt; { gLand.attr("transform", e.transform); renderMarks(e.transform); });
+    svg.call(zoom);
+    // load already zoomed into the Gulf so it fills the frame (drag/scroll to explore)
+    const c0 = projection([53.6, 27.0]), k0 = 1.3;
+    svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2 - k0 * c0[0], height / 2 - k0 * c0[1]).scale(k0));
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script>
+  const width = 960, height = 560;
+  const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${width} ${height}`);
+  const tooltip = d3.select("#tooltip");
+
+  const projection = d3.geoMercator().center([53.0, 26.9]).scale(3200).translate([width / 2, height / 2]);
+  const path = d3.geoPath(projection);
+
+  const base = "https://api.mapjson.com/v1/geo?detail=high&properties=name,iso2&filter=";
+  const fill = { IR:"#c1734e", IQ:"#8aa06a", KW:"#e2a13e", SA:"#cdbd82", BH:"#a97bb0", QA:"#d98b64", AE:"#d9c169", OM:"#7fa07c" };
+  const countries = ["Iran", "Iraq", "Kuwait", "Saudi Arabia", "Bahrain", "Qatar", "United Arab Emirates", "Oman"];
+
+  // Narrowest is Larak (Iran) → Great Quoin islet (Oman): 21 nmi ≈ 39 km (or 33 km read as
+  // statute miles). Great Quoin is absent from Natural Earth 10m. Nearest coastlines the data
+  // carries — Larak → Musandam mainland — are ~49 km apart.
+  const LARAK_Q = [56.379, 26.839], GREAT_QUOIN = [56.517, 26.483];
+  const LARAK_C = [56.341, 26.828], MUSANDAM_TIP = [56.364, 26.386];
+
+  const gLand  = svg.append("g");
+  const gLines = gLand.append("g");
+  const gMarks = svg.append("g");
+
+  [ { a: LARAK_Q, b: GREAT_QUOIN,  color: "#b0402f", dash: "6 4" },
+    { a: LARAK_C, b: MUSANDAM_TIP, color: "#33475a", dash: "3 4" },
+  ].forEach((L) => { const p1 = projection(L.a), p2 = projection(L.b);
+    gLines.append("line").attr("x1", p1[0]).attr("y1", p1[1]).attr("x2", p2[0]).attr("y2", p2[1])
+      .attr("stroke", L.color).attr("stroke-width", 1.4).attr("stroke-dasharray", L.dash).attr("vector-effect", "non-scaling-stroke"); });
+
+  const places = [
+    { name: "Basra",        lng: 47.82, lat: 30.51, type: "city", small: true },
+    { name: "Kuwait City",  lng: 47.98, lat: 29.37, type: "city" },
+    { name: "Dammam",       lng: 50.10, lat: 26.43, type: "city", small: true },
+    { name: "Manama",       lng: 50.58, lat: 26.23, type: "city" },
+    { name: "Doha",         lng: 51.53, lat: 25.29, type: "city" },
+    { name: "Abu Dhabi",    lng: 54.37, lat: 24.45, type: "city" },
+    { name: "Dubai",        lng: 55.27, lat: 25.20, type: "city" },
+    { name: "Bandar Abbas", lng: 56.27, lat: 27.18, type: "city" },
+    { name: "Khasab",       lng: 56.24, lat: 26.18, type: "city", small: true },
+    { name: "Muscat",       lng: 58.54, lat: 23.61, type: "city" },
+    { name: "Larak I.",     lng: 56.37, lat: 26.85, type: "island", zoom: 4 },
+    { name: "Great Quoin I.", lng: 56.517, lat: 26.483, type: "islet", zoom: 4 },
+    { name: "21 nmi · 39 km (33 mi)", lng: 56.448, lat: 26.661, type: "measure", dy: -6, accent: true, zoom: 4 },
+    { name: "≈ 49 km coastline",      lng: 56.353, lat: 26.607, type: "measure", dy: 15, zoom: 4 },
+    { name: "Strait of Hormuz", lng: 57.05, lat: 26.20, type: "sea", strait: true },
+    { name: "Persian Gulf", lng: 51.60, lat: 27.30, type: "sea" },
+    { name: "Gulf of Oman", lng: 58.30, lat: 24.70, type: "sea" },
+  ];
+  function renderMarks(t) {
+    const mk = gMarks.selectAll("g.mk").data(places);
+    const ent = mk.enter().append("g").attr("class", "mk");
+    ent.append("circle").attr("stroke", "#fff");
+    ent.append("text").attr("text-anchor", "middle").attr("font-family", "monospace")
+      .attr("stroke", "#fff").attr("stroke-width", 3).attr("paint-order", "stroke");
+    const m = ent.merge(mk)
+      .style("opacity", d => (d.zoom && t.k < d.zoom) ? 0 : 1)
+      .attr("transform", d => { const p = projection([d.lng, d.lat]); return `translate(${t.applyX(p[0])},${t.applyY(p[1])})`; });
+    m.select("circle")
+      .attr("r", d => (d.type === "sea" || d.type === "measure") ? 0 : d.type === "islet" ? 2.4 : d.type === "island" ? 2.4 : (d.small ? 2.5 : 3.4))
+      .attr("fill", d => d.type === "islet" ? "#7ab4cc" : "#333")
+      .attr("stroke", d => d.type === "islet" ? "#b0402f" : "#fff")
+      .attr("stroke-width", d => (d.type === "sea" || d.type === "measure") ? 0 : d.type === "islet" ? 1.3 : 0.9);
+    m.select("text")
+      .attr("y", d => d.type === "sea" ? 4 : d.type === "measure" ? (d.dy || 0) : (-(d.small ? 2.5 : 3.4) - 6))
+      .attr("font-size", d => d.type === "measure" ? 11 : d.type === "sea" ? 12 : (d.small || d.type === "island" || d.type === "islet") ? 10 : 12)
+      .attr("font-weight", d => d.type === "sea" ? 400 : 600)
+      .attr("font-style", d => d.type === "sea" ? "italic" : "normal")
+      .attr("letter-spacing", d => d.type === "sea" ? "0.14em" : "0")
+      .attr("fill", d => (d.accent || d.strait) ? "#b0402f" : d.type === "sea" ? "#2f6fb0" : d.type === "measure" ? "#33475a" : "#1a1a1a")
+      .text(d => d.name);
+  }
+
+  Promise.all(countries.map(f => d3.json(base + encodeURIComponent(f)))).then(topos => {
+    const feats = topos.flatMap(t => topojson.feature(t, t.objects.geo).features);
+    gLand.insert("g", ":first-child").selectAll("path").data(feats).join("path")   // land under the lines
+      .attr("d", path)
+      .attr("fill", d => fill[d.properties.iso2] || "#d9d0be")
+      .attr("stroke", "#fff").attr("stroke-width", 0.7).attr("vector-effect", "non-scaling-stroke")
+      .style("cursor", "pointer")
+      .on("mouseover", function (e, d) { d3.select(this).attr("stroke", "#1a1a1a").raise();
+        tooltip.style("opacity", 1).text(d.properties.name + " (" + d.properties.iso2 + ")"); })
+      .on("mousemove", e => tooltip.style("left", (e.clientX + 12) + "px").style("top", (e.clientY - 8) + "px"))
+      .on("mouseout", function () { d3.select(this).attr("stroke", "#fff"); tooltip.style("opacity", 0); });
+  });
+
+  // legend from the fill map
+  const NAMES = { IR:"Iran", IQ:"Iraq", KW:"Kuwait", SA:"Saudi Arabia", BH:"Bahrain", QA:"Qatar", AE:"UAE", OM:"Oman" };
+  const legend = document.getElementById("legend");
+  Object.entries(fill).forEach(([iso, c]) => {
+    const el = document.createElement("div"); el.className = "legend-item";
+    el.innerHTML = `<span class="legend-swatch" style="background:${c}"></span><span>${NAMES[iso]}</span>`;
+    legend.appendChild(el);
+  });
+
+  const zoom = d3.zoom().scaleExtent([1, 80]).on("zoom", (e) => { gLand.attr("transform", e.transform); renderMarks(e.transform); });
+  svg.call(zoom);
+  // load already zoomed into the Gulf so it fills the frame (drag/scroll to explore)
+  const c0 = projection([53.6, 27.0]), k0 = 1.3;
+  svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2 - k0 * c0[0], height / 2 - k0 * c0[1]).scale(k0));
+</script>
+<script src="example-widgets.js" defer></script>
+</body>
+</html>

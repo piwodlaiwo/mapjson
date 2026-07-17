@@ -444,16 +444,6 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
           </td>
           <td>Output format. Topojson is smaller and faster to render. Geojson is more compatible with other tools.</td>
         </tr>
-        <tr>
-          <td><code class="param-name">omitted</code></td>
-          <td><code class="default">off</code></td>
-          <td>
-            <div class="options">
-              <span class="opt">1</span>
-            </div>
-          </td>
-          <td>Set <code>omitted=1</code> on a <code>world</code> or continent request (<code>countries</code> layer) to append a top-level <code>omitted</code> array — the countries dropped at the requested <code>detail</code> because they only exist at a higher one, each with its <code>minDetail</code>. Off by default.</td>
-        </tr>
       </tbody>
     </table>
     </div>
@@ -540,7 +530,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
       When <code>filter</code> is an ISO alpha-2 country code and <code>detail=high</code>, the API automatically serves a higher-resolution file for ~60 small countries and territories (Monaco, Aruba, Singapore, Martinique, etc.) that are too small for Natural Earth 10m. No change to your API call is needed.
     </div>
     <div class="note">
-      Small nations are dropped at coarser resolutions — Cabo Verde, Comoros, and ~85 others are absent at <code>low</code> and first appear at <code>medium</code>. Rather than fail silently: <code>/v1/catalog</code> reports each country's <code>minDetail</code> (the lowest detail that includes it); a single-country request that comes back empty carries a top-level <code>notice</code> naming the detail to use; and adding <code>?omitted=1</code> to a <code>world</code> or continent request appends a top-level <code>omitted</code> array of every country that only exists deeper.
+      Small nations are dropped at coarser resolutions — Cabo Verde, Comoros, and ~85 others are absent at <code>low</code> and first appear at <code>medium</code>. Rather than fail silently: <code>/v1/catalog</code> reports each country's <code>minDetail</code> (the lowest detail that includes it); a single-country request that comes back empty carries a top-level <code>notice</code> naming the detail to use.
     </div>
   </section>
 

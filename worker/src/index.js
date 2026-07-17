@@ -14,12 +14,6 @@ let countryCatalogCache = null;
 
 const DETAIL_TO_FILE = { low: 'low', medium: 'medium', high: 'high', ultra: 'high' };
 const DETAIL_RANK    = { low: 0, medium: 1, high: 2, ultra: 2 };
-// Continent filter slug → the continent name stored in the catalog (scopes `omitted`)
-const CONTINENT_NAME = {
-  europe: 'Europe', asia: 'Asia', africa: 'Africa',
-  'north-america': 'North America', 'south-america': 'South America',
-  oceania: 'Oceania', antarctica: 'Antarctica',
-};
 
 
 const CORS = {
@@ -109,34 +103,17 @@ async function getCountryCatalog(bucket) {
   return countryCatalogCache;
 }
 
-// Build notice/omitted for a countries request, given the resolved filter, requested
-// detail, and how many features the response ended up with.
-//   notice   — a single-country filter that resolved but came back empty at this detail;
-//              always on (tiny, only appears on empty responses, points clients to the fix)
-//   omitted  — a world/continent request; lists countries that only exist deeper. Opt-in
-//              via ?omitted=1, since it rides on the common world/low call otherwise.
-async function detailHints(bucket, filter, detail, featureCount, includeOmitted) {
+// Build a notice for a single-country request that resolved but came back empty at the
+// requested detail — small nations (e.g. Cabo Verde) are absent from coarser tiers, so
+// point the caller at the detail level that carries them.
+async function detailHints(bucket, filter, detail, featureCount) {
+  if (!/^[A-Z]{2}$/.test(filter) || featureCount > 0) return null;
   const cat = await getCountryCatalog(bucket);
   if (!cat) return null;
-  const reqRank = DETAIL_RANK[detail];
-  const deeper = (e) => e.minDetail && DETAIL_RANK[e.minDetail] > reqRank;
-
-  if (/^[A-Z]{2}$/.test(filter)) {
-    if (featureCount > 0) return null;
-    const e = cat.byIso2.get(filter);
-    if (e && deeper(e)) {
-      return { notice: { code: 'detail_too_low', iso2: e.iso2, name: e.name, minDetail: e.minDetail,
-                         hint: `${e.name} is only available at detail=${e.minDetail} or higher` } };
-    }
-    return null;
-  }
-
-  const cont = CONTINENT_NAME[filter];
-  if (includeOmitted && (filter === 'world' || cont)) {
-    const omitted = cat.list
-      .filter((e) => deeper(e) && (filter === 'world' || e.continent === cont))
-      .map((e) => ({ iso2: e.iso2, name: e.name, minDetail: e.minDetail }));
-    if (omitted.length) return { omitted };
+  const e = cat.byIso2.get(filter);
+  if (e && e.minDetail && DETAIL_RANK[e.minDetail] > DETAIL_RANK[detail]) {
+    return { notice: { code: 'detail_too_low', iso2: e.iso2, name: e.name, minDetail: e.minDetail,
+                       hint: `${e.name} is only available at detail=${e.minDetail} or higher` } };
   }
   return null;
 }
@@ -272,19 +249,16 @@ async function handleGeo(request, env) {
     delete topo.objects[objectKey];
   }
 
-  // Detail-discoverability hints (countries only): attach a top-level `notice` when a
-  // resolved single-country request is empty at this detail, or `omitted` on world/continent
-  // requests listing countries that only exist deeper. Foreign members are valid in both
-  // TopoJSON and GeoJSON, so they ride along on whichever root we return.
+  // Detail-discoverability hint (countries only): attach a top-level `notice` when a
+  // resolved single-country request is empty at this detail. A foreign member is valid in
+  // both TopoJSON and GeoJSON, so it rides along on whichever root we return.
   const featureCount = (topo.objects.geo.geometries || []).length;
-  const includeOmitted = /^(1|true)$/i.test(new URL(request.url).searchParams.get('omitted') || '');
   const hints = layer === 'countries'
-    ? await detailHints(env.GEO_BUCKET, filter, detail, featureCount, includeOmitted)
+    ? await detailHints(env.GEO_BUCKET, filter, detail, featureCount)
     : null;
 
   const out = format === 'geojson' ? feature(topo, topo.objects.geo) : topo;
   if (hints?.notice) out.notice = hints.notice;
-  if (hints?.omitted) out.omitted = hints.omitted;
   return json(out, 200, { 'Cache-Control': 'public, max-age=3600' });
 }
 

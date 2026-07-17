@@ -530,7 +530,7 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
       When <code>filter</code> is an ISO alpha-2 country code and <code>detail=high</code>, the API automatically serves a higher-resolution file for ~60 small countries and territories (Monaco, Aruba, Singapore, Martinique, etc.) that are too small for Natural Earth 10m. No change to your API call is needed.
     </div>
     <div class="note">
-      Small nations are dropped at coarser resolutions — Cabo Verde, Comoros, and ~85 others are absent at <code>low</code> and first appear at <code>medium</code>. Rather than fail silently: <code>/v1/catalog</code> reports each country's <code>minDetail</code> (the lowest detail that includes it); a single-country request that comes back empty carries a top-level <code>notice</code> naming the detail to use.
+      Small nations are dropped at coarser resolutions — Cabo Verde, Comoros, and ~85 others are absent at <code>low</code> and first appear at <code>medium</code>. Rather than fail silently: <code>/v1/catalog</code> reports each country's <code>minDetail</code> (the lowest detail that includes it); a single-country request that comes back empty carries a top-level <code>notice</code> naming the detail to use; and a <code>world</code> or continent request includes a top-level <code>omitted</code> array of every country that only exists at a higher detail.
     </div>
   </section>
 

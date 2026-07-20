@@ -112,6 +112,75 @@ Missing step 2 means the API silently ignores the property even though it's in p
 
 ## Example pages
 
-- Example code blocks must be **full standalone HTML** starting with `<!DOCTYPE html>` — not partial snippets
+**Required structure — every example page in `docs/examples/` MUST have all of these, or it is incomplete:**
+
+1. A **Code** section — `<section><h2>Code</h2><pre>…</pre></section>` — containing the **full standalone HTML** (starts with `<!DOCTYPE html>`, self-contained, copy-paste-runnable), HTML-escaped inside the `<pre>`. Not a partial snippet.
+2. An **API Calls** section (`<h2>API Calls</h2><pre>…</pre>`) listing the endpoints the page hits.
+3. The map must render into a `.map-wrap` container (`<div class="map-wrap" id="map-wrap">`).
+4. **`<script src="example-widgets.js" defer></script>`** as the last script before `</body>`. This shared widget **auto-injects the `save` (PNG) + `share` buttons** over `.map-wrap` and a **`copy`** button on the Code section — do NOT hand-roll save/share. A page missing this has no save/share and is incomplete.
+5. A card added to `docs/examples/index.html` (the gallery), then `npm test` (checks examples ↔ VALID_LAYERS ↔ docs), then deploy docs via `git push origin main`.
+
+**Do not forget the Code section or `example-widgets.js`** — these are the two things most easily missed.
+
 - Map background color must **contrast with the choropleth color scheme** — never use a blue background with a blue (`d3.interpolateBlues`) choropleth; use a warm neutral (e.g. `#d4cfc8`) instead
 - County/region border stroke should complement the fill palette — cream (`#f4efe8`) works against blue fills; dark (`#3a5e70`) works against light land fills
+
+### Examples that pull external data
+
+- The best examples **join outside data to mapjson geometry** (the map API's actual purpose); pure geometry-derived visuals are weaker shares. Where the external dataset is keyed by messy country names, join via **`POST /v1/resolve`** (up to 1000 keys/call) — it maps aliases/spellings/ISO codes to gids and drops non-country aggregates.
+- External sources must be **browser-CORS-enabled** (fetched client-side). Verified working: **USGS** earthquake feeds, **Open-Meteo**, **Our World in Data** grapher CSVs (`ourworldindata.org/grapher/<slug>.csv?csvType=filtered`), anything on **raw.githubusercontent.com**. **World Bank `api.worldbank.org` is browser-blocked** (sends no `Access-Control-Allow-Origin` to a request with an `Origin` header) — a plain `curl` check misses this because curl sends no `Origin`; test CORS with `curl -H "Origin: http://localhost:8000" -D -`.
+
+## frame.js — prototype library (in `frame/`, UNCOMMITTED)
+
+`frame/frame.js` + `frame/index.html` are a prototype for a **separate library** that
+will eventually get its own repo. **Do not commit it to this repo** unless asked. Serve
+it with `python3 -m http.server 8899` from the repo root, then open
+`http://localhost:8899/frame/index.html`. There is no browser available in this
+environment — all frame.js visual behavior must be verified by the user; we iterate
+from their reports/screenshots.
+
+**Concept.** "d3, framed." A *frame* = a **top bar / inside / bottom bar**; the bars hold
+actions (functions) that receive the map API and act on the inside. It is meant to grow
+**beyond maps** (images, slideshows, comic viewers). `frame.map()` is the first frame.
+
+**Key API/decisions (and why):**
+- Prototype expects **global `d3` + `topojson`** (CDN in the demo page); the published
+  build will bundle d3 + topojson-client + d3-geo so `frame.js` is the only tag.
+- `frame.map("url")` or `frame.map({data, …})`. **Container defaults** to an existing
+  `#frame`/`.frame` or a created `<div class="frame">`; the container *is* the frame.
+- **Bars start EMPTY by default** (user asked). Everything is opt-in: `reset`, `save`,
+  `share`, `globe`, `zoomButtons`, `graticule`, `equatorLine`, `labels`, `tiles`.
+- **`rotate: [-11, 0]` is the default** — puts the map seam in the Bering Strait so
+  **Alaska is on the left edge and Russia stays whole on the right** (verified with
+  d3-geo). Skipped when `tiles` is set (tiles need standard un-rotated Web-Mercator).
+- mapjson `/v1/geo` URLs auto-get `properties=name` so tooltips read "France" not "FR".
+- **Zoom model**: `d3.zoom` CSS-transforms a `<g>` (gZoom); vectors are drawn once at the
+  base projection and transformed. **Labels live OUTSIDE gZoom** (constant screen size,
+  repositioned each frame; greedy biggest-first declutter; `labelAnchors {gid:[lng,lat]}`
+  overrides bad centroids). **Data-zoom**: mapjson low→high on zoom past `detailZoom` 2.2,
+  cross-fade; also on first touch (mobile).
+- **save** = SVG→canvas PNG (bakes attribution). Cross-origin **tiles taint the canvas**,
+  so save fails with tiles on. **attribution** = bottom-right label; tile source's
+  attribution auto-shows when tiles are on. **share** = mapjson-style menu, needs `{url,title}`.
+
+**Tiles (flat) — WORKS.** `tiles` preset (`osm`/`carto-light`/`carto-dark`/`satellite`)
+or `{url,attribution,maxZoom,subdomains}`. Forces `projection:"mercator"`, world-square
+fit, screen-space image grid recomputed per zoom, `pointer-events:all` on paths so hover
+works when fill is transparent. **Antarctica is dropped in Mercator** — it reaches lat −90
+where Mercator y→∞ and its filled polygon covers the whole map.
+
+**Globe — WORKS.** `globe:true` adds a toggle → `orthographic` + sphere outline; **drag
+rotates** (`projection.rotate`, `zoom.filter` makes the wheel-only zoom so drag is free).
+
+**Globe + tiles — BROKEN / OPEN BUG.** Approach (correct per user): invert the pipeline —
+clip flat tile `<image>`s inside their **orthographic-projected (curved) tile polygons**
+(`renderGlobeTiles`: XYZ→densified GeoJSON, per-tile `<clipPath>` in `gDefs`, affine-fit
+image from NW/NE/SW corners, back-face cull via `geoDistance`). The math validates in Node
+but **tiles do not render correctly on the globe** — the wrapper-`<g clip-path>` fix (clip
+on a group, not the transformed image) did NOT resolve it. Needs live debugging next session.
+
+**Perf note (settled):** globe-drag lag was **labels** (per-frame centroid recompute) —
+hidden during drag, recomputed on release. High-detail geometry re-projection was suspected
+but the user confirmed pan/zoom is smooth with high detail (demos 1–2), so **high detail is
+NOT the bottleneck** — the "keep globe low-detail" change was reverted. `labels:false` is set
+TEMP in demo 3 for testing; flip back on when done.

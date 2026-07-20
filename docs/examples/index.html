@@ -286,12 +286,62 @@
       </div>
     </a>
 
+    <a class="card" href="capitals-globe.html">
+      <div class="card-tag">capitals · orthographic · zoomable · coastlines</div>
+      <div class="card-title">Capitals on the Globe</div>
+      <div class="card-desc">Every national capital on a large orthographic globe — drag to spin, scroll to zoom. Each dot is coloured coastal or inland, measured against the coastlines layer, revealing how sea-facing the world's capitals are.</div>
+      <div class="card-footer">
+        <span class="card-url">properties=capital,capitalLat,capitalLng</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
     <a class="card" href="physical.html">
       <div class="card-tag">countries · rivers · lakes · multiple layers</div>
       <div class="card-title">Physical Features</div>
       <div class="card-desc">Three API calls composed into one map — countries as the base layer, overlaid with rivers and lakes. Shows how to build up a richer world map from independent layers.</div>
       <div class="card-footer">
         <span class="card-url">layer=rivers · layer=lakes</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="card" href="rivers.html">
+      <div class="card-tag">rivers · lakes · coastlines · minimal</div>
+      <div class="card-title">Earth's Rivers</div>
+      <div class="card-desc">Every river and lake on the planet on a dark canvas — no borders, no labels. A glowing river network over a faint coastline, so the continents read as their own circulatory system.</div>
+      <div class="card-footer">
+        <span class="card-url">layer=rivers · layer=lakes · layer=coastlines</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="card" href="earthquakes.html">
+      <div class="card-tag">USGS live feed · basemap · join</div>
+      <div class="card-title">30 Days of Earthquakes</div>
+      <div class="card-desc">Every magnitude-4.5+ earthquake of the past month, pulled live from the USGS feed and plotted on a mapjson world basemap — sized by magnitude, coloured by depth. The Ring of Fire draws itself.</div>
+      <div class="card-footer">
+        <span class="card-url">live USGS + layer=countries</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="card" href="capital-temps.html">
+      <div class="card-tag">Open-Meteo live · capitals · join</div>
+      <div class="card-title">Live Capital Temperatures</div>
+      <div class="card-desc">The current temperature in every national capital, fetched from Open-Meteo in a single call and joined to mapjson capital coordinates — a different map every hour, from freezing blue to scorching red.</div>
+      <div class="card-footer">
+        <span class="card-url">Open-Meteo + capitalLat,capitalLng</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="card" href="renewable-electricity.html">
+      <div class="card-tag">Our World in Data · /v1/resolve</div>
+      <div class="card-title">Renewable Electricity</div>
+      <div class="card-desc">An Our World in Data choropleth joined to the map by the dataset's plain country names via <code>/v1/resolve</code> — which quietly fixes Turkey→Türkiye, East Timor→Timor-Leste and others a text match would drop.</div>
+      <div class="card-footer">
+        <span class="card-url">OWID + /v1/resolve</span>
         <span class="card-arrow">→</span>
       </div>
     </a>

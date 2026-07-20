@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Crystalline Earth | MapJSON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The continents rendered as a glowing low-poly wireframe - points scattered over the land and Delaunay-triangulated, each facet tinted by its continent.">
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1a1a1a;
+      --bg: #fafafa;
+      --accent: #b0402f;
+      --muted: #9b9a94;
+      --border: #e5e4df;
+      --code-bg: #efeeea;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 300;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link {
+      display: inline-block;
+      padding: 2.5rem 0 0;
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .back-link:hover { color: var(--ink); }
+    header {
+      border-bottom: 1.5px solid var(--ink);
+      padding: 1rem 0 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    header .tag {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.25rem;
+      font-weight: 400;
+      line-height: 1.1;
+    }
+    header p { color: var(--muted); margin-top: 0.6rem; font-size: 12px; max-width: 640px; line-height: 1.7; }
+    h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    section { margin-bottom: 2.5rem; }
+    section p { max-width: 680px; }
+    section p + p { margin-top: 0.9rem; }
+    .map-wrap {
+      margin-bottom: 1.25rem;
+      border: 1px solid var(--border);
+      background: #1b3a4b;
+      line-height: 0;
+      position: relative;
+    }
+    .map-wrap svg { width: 100%; display: block; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.45rem; }
+    .legend-swatch { width: 14px; height: 14px; border: 1px solid var(--border); flex-shrink: 0; }
+    pre {
+      background: var(--code-bg);
+      border-left: 3px solid var(--ink);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.65;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 48px;
+    }
+    .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink); text-decoration: none; letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); }
+    .tooltip {
+      position: absolute;
+      background: #1a1a1a;
+      color: #fafafa;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      padding: 6px 10px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      white-space: nowrap;
+      line-height: 1.6;
+    }
+    .nav-brand { display: inline-flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink, #1a1a1a); text-decoration: none; }
+    .nav-brand .b { font-size: 19px; font-weight: 500; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 12px; height: 12px; background: var(--ink, #1a1a1a); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 4.5px; height: 4.5px; background: var(--bg, #fafafa); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 5px; }
+    /* type system: Space Grotesk display/body, IBM Plex Mono labels/params/code */
+    body { font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; }
+    .back-link, .tag, pre, code { font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; color: #a7a6a0; }
+    header p { font-size: 15px; line-height: 1.65; color: #4a4a45; max-width: 680px; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; }
+    section .note { font-size: 13px; }
+    section p { font-size: 15px; line-height: 1.65; color: #4a4a45; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    /* type system: nav + lockup (TYPOGRAPHY.md) */
+    .nav-links a { font-size: 12px; letter-spacing: 0.18em; color: #9b9a94; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { gap: 4px; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; }
+    .nav-brand .pin { width: 14px; height: 14px; }
+    .nav-brand .pin i { width: 5px; height: 5px; }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  </style>
+<style>
+  /* nav type: definitive — IBM Plex Mono per TYPOGRAPHY.md, identical on every page */
+  .nav-links a, nav .nav-links a, .topnav .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; }
+  .nav-links a:hover, .topnav .nav-links a:hover { color: var(--ink, #1a1a1a); }
+  .nav-links a.here, .topnav .nav-links a.here { color: var(--ink, #1a1a1a); font-weight: 500; }
+  .nav-brand, .topnav .nav-brand { display: inline-flex; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; text-decoration: none; color: var(--ink, #1a1a1a); letter-spacing: -0.01em; }
+  .nav-brand .b, .topnav .nav-brand .b { font-size: 21px; font-weight: 400; color: #c8c6c0; line-height: 1; }
+  .nav-brand .pin, .topnav .nav-brand .pin { width: 14px; height: 14px; }
+  .nav-brand .pin i, .topnav .nav-brand .pin i { width: 5px; height: 5px; }
+  .nav-brand .word, .topnav .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
+</style>
+  <style>
+  /* mobile: nav + page headers (TYPOGRAPHY.md responsive pass) */
+  @media (max-width: 640px) {
+    html, body { overflow-x: hidden; }
+    nav, .topnav { padding: 0 0.6rem; }
+    .nav-links, .topnav .nav-links { gap: 0.55rem; }
+    .nav-links a, nav .nav-links a, .topnav .nav-links a { font-size: 11px !important; letter-spacing: 0.08em !important; }
+    .nav-brand .b, .topnav .nav-brand .b { font-size: 16px; }
+    .nav-brand .pin, .topnav .nav-brand .pin { width: 9px; height: 9px; }
+    .nav-brand .pin i, .topnav .nav-brand .pin i { width: 3.2px; height: 3.2px; }
+    .nav-brand .word, .topnav .nav-brand .word { font-size: 13px; margin-left: 4px; }
+
+    header h1, .hero h1 { font-size: 2rem !important; letter-spacing: -0.02em !important; line-height: 1.1 !important; }
+    header .tag, header .tagline, .hero-eyebrow, header p.tagline { font-size: 10px !important; letter-spacing: 0.18em !important; }
+    header p:not(.tagline), .hero p { font-size: 13px !important; }
+    .card { padding: 24px 20px 20px !important; }
+  }
+  </style>
+<style>
+.map-wrap{background:#06080e;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+
+<div class="page">
+  <a class="back-link" href="/examples/">&larr; Examples</a>
+  <header>
+    <div class="tag">countries · Delaunay · low-poly · art</div>
+    <h1>Crystalline Earth</h1>
+    <p>The continents, crystallised. Points are scattered at random across the land and joined by Delaunay triangulation into a fine mesh; the long edges that would bridge the oceans are cut away, so each landmass sets into its own faceted lattice, glowing in the colour of its continent. It's generative — every load grows a slightly different crystal.</p>
+  </header>
+  <div class="map-wrap" id="map-wrap"></div>
+  <section>
+    <h2>API Call</h2>
+    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=medium&amp;properties=continent</pre>
+  </section>
+  <section>
+    <h2>Code</h2>
+    <pre>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"&gt;&lt;/script&gt;
+  &lt;style&gt;
+    body { margin: 0; background: #06080e; }
+    svg { width: 100%; height: auto; display: block; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;svg id="map"&gt;&lt;/svg&gt;
+  &lt;script&gt;
+  const W = 1100, H = 620;
+  const svg = d3.select("#map").attr("viewBox", `0 0 ${W} ${H}`);
+  const projection = d3.geoNaturalEarth1();
+  const CC = {"Africa":"#ffb43a","Asia":"#ff5a6e","Europe":"#58a6ff","North America":"#4be08a","South America":"#c07bff","Oceania":"#2fe0d4","Antarctica":"#cfd8e3"};
+  d3.json("https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=medium&amp;properties=continent&amp;format=geojson").then(fc=&gt;{
+    projection.fitExtent([[16,16],[W-16,H-16]], fc);
+    // paint continents to a hidden canvas — the land mask + the colour of each facet
+    const cvn = document.createElement("canvas"); cvn.width = W; cvn.height = H;
+    const ctx = cvn.getContext("2d"); const gp = d3.geoPath(projection, ctx);
+    fc.features.forEach(f=&gt;{ ctx.fillStyle = CC[f.properties.continent] || "#8a8f99"; ctx.beginPath(); gp(f); ctx.fill(); });
+    const px = ctx.getImageData(0,0,W,H).data;
+    const at = (x,y)=&gt;{ if(x&lt;0||y&lt;0||x&gt;=W||y&gt;=H) return null; const i=((y|0)*W+(x|0))*4; return px[i+3]&gt;10 ? [px[i],px[i+1],px[i+2]] : null; };
+    // scatter points over the land
+    const G = 12, pts = [];
+    for (let y=0;y&lt;H;y+=G) for (let x=0;x&lt;W;x+=G){ const jx=x+(Math.random()-0.5)*G, jy=y+(Math.random()-0.5)*G; if (at(jx,jy)) pts.push([jx,jy]); }
+    const del = d3.Delaunay.from(pts), tri = del.triangles, L2 = (G*2.6)**2;
+    const g = svg.append("g").style("mix-blend-mode","screen");
+    const seen = new Set();
+    for (let i=0;i&lt;tri.length;i+=3){
+      for (let e=0;e&lt;3;e++){
+        const a=tri[i+e], b=tri[i+(e+1)%3], key = a&lt;b ? a*1e6+b : b*1e6+a;
+        if (seen.has(key)) continue; seen.add(key);
+        const pa=pts[a], pb=pts[b], dx=pa[0]-pb[0], dy=pa[1]-pb[1];
+        if (dx*dx+dy*dy &gt; L2) continue;                                   // drop long ocean-spanning edges
+        const c = at((pa[0]+pb[0])/2,(pa[1]+pb[1])/2) || [110,130,160];
+        g.append("line").attr("x1",pa[0]).attr("y1",pa[1]).attr("x2",pb[0]).attr("y2",pb[1])
+          .attr("stroke",`rgb(${c[0]},${c[1]},${c[2]})`).attr("stroke-width",0.5).attr("stroke-opacity",0.5);
+      }
+    }
+    g.append("g").selectAll("circle").data(pts).join("circle")
+      .attr("cx",d=&gt;d[0]).attr("cy",d=&gt;d[1]).attr("r",0.7).attr("fill","#eaf2ff").attr("fill-opacity",0.55);
+  });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+<script>
+  const W = 1100, H = 620;
+  const svg = d3.select("#map-wrap").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
+  const projection = d3.geoNaturalEarth1();
+  const CC = {"Africa":"#ffb43a","Asia":"#ff5a6e","Europe":"#58a6ff","North America":"#4be08a","South America":"#c07bff","Oceania":"#2fe0d4","Antarctica":"#cfd8e3"};
+  d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=medium&properties=continent&format=geojson").then(fc=>{
+    projection.fitExtent([[16,16],[W-16,H-16]], fc);
+    // paint continents to a hidden canvas — the land mask + the colour of each facet
+    const cvn = document.createElement("canvas"); cvn.width = W; cvn.height = H;
+    const ctx = cvn.getContext("2d"); const gp = d3.geoPath(projection, ctx);
+    fc.features.forEach(f=>{ ctx.fillStyle = CC[f.properties.continent] || "#8a8f99"; ctx.beginPath(); gp(f); ctx.fill(); });
+    const px = ctx.getImageData(0,0,W,H).data;
+    const at = (x,y)=>{ if(x<0||y<0||x>=W||y>=H) return null; const i=((y|0)*W+(x|0))*4; return px[i+3]>10 ? [px[i],px[i+1],px[i+2]] : null; };
+    // scatter points over the land
+    const G = 12, pts = [];
+    for (let y=0;y<H;y+=G) for (let x=0;x<W;x+=G){ const jx=x+(Math.random()-0.5)*G, jy=y+(Math.random()-0.5)*G; if (at(jx,jy)) pts.push([jx,jy]); }
+    const del = d3.Delaunay.from(pts), tri = del.triangles, L2 = (G*2.6)**2;
+    const g = svg.append("g").style("mix-blend-mode","screen");
+    const seen = new Set();
+    for (let i=0;i<tri.length;i+=3){
+      for (let e=0;e<3;e++){
+        const a=tri[i+e], b=tri[i+(e+1)%3], key = a<b ? a*1e6+b : b*1e6+a;
+        if (seen.has(key)) continue; seen.add(key);
+        const pa=pts[a], pb=pts[b], dx=pa[0]-pb[0], dy=pa[1]-pb[1];
+        if (dx*dx+dy*dy > L2) continue;                                   // drop long ocean-spanning edges
+        const c = at((pa[0]+pb[0])/2,(pa[1]+pb[1])/2) || [110,130,160];
+        g.append("line").attr("x1",pa[0]).attr("y1",pa[1]).attr("x2",pb[0]).attr("y2",pb[1])
+          .attr("stroke",`rgb(${c[0]},${c[1]},${c[2]})`).attr("stroke-width",0.5).attr("stroke-opacity",0.5);
+      }
+    }
+    g.append("g").selectAll("circle").data(pts).join("circle")
+      .attr("cx",d=>d[0]).attr("cy",d=>d[1]).attr("r",0.7).attr("fill","#eaf2ff").attr("fill-opacity",0.55);
+  });
+</script>
+<script src="example-widgets.js" defer></script>
+</body>
+</html>

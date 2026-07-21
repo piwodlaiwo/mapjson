@@ -95,6 +95,7 @@
   const STYLE_PROPS = [
     "fill", "fill-opacity", "stroke", "stroke-width", "stroke-opacity",
     "stroke-dasharray", "stroke-linejoin", "stroke-linecap", "opacity",
+    "mix-blend-mode", "isolation",
     "font-family", "font-size", "font-weight", "font-style",
     "letter-spacing", "text-anchor", "paint-order", "display", "visibility",
   ];
@@ -121,6 +122,21 @@
     clone.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
     clone.setAttribute("width", w);
     clone.setAttribute("height", h);
+
+    // mix-blend-mode (e.g. `multiply`) blends each shape against what's BEHIND it. That backdrop
+    // is the .map-wrap paper — which lives outside the SVG. Bake it in as a bottom rect so overlapping
+    // strokes darken in the export exactly as they do live; without it, multiply has nothing to darken
+    // against and the image comes out washed-out and low-contrast.
+    const paper = getComputedStyle(wrap).backgroundColor;
+    if (paper && paper !== "rgba(0, 0, 0, 0)" && paper !== "transparent") {
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", vb ? vb.x : 0);
+      rect.setAttribute("y", vb ? vb.y : 0);
+      rect.setAttribute("width", w);
+      rect.setAttribute("height", h);
+      rect.setAttribute("fill", paper);
+      clone.insertBefore(rect, clone.firstChild);
+    }
 
     const blob = new Blob([new XMLSerializer().serializeToString(clone)], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(blob);

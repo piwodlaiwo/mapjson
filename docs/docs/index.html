@@ -417,15 +417,16 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
         </tr>
         <tr>
           <td><code class="param-name">detail</code></td>
-          <td><code class="default">low</code></td>
+          <td><code class="default">auto</code></td>
           <td>
             <div class="options">
-              <span class="opt default-val">low</span>
+              <span class="opt default-val">auto</span>
+              <span class="opt">low</span>
               <span class="opt">medium</span>
               <span class="opt">high</span>
             </div>
           </td>
-          <td>Geometry resolution. See <em>Detail Levels</em> below.</td>
+          <td>Geometry resolution. <code>auto</code> (the default) serves the right level for your filter — e.g. <code>filter=PL&amp;layer=regions</code> returns high (the only tier with Poland's regions) while <code>filter=US</code> returns low. See <em>Detail Levels</em> below.</td>
         </tr>
         <tr>
           <td><code class="param-name">properties</code></td>
@@ -506,6 +507,12 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
       </thead>
       <tbody>
         <tr>
+          <td><code>auto</code> <span class="default">default</span></td>
+          <td>the right tier for your filter</td>
+          <td>“just works” — you don't pick a level</td>
+          <td>varies</td>
+        </tr>
+        <tr>
           <td><code>low</code></td>
           <td>110m (Natural Earth)</td>
           <td>World maps, small insets, thumbnails</td>
@@ -531,6 +538,9 @@ d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=europe&detail=med
     </div>
     <div class="note">
       Small nations are dropped at coarser resolutions — Cabo Verde, Comoros, and ~85 others are absent at <code>low</code> and first appear at <code>medium</code>. Rather than fail silently: <code>/v1/catalog</code> reports each country's <code>minDetail</code> (the lowest detail that includes it); a single-country request that comes back empty carries a top-level <code>notice</code> naming the detail to use; and a <code>world</code> or continent request includes a top-level <code>omitted</code> array of every country that only exists at a higher detail.
+    </div>
+    <div class="note">
+      <code>detail=auto</code> (the default) uses that coverage map so you never have to pick a level: a single-country request is served at the lowest tier that actually includes it. This matters most for <code>regions</code> — most countries' subdivisions only exist at <code>high</code> (<code>filter=PL&amp;layer=regions</code> → high, its 16 voivodeships), while a few large federations are coarser (<code>US</code> → low, <code>CA</code>/<code>BR</code>/<code>IN</code>/<code>AU</code> → medium). The response carries an <code>X-Detail-Served</code> header with the tier you got; pass an explicit <code>detail</code> to override.
     </div>
   </section>
 

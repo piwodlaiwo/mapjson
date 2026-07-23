@@ -1,7 +1,18 @@
 const VALID_LAYERS  = new Set(['countries', 'regions', 'districts', 'postal', 'lakes', 'rivers', 'coastlines']);
 const VALID_FILTERS = new Set(['world', 'europe', 'asia', 'africa', 'north-america', 'south-america', 'oceania', 'antarctica']);
-const VALID_DETAIL  = new Set(['low', 'medium', 'high', 'ultra']);
+const VALID_DETAIL  = new Set(['auto', 'low', 'medium', 'high', 'ultra']);
 const VALID_FORMAT  = new Set(['topojson', 'geojson']);
+// The only query params /v1/geo understands. Anything else is a mistake we
+// reject rather than silently ignore — otherwise a typo like ?country=AW drops
+// the intended filter and quietly falls back to filter=world (the whole planet).
+const VALID_PARAMS  = new Set(['layer', 'filter', 'detail', 'format', 'properties']);
+// Common wrong param names → the one the user probably meant.
+const PARAM_HINTS = {
+  country: 'filter', countries: 'filter', region: 'filter', continent: 'filter',
+  iso2: 'filter', iso: 'filter', code: 'filter', name: 'filter', q: 'filter',
+  resolution: 'detail', res: 'detail', quality: 'detail',
+  props: 'properties', property: 'properties', fields: 'properties', type: 'layer',
+};
 
 // ISO alpha-2: two uppercase letters
 const ISO2_RE = /^[A-Z]{2}$/;
@@ -17,12 +28,21 @@ export function parseAndValidate(url) {
 
   const layer  = q.get('layer')  || 'countries';
   const filter = q.get('filter') || 'world';
-  const detail = q.get('detail') || 'low';
+  const detail = q.get('detail') || 'auto';   // auto = server picks the right tier for the filter (see resolveAutoDetail)
   const format = q.get('format') || 'topojson';
   const propParam  = q.get('properties');
   const properties = propParam ? propParam.split(',').map((s) => s.trim()).filter(Boolean) : [];
 
   const errors = [];
+
+  // Reject unknown params up front so a typo can't silently degrade the request.
+  for (const key of q.keys()) {
+    if (VALID_PARAMS.has(key)) continue;
+    const hint = PARAM_HINTS[key.toLowerCase()];
+    errors.push(
+      `unknown parameter '${key}'${hint ? ` — did you mean '${hint}'?` : ''} — valid parameters are: ${[...VALID_PARAMS].join(', ')}`
+    );
+  }
 
   if (!VALID_LAYERS.has(layer)) {
     errors.push(`layer must be one of: ${[...VALID_LAYERS].join(', ')}`);
@@ -42,7 +62,7 @@ export function parseAndValidate(url) {
     errors.push(`postal layer requires a state filter — use an ISO 3166-2 region code (e.g. filter=US-MA)`);
   }
   if (!VALID_DETAIL.has(detail)) {
-    errors.push(`detail must be one of: low, medium, high, ultra`);
+    errors.push(`detail must be one of: auto, low, medium, high, ultra`);
   }
   if (!VALID_FORMAT.has(format)) {
     errors.push(`format must be topojson or geojson`);

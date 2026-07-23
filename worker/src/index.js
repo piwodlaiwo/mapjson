@@ -26,6 +26,7 @@ const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Expose-Headers': 'X-Detail-Served, X-Content-Bytes',
 };
 
 function json(data, status = 200, extra = {}) {
@@ -107,6 +108,28 @@ async function getCountryCatalog(bucket) {
     countryCatalogCache = { list, byIso2: new Map(list.map((e) => [e.iso2, e])) };
   }
   return countryCatalogCache;
+}
+
+// detail=auto → the right tier for THIS request, so `filter=PL` just works without the caller knowing
+// PL's regions only exist at high. Resolution:
+//   • districts               → high (single resolution)
+//   • single ISO2 country     → the catalog's minDetail (countries) / regionMinDetail (regions)
+//   • world / continent regions → high (only tier with complete admin1)
+//   • everything else         → low  (fast overview; small nations flagged via `omitted` hints)
+async function resolveAutoDetail(env, layer, filter, detail) {
+  if (detail !== 'auto') return detail;
+  if (layer === 'districts') return 'high';
+  if (/^[A-Z]{2}$/.test(filter)) {
+    const cat = await getCountryCatalog(env.GEO_BUCKET);
+    const e = cat && cat.byIso2.get(filter);
+    if (e) {
+      const md = layer === 'regions' ? e.regionMinDetail : e.minDetail;
+      if (md) return md;
+    }
+    return layer === 'regions' ? 'high' : 'low';
+  }
+  if (layer === 'regions') return 'high';
+  return 'low';
 }
 
 // Detail-discoverability hints for a countries request. Small nations (e.g. Cabo Verde)
@@ -209,6 +232,7 @@ async function handleGeo(request, env) {
     return json(topo, 200, { 'Cache-Control': 'public, max-age=3600' });
   }
 
+  detail = await resolveAutoDetail(env, layer, filter, detail);   // 'auto' → a concrete tier for this filter
   const fileDetail = DETAIL_TO_FILE[detail];
   const r2Layer = layer === 'regions' ? 'admin1' : layer;
 
@@ -229,9 +253,9 @@ async function handleGeo(request, env) {
         delete topo.objects[objectKey];
       }
       if (format === 'geojson') {
-        return json(feature(topo, topo.objects.geo), 200, { 'Cache-Control': 'public, max-age=3600' });
+        return json(feature(topo, topo.objects.geo), 200, { 'Cache-Control': 'public, max-age=3600', 'X-Detail-Served': detail });
       }
-      return json(topo, 200, { 'Cache-Control': 'public, max-age=3600' });
+      return json(topo, 200, { 'Cache-Control': 'public, max-age=3600', 'X-Detail-Served': detail });
     }
     // No per-country file — fall through to global 10m handling below
   }
@@ -282,7 +306,7 @@ async function handleGeo(request, env) {
   const out = format === 'geojson' ? feature(topo, topo.objects.geo) : topo;
   if (hints?.notice) out.notice = hints.notice;
   if (hints?.omitted) out.omitted = hints.omitted;
-  return json(out, 200, { 'Cache-Control': 'public, max-age=3600' });
+  return json(out, 200, { 'Cache-Control': 'public, max-age=3600', 'X-Detail-Served': detail });
 }
 
 // Point features (cities, and later airports/hospitals/…). Served as GeoJSON only —

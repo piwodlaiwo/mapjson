@@ -58,21 +58,43 @@ function makeMinDetailResolver() {
   };
 }
 
+// Lowest detail tier whose admin1 (regions) geometry contains a country's subdivisions. Most
+// countries' regions only appear at `high`; a few large federations (US at low; CA, BR, IN, AU at
+// medium) exist coarser. Keyed by the region's iso2 — the same field the API filters regions by.
+// Exposed per-country as `regionMinDetail` so `detail=auto` can serve the right tier for regions.
+function makeRegionMinDetailResolver() {
+  const tierSets = {};
+  for (const tier of DETAIL_TIERS) {
+    const file = path.join(PROCESSED, `admin1/${tier}.topojson`);
+    if (!fs.existsSync(file)) { tierSets[tier] = null; continue; }
+    tierSets[tier] = new Set(readTopoProperties(file).map((p) => p.iso2).filter(Boolean));
+  }
+  return (iso2) => {
+    if (!iso2) return null;
+    if (tierSets.low?.has(iso2)) return 'low';
+    if (tierSets.medium?.has(iso2)) return 'medium';
+    if (tierSets.high?.has(iso2)) return 'high';
+    return null;   // this country has no regions at any tier
+  };
+}
+
 function buildCountries(props) {
   const minDetailOf = makeMinDetailResolver();
+  const regionMinDetailOf = makeRegionMinDetailResolver();
   const entries = [];
   for (const [gid, p] of Object.entries(props)) {
     entries.push({
       gid,
-      name:       p.name       || null,
-      layer:      'countries',
-      parent_gid: null,
-      iso2:       p.iso2       || null,
-      iso3:       p.iso3       || null,
-      isoNum:     p.isoNum     || null,
-      continent:  p.continent  || null,
-      subregion:  p.subregion  || null,
-      minDetail:  minDetailOf(p.iso2 || gid),
+      name:            p.name       || null,
+      layer:           'countries',
+      parent_gid:      null,
+      iso2:            p.iso2       || null,
+      iso3:            p.iso3       || null,
+      isoNum:          p.isoNum     || null,
+      continent:       p.continent  || null,
+      subregion:       p.subregion  || null,
+      minDetail:       minDetailOf(p.iso2 || gid),
+      regionMinDetail: regionMinDetailOf(p.iso2 || gid),
     });
   }
   entries.sort((a, b) => (a.name || '').localeCompare(b.name || ''));

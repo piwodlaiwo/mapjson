@@ -218,8 +218,9 @@
     <label><span>filter</span><input type="text" id="filter" list="filterlist" placeholder="world"></label>
     <datalist id="filterlist"></datalist>
     <label><span>detail</span><select id="detail">
+      <option value="auto" selected>auto</option>
       <option value="low">low</option>
-      <option value="medium" selected>medium</option>
+      <option value="medium">medium</option>
       <option value="high">high</option>
     </select></label>
     <pre id="apiurl" title="click to copy"></pre>
@@ -284,7 +285,7 @@ const $ = (id) => document.getElementById(id);
 // ---- state --------------------------------------------------------------
 
 const state = {
-  layer: "countries", filter: "", detail: "medium",
+  layer: "countries", filter: "", detail: "auto",
   proj: "auto", ramp: "red", zoom: true, hover: true, grat: false,
   rows: null, valueCol: null, parents: null,   // parents: multi-state postal handoff
 };
@@ -426,6 +427,14 @@ async function render() {
   try { fc = await fetchGeo(); }
   catch (err) { return status(err.message, true); }
   if (seq !== renderSeq) return;   // a newer render superseded this one
+
+  // Empty result — most often a region requested below the detail level where its admin1 data exists.
+  if (!fc || !fc.features || !fc.features.length) {
+    return status(
+      (state.layer === "regions" && state.detail !== "high" && state.detail !== "ultra")
+        ? `no regions for "${state.filter || "world"}" at detail=${state.detail} — try detail: high`
+        : `no boundaries for filter "${state.filter || "world"}"`, true);
+  }
 
   const rows = state.rows ? state.rows.filter((r) => r.gid) : null;
   const gids = rows ? new Set(rows.map((r) => r.gid)) : null;

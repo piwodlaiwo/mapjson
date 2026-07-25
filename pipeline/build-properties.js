@@ -220,6 +220,14 @@ const SPLIT_TERRITORY_AREAS = {
   CC: 14,      // Cocos (Keeling) Islands
 };
 
+// Published land areas (km²) for territories whose 10m geometry rounds to 0 (sub-km²
+// micro-states), so areakm2 isn't null for them. Floats where < 1 km². Landless disputed
+// banks (Bajo Nuevo, Serranilla, Scarborough) stay null — they have no permanent land.
+const AREA_FALLBACK = {
+  VA: 0.44,   // Vatican City — official (44 hectares)
+  XO: 3,      // Coral Sea Islands — land area of the cays
+};
+
 // ── Point-in-polygon (ray casting): stamps each city with the admin1 region that
 // contains it, so `region` uses the exact gid scheme of the regions/districts
 // layers (a build-time spatial join, no external deps). ──
@@ -322,17 +330,20 @@ async function main() {
     const patch = ISO_PATCHES[r.ADM0_A3];
     const rawName = (r.NAME && r.NAME.includes('.') && r.NAME_LONG) ? r.NAME_LONG : r.NAME;
     const name = NAME_PATCHES[r.ADM0_A3] || rawName;
+    const iso2 = patch ? patch.a2 : nullIfMissing(r.ISO_A2);
+    const geoArea = areaByGid[key];
     props[key] = {
       name: name || null,
       nameOfficial: nullIfMissing(r.FORMAL_EN) || r.NAME_LONG || r.NAME || null,
-      iso2: patch ? patch.a2 : nullIfMissing(r.ISO_A2),
+      iso2,
       iso3: (patch && patch.a3) || nullIfMissing(r.ISO_A3_EH) || nullIfMissing(r.ISO_A3),
       isoNum: patch
         ? (patch.n3 ? String(patch.n3).padStart(3, '0') : null)
         : (+r.ISO_N3 > 0 ? String(r.ISO_N3).padStart(3, '0') : null),
       continent: r.CONTINENT || null,
       subregion: r.SUBREGION || null,
-      areakm2: areaByGid[key] || null,
+      // 10m geometry rounds sub-km² micro-states to 0 — fall back to a published land area
+      areakm2: geoArea > 0 ? geoArea : (AREA_FALLBACK[iso2] ?? null),
       capital: null,
       capitalLat: null,
       capitalLng: null,

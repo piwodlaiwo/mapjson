@@ -260,7 +260,7 @@
     const tooltip = document.getElementById("tooltip");
     const svg = d3.select("#map").attr("viewBox", `0 0 ${width} ${height}`);
     const g = svg.append("g");
-    const projection = d3.geoEqualEarth().scale(160).translate([width / 2, height / 2 + 20]);
+    const projection = d3.geoEqualEarth().rotate([-11, 0]).scale(160).translate([width / 2, height / 2 + 20]);
     const path = d3.geoPath(projection);
 
     g.append("path").datum({ type: "Sphere" }).attr("fill", "#22485e").attr("d", path);
@@ -317,7 +317,7 @@
     .style("height", "auto");
 
   const g = svg.append("g");
-  const projection = d3.geoEqualEarth().scale(160).translate([width / 2, height / 2 + 20]);
+  const projection = d3.geoEqualEarth().rotate([-11, 0]).scale(160).translate([width / 2, height / 2 + 20]);
   const path = d3.geoPath(projection);
 
   g.append("path").datum({ type: "Sphere" }).attr("fill", "#22485e").attr("d", path);

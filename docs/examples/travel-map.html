@@ -188,7 +188,7 @@ https://api.mapjson.com/v1/geo?layer=countries&amp;detail=high&amp;properties=na
     const gZoom = svg.append("g");
     const gLow = gZoom.append("g");
     const gHigh = gZoom.append("g");
-    const projection = d3.geoNaturalEarth1();
+    const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
     const path = d3.geoPath(projection);
     const gid = (d) =&gt; d.properties.gid || d.properties.iso2;
 
@@ -315,7 +315,7 @@ https://api.mapjson.com/v1/geo?layer=countries&amp;detail=high&amp;properties=na
   const gZoom = svg.append("g");
   const gLow = gZoom.append("g");
   const gHigh = gZoom.append("g");
-  const projection = d3.geoNaturalEarth1();
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
   const path = d3.geoPath(projection);
   const gid = (d) => d.properties.gid || d.properties.iso2;
 

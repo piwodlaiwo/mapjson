@@ -224,7 +224,7 @@
     const width = 960, height = 500;
     const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${width} ${height}`);
     const tooltip = d3.select("#tooltip");
-    const projection = d3.geoEqualEarth().scale(160).translate([width / 2, height / 2 + 20]);
+    const projection = d3.geoEqualEarth().rotate([-11, 0]).scale(160).translate([width / 2, height / 2 + 20]);
     const path = d3.geoPath().projection(projection);
     const g = svg.append("g");
 
@@ -278,7 +278,7 @@
 
   const tooltip = d3.select("#tooltip");
 
-  const projection = d3.geoEqualEarth().scale(160).translate([width / 2, height / 2 + 20]);
+  const projection = d3.geoEqualEarth().rotate([-11, 0]).scale(160).translate([width / 2, height / 2 + 20]);
   const path = d3.geoPath().projection(projection);
   const g = svg.append("g");
 

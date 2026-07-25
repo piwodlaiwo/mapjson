@@ -344,7 +344,7 @@
   <!-- ── Overview ── -->
   <section>
     <h2>Overview</h2>
-    <p>mapjson returns topojson (or geojson) for any geographic layer in a single API call. The shortest possible call returns 110m world countries with no attached properties — the most common use case for a world map.</p>
+    <p>mapjson returns topojson (or geojson) for any geographic layer in a single API call. The shortest possible call returns Natural Earth 110m world countries with no attached properties — the most common use case for a world map.</p>
     <pre><code>// Minimal call — 110m world countries, no properties
 d3.json("https://api.mapjson.com/v1/geo").then(topo => {
   const countries = topojson.feature(topo, topo.objects.geo);

@@ -230,7 +230,7 @@
   &lt;script&gt;
   const W = 1100, H = 620;
   const svg = d3.select("#map").attr("viewBox", `0 0 ${W} ${H}`);
-  const projection = d3.geoNaturalEarth1();
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
   const CC = {"Africa":"#ffb43a","Asia":"#ff5a6e","Europe":"#58a6ff","North America":"#4be08a","South America":"#c07bff","Oceania":"#2fe0d4","Antarctica":"#cfd8e3"};
   d3.json("https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=medium&amp;properties=continent&amp;format=geojson").then(fc=&gt;{
     projection.fitExtent([[16,16],[W-16,H-16]], fc);
@@ -271,7 +271,7 @@
 <script>
   const W = 1100, H = 620;
   const svg = d3.select("#map-wrap").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
-  const projection = d3.geoNaturalEarth1();
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
   const CC = {"Africa":"#ffb43a","Asia":"#ff5a6e","Europe":"#58a6ff","North America":"#4be08a","South America":"#c07bff","Oceania":"#2fe0d4","Antarctica":"#cfd8e3"};
   d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=medium&properties=continent&format=geojson").then(fc=>{
     projection.fitExtent([[16,16],[W-16,H-16]], fc);

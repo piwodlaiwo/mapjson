@@ -235,7 +235,7 @@
   const svg = d3.select("#map").attr("viewBox", `0 0 ${W} ${H}`);
   // deeper, saturated hues so they read on paper and darken where they overlap
   const CC = {"Africa":"#e08a1e","Asia":"#e23b46","Europe":"#2f7ad0","North America":"#1fa85f","South America":"#a63fd0","Oceania":"#159e97","Antarctica":"#8a97a5"};
-  const projection = d3.geoNaturalEarth1().scale(150).translate([0,0]);
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]).scale(150).translate([0,0]);
   const path = d3.geoPath(projection);
   d3.json("https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=low&amp;properties=name,continent&amp;format=geojson").then(fc=&gt;{
     const g = svg.append("g");
@@ -267,7 +267,7 @@
   const svg = d3.select("#map-wrap").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
   // deeper, saturated hues so they read on paper and darken where they overlap
   const CC = {"Africa":"#e08a1e","Asia":"#e23b46","Europe":"#2f7ad0","North America":"#1fa85f","South America":"#a63fd0","Oceania":"#159e97","Antarctica":"#8a97a5"};
-  const projection = d3.geoNaturalEarth1().scale(150).translate([0,0]);
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]).scale(150).translate([0,0]);
   const path = d3.geoPath(projection);
   d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=low&properties=name,continent&format=geojson").then(fc=>{
     const g = svg.append("g");

@@ -199,7 +199,7 @@
   &lt;div id="map"&gt;&lt;/div&gt;
   &lt;script&gt;
     const svg = d3.select("#map").append("svg").attr("viewBox", "0 0 960 500");
-    const path = d3.geoPath().projection(d3.geoNaturalEarth1());
+    const path = d3.geoPath().projection(d3.geoNaturalEarth1().rotate([-11, 0]));
 
     d3.json("https://api.mapjson.com/v1/geo").then(topo =&gt; {
       svg.selectAll("path")
@@ -221,7 +221,7 @@
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <script>
   const svg = d3.select("#map").append("svg").attr("viewBox", "0 0 960 500");
-  const path = d3.geoPath().projection(d3.geoNaturalEarth1());
+  const path = d3.geoPath().projection(d3.geoNaturalEarth1().rotate([-11, 0]));
 
   d3.json("https://mapjson.mapjson.workers.dev/v1/geo").then(topo => {
     svg.selectAll("path")

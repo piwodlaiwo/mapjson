@@ -244,7 +244,7 @@ https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=mediu
   const W = 1200, H = 620;
   const svg = d3.select("#map").attr("viewBox", `0 0 ${W} ${H}`);
   const tt = d3.select("body").append("div").style("position","fixed").style("pointer-events","none").style("opacity",0).style("background","#1c2833").style("color","#fff").style("font","11px ui-monospace,monospace").style("padding","5px 9px").style("border-radius","4px").style("z-index",10);
-  const projection = d3.geoNaturalEarth1();
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
   const path = d3.geoPath(projection);
   const color = d3.scaleSequential(d3.interpolateGreens).domain([0, 100]).clamp(true);
   const COL = "renewable_share_of_electricity__pct";
@@ -296,7 +296,7 @@ https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=mediu
   const W = 1200, H = 620;
   const svg = d3.select("#map-wrap").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
   const tt = d3.select("body").append("div").style("position","fixed").style("pointer-events","none").style("opacity",0).style("background","#1c2833").style("color","#fff").style("font","11px ui-monospace,monospace").style("padding","5px 9px").style("border-radius","4px").style("z-index",10);
-  const projection = d3.geoNaturalEarth1();
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
   const path = d3.geoPath(projection);
   const color = d3.scaleSequential(d3.interpolateGreens).domain([0, 100]).clamp(true);
   const COL = "renewable_share_of_electricity__pct";

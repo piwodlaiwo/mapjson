@@ -258,7 +258,7 @@
       // Adjacency from the topology's shared arcs — no separate borders file
       const neighborIdx = topojson.neighbors(objects);
 
-      const projection = d3.geoPatterson().fitExtent([[8, 8], [width - 8, height - 8]], fc);
+      const projection = d3.geoPatterson().rotate([-11, 0]).fitExtent([[8, 8], [width - 8, height - 8]], fc);
       const path = d3.geoPath(projection);
 
       svg.selectAll("path")
@@ -371,7 +371,7 @@
     const fc = topojson.feature(topo, topo.objects.geo);
     const neighborIdx = topojson.neighbors(objects);
 
-    const projection = d3.geoPatterson().fitExtent([[8, 8], [width - 8, height - 8]], fc);
+    const projection = d3.geoPatterson().rotate([-11, 0]).fitExtent([[8, 8], [width - 8, height - 8]], fc);
     const path = d3.geoPath(projection);
 
     g.selectAll("path")

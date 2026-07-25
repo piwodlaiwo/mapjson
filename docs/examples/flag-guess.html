@@ -161,7 +161,7 @@
       .attr("viewBox", `0 0 ${width} ${height}`).style("width", "100%").style("height", "auto");
     svg.append("rect").attr("width", width).attr("height", height).attr("fill", OCEAN);
     const g = svg.append("g");
-    const projection = d3.geoNaturalEarth1();
+    const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
     const path = d3.geoPath(projection);
 
     let paths, queue = [], qi = 0, target = null, locked = false, correct = 0, wrong = 0;
@@ -244,7 +244,7 @@
     .attr("viewBox", `0 0 ${width} ${height}`).style("width", "100%").style("height", "auto");
   svg.append("rect").attr("width", width).attr("height", height).attr("fill", OCEAN);
   const g = svg.append("g");
-  const projection = d3.geoNaturalEarth1();
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
   const path = d3.geoPath(projection);
 
   let paths, queue = [], qi = 0, target = null, locked = false, correct = 0, wrong = 0;

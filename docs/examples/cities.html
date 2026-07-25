@@ -258,7 +258,7 @@
     const width = 960, height = 500;
     const tooltip = document.getElementById("tooltip");
     const svg = d3.select("#map").attr("viewBox", `0 0 ${width} ${height}`);
-    const projection = d3.geoEqualEarth().scale(168).translate([width / 2, height / 2 + 12]);
+    const projection = d3.geoEqualEarth().rotate([-11, 0]).scale(168).translate([width / 2, height / 2 + 12]);
     const path = d3.geoPath(projection);
     const radius = d3.scaleSqrt().domain([0, 35000000]).range([0.6, 13]);
 
@@ -318,7 +318,7 @@
     .style("width", "100%")
     .style("height", "auto");
 
-  const projection = d3.geoEqualEarth().scale(168).translate([width / 2, height / 2 + 12]);
+  const projection = d3.geoEqualEarth().rotate([-11, 0]).scale(168).translate([width / 2, height / 2 + 12]);
   const path = d3.geoPath(projection);
   const radius = d3.scaleSqrt().domain([0, 35000000]).range([0.6, 13]);
 

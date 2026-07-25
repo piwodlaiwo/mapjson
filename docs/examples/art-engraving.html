@@ -230,7 +230,7 @@
   &lt;script&gt;
   const W = 1100, H = 640;
   const svg = d3.select("#map").attr("viewBox", `0 0 ${W} ${H}`);
-  const projection = d3.geoNaturalEarth1();
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
   const path = d3.geoPath(projection);
   const ANG = {"Africa":15,"Asia":75,"Europe":135,"North America":45,"South America":105,"Oceania":165,"Antarctica":0};
   const INK = {"Africa":"#6b4423","Asia":"#6b2b30","Europe":"#274069","North America":"#264d33","South America":"#4a2b5c","Oceania":"#1d4f4b","Antarctica":"#3c4149"};
@@ -258,7 +258,7 @@
 <script>
   const W = 1100, H = 640;
   const svg = d3.select("#map-wrap").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
-  const projection = d3.geoNaturalEarth1();
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
   const path = d3.geoPath(projection);
   const ANG = {"Africa":15,"Asia":75,"Europe":135,"North America":45,"South America":105,"Oceania":165,"Antarctica":0};
   const INK = {"Africa":"#6b4423","Asia":"#6b2b30","Europe":"#274069","North America":"#264d33","South America":"#4a2b5c","Oceania":"#1d4f4b","Antarctica":"#3c4149"};

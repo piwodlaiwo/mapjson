@@ -241,7 +241,7 @@ https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson</pre
   const W = 1200, H = 620;
   const svg = d3.select("#map-wrap").append("svg").attr("viewBox", `0 0 ${W} ${H}`).style("cursor","grab");
   const tt = d3.select("body").append("div").style("position","fixed").style("pointer-events","none").style("opacity",0).style("background","#0b1220").style("color","#eaf2ff").style("font","11px ui-monospace,monospace").style("padding","5px 9px").style("border","1px solid #24405f").style("border-radius","4px").style("z-index",10);
-  const projection = d3.geoNaturalEarth1();
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
   const path = d3.geoPath(projection);
   const defs = svg.append("defs");
   const gl = defs.append("filter").attr("id","g").attr("x","-60%").attr("y","-60%").attr("width","220%").attr("height","220%");
@@ -292,7 +292,7 @@ https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson</pre
   const W = 1200, H = 620;
   const svg = d3.select("#map-wrap").append("svg").attr("viewBox", `0 0 ${W} ${H}`).style("cursor","grab");
   const tt = d3.select("body").append("div").style("position","fixed").style("pointer-events","none").style("opacity",0).style("background","#0b1220").style("color","#eaf2ff").style("font","11px ui-monospace,monospace").style("padding","5px 9px").style("border","1px solid #24405f").style("border-radius","4px").style("z-index",10);
-  const projection = d3.geoNaturalEarth1();
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
   const path = d3.geoPath(projection);
   const defs = svg.append("defs");
   const gl = defs.append("filter").attr("id","g").attr("x","-60%").attr("y","-60%").attr("width","220%").attr("height","220%");

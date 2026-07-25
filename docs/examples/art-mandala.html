@@ -230,7 +230,7 @@
   &lt;script&gt;
   const W = 900, H = 900, N = 10;
   const svg = d3.select("#map").attr("viewBox", `0 0 ${W} ${H}`);
-  const projection = d3.geoNaturalEarth1();
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
   const path = d3.geoPath(projection);
   d3.json("https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=low&amp;format=geojson").then(fc=&gt;{
     projection.fitExtent([[W*0.16,H*0.16],[W*0.84,H*0.84]], fc);
@@ -255,7 +255,7 @@
 <script>
   const W = 900, H = 900, N = 10;
   const svg = d3.select("#map-wrap").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
-  const projection = d3.geoNaturalEarth1();
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
   const path = d3.geoPath(projection);
   d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=low&format=geojson").then(fc=>{
     projection.fitExtent([[W*0.16,H*0.16],[W*0.84,H*0.84]], fc);

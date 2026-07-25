@@ -209,7 +209,7 @@ const topo = await (await fetch(API)).json();
 const fc = feature(topo, topo.objects.geo);
 
 const width = 960, height = 500;
-const projection = d3.geoNaturalEarth1().fitExtent([[8, 8], [width - 8, height - 8]], fc);
+const projection = d3.geoNaturalEarth1().rotate([-11, 0]).fitExtent([[8, 8], [width - 8, height - 8]], fc);
 const path = d3.geoPath(projection);   // no canvas context → returns SVG path strings
 
 const esc = (s) =&gt; String(s).replace(/&amp;/g, "&amp;amp;").replace(/&lt;/g, "&amp;lt;");
@@ -246,7 +246,7 @@ ${capitals.join("\n")}
 
   d3.json("https://api.mapjson.com/v1/geo?properties=name,capital,capitalLat,capitalLng").then(topo => {
     const fc = topojson.feature(topo, topo.objects.geo);
-    const projection = d3.geoNaturalEarth1().fitExtent([[8, 8], [width - 8, height - 8]], fc);
+    const projection = d3.geoNaturalEarth1().rotate([-11, 0]).fitExtent([[8, 8], [width - 8, height - 8]], fc);
     const path = d3.geoPath(projection);
 
     svg.selectAll("path")

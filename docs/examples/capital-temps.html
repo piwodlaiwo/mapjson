@@ -238,7 +238,7 @@ https://api.open-meteo.com/v1/forecast?latitude=LAT,LAT,…&amp;longitude=LNG,LN
   const W = 1200, H = 620;
   const svg = d3.select("#map").attr("viewBox", `0 0 ${W} ${H}`);
   const tt = d3.select("body").append("div").style("position","fixed").style("pointer-events","none").style("opacity",0).style("background","#0b1220").style("color","#eaf2ff").style("font","11px ui-monospace,monospace").style("padding","5px 9px").style("border","1px solid #24405f").style("border-radius","4px").style("z-index",10);
-  const projection = d3.geoNaturalEarth1();
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
   const path = d3.geoPath(projection);
   const cT = d3.scaleSequential(t =&gt; d3.interpolateRdYlBu(1 - t)).domain([-10,40]).clamp(true);
   d3.json("https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=low&amp;properties=name,capital,capitalLat,capitalLng&amp;format=geojson").then(world=&gt;{
@@ -277,7 +277,7 @@ https://api.open-meteo.com/v1/forecast?latitude=LAT,LAT,…&amp;longitude=LNG,LN
   const W = 1200, H = 620;
   const svg = d3.select("#map-wrap").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
   const tt = d3.select("body").append("div").style("position","fixed").style("pointer-events","none").style("opacity",0).style("background","#0b1220").style("color","#eaf2ff").style("font","11px ui-monospace,monospace").style("padding","5px 9px").style("border","1px solid #24405f").style("border-radius","4px").style("z-index",10);
-  const projection = d3.geoNaturalEarth1();
+  const projection = d3.geoNaturalEarth1().rotate([-11, 0]);
   const path = d3.geoPath(projection);
   const cT = d3.scaleSequential(t => d3.interpolateRdYlBu(1 - t)).domain([-10,40]).clamp(true);
   d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=low&properties=name,capital,capitalLat,capitalLng&format=geojson").then(world=>{

@@ -422,8 +422,13 @@ async function main() {
   const mledoze = loadMledoze();
   let mledozeMatched = 0;
   for (const entry of Object.values(props)) {
-    const fields = mledozeFields(entry.iso2 ? mledoze[entry.iso2] : null);
+    const md = entry.iso2 ? mledoze[entry.iso2] : null;
+    const fields = mledozeFields(md);
     Object.assign(entry, fields);
+    // authoritative published area (total km²) — replaces the coarse 10m-polygon estimate,
+    // which badly over/understates micro-states (Monaco 19 → 2.02). Territories not in mledoze
+    // keep the geometry-derived value (or the AREA_FALLBACK set above).
+    if (md && typeof md.area === 'number' && md.area > 0) entry.areakm2 = md.area;
     if (fields.currencies || fields.languages || fields.idd || fields.demonym) mledozeMatched++;
   }
   console.log(`  ${mledozeMatched} of ${Object.keys(props).length} matched`);

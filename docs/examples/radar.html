@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Local Weather Radar, Where You Are | MapJSON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A pan-and-zoom map with live open-source weather radar (RainViewer) and current conditions (Open-Meteo). Click anywhere — or share your location — and mapjson reverse-geocodes the point to name and highlight the admin region you're pointing at.">
+  <link rel="canonical" href="https://mapjson.com/examples/radar.html">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --ink: #1a1a1a; --bg: #fafafa; --accent: #b0402f; --muted: #9b9a94; --border: #e5e4df; --code-bg: #efeeea; }
+    body { background: var(--bg); color: var(--ink); font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; line-height: 1.7; }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link { display: inline-block; padding: 2.5rem 0 0; font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; font-family: 'IBM Plex Mono', monospace; }
+    .back-link:hover { color: var(--ink); }
+    header { border-bottom: 1.5px solid var(--ink); padding: 1rem 0 1.5rem; margin-bottom: 2.5rem; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #a7a6a0; margin-bottom: 0.5rem; font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
+    header p { color: #4a4a45; margin-top: 0.6rem; font-size: 15px; max-width: 680px; line-height: 1.65; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; margin-bottom: 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+    section { margin-bottom: 2.5rem; }
+    section p { color: #4a4a45; font-size: 14px; }
+    .map-wrap { margin-bottom: 0.75rem; border: 1px solid var(--border); background: #dfe6ea; line-height: 0; border-radius: 4px; overflow: hidden; }
+    .map-wrap svg { width: 100%; display: block; cursor: crosshair; }
+    .hint { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 1.5rem; }
+    pre { background: var(--code-bg); border-left: 3px solid var(--ink); padding: 1rem 1.25rem; overflow-x: auto; font-size: 12px; line-height: 1.65; font-family: 'IBM Plex Mono', monospace; }
+    .tooltip { position: fixed; background: var(--ink); color: var(--bg); font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 0.3rem 0.6rem; pointer-events: none; opacity: 0; transition: opacity 0.1s; white-space: nowrap; border-radius: 3px; z-index: 200; }
+    nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 48px; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    .nav-links a, nav .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; text-decoration: none; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { display: inline-flex; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; text-decoration: none; color: var(--ink); letter-spacing: -0.01em; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 14px; height: 14px; background: var(--ink); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; background: var(--bg); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
+    .maprow { display: flex; align-items: center; gap: 0.9rem; margin: 0.6rem 0 0.2rem; flex-wrap: wrap; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4a4a45; }
+    .maprow #stat b { color: var(--accent); }
+    .btn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 5px 11px; background: #fff; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; color: var(--ink); }
+    .btn:hover { border-color: var(--ink); }
+    .noterow { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); margin-bottom: 0.4rem; }
+    @media (max-width: 640px) {
+      html, body { overflow-x: hidden; }
+      nav { padding: 0 0.6rem; }
+      .nav-links { gap: 0.55rem; }
+      .nav-links a { font-size: 11px !important; letter-spacing: 0.08em !important; }
+      header h1 { font-size: 2rem; letter-spacing: -0.02em; line-height: 1.1; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <a class="back-link" href="/examples/">← Examples</a>
+
+  <header>
+    <div class="tag">pan · zoom · click-to-pick · reverse-geocode · live radar + weather</div>
+    <h1>Local Weather Radar</h1>
+    <p>A live map you can drag and zoom, with open-source weather radar (RainViewer) laid over the basemap. <strong>Click anywhere</strong> — or use <em>my location</em> — and mapjson reverse-geocodes that point: <code>d3.geoContains</code> finds the country, then its regions (at the right tier via <code>detail=auto</code>) name and highlight the exact admin area, while Open-Meteo returns the conditions there. Pan to a rainy part of the world to see the radar light up. The tiles show what's overhead; the vectors say <em>where</em> that is.</p>
+  </header>
+
+  <div class="map-wrap" id="map"></div>
+  <div class="maprow">
+    <button class="btn" id="locate">📍 my location</button>
+    <span id="stat">click the map to pick a spot</span>
+  </div>
+  <div class="noterow" id="note"></div>
+  <div class="hint">Drag to pan · scroll / pinch to zoom · click to pick a point. The highlighted region and marker are vector; the basemap and radar are tiles.</div>
+  <div class="tooltip" id="tooltip"></div>
+
+  <section>
+    <h2>How it fits together</h2>
+    <p>A standard slippy map (<code>d3-tile</code> + <code>d3-zoom</code>) renders two tile layers — a Carto basemap and RainViewer's radar — in one SVG. On any click it inverts the screen point to a lng/lat, and that's where mapjson earns its place: the world geometry <strong>reverse-geocodes</strong> the point to a country, that country's regions (loaded once, at <code>detail=auto</code>) find the exact admin area, and it gets outlined and highlighted. Open-Meteo fills in the current weather. Tiles are pixels — they can't name a place or draw its boundary; the vector layer does both, and it re-projects cleanly as you zoom.</p>
+  </section>
+
+  <section>
+    <h2>API Calls</h2>
+    <pre>// reverse-geocode the clicked point, then fetch that region's boundaries (mapjson):
+https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=low&amp;properties=name,iso2&amp;format=geojson
+https://api.mapjson.com/v1/geo?layer=regions&amp;filter={ISO2}&amp;detail=auto&amp;properties=name&amp;format=geojson
+
+// live weather + radar (open, CORS-enabled):
+// https://api.open-meteo.com/v1/forecast?latitude={lat}&amp;longitude={lng}&amp;current=temperature_2m,weather_code,wind_speed_10m
+// https://api.rainviewer.com/public/weather-maps.json   → radar tile template</pre>
+  </section>
+
+  <section>
+    <h2>Code</h2>
+    <pre id="codeblock">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;Local Weather Radar&lt;/title&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+  &lt;style&gt;
+    body { margin: 0; font-family: system-ui, sans-serif; background: #fafafa; color: #1a1a1a; }
+    .wrap { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    #map { border: 1px solid #e5e4df; background: #dfe6ea; border-radius: 4px; overflow: hidden; }
+    #map svg { width: 100%; display: block; cursor: crosshair; }
+    .row { display: flex; align-items: center; gap: 0.9rem; margin-top: 0.6rem; font-family: monospace; font-size: 13px; }
+    .row b { color: #b0402f; }
+    button { font-family: monospace; font-size: 11px; padding: 5px 11px; background: #fff; border: 1px solid #e5e4df; border-radius: 4px; cursor: pointer; }
+    #note { font-family: monospace; font-size: 11px; color: #9b9a94; margin-top: 0.4rem; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="wrap"&gt;
+    &lt;div id="map"&gt;&lt;/div&gt;
+    &lt;div class="row"&gt;&lt;button id="locate"&gt;📍 my location&lt;/button&gt;&lt;span id="stat"&gt;click the map to pick a spot&lt;/span&gt;&lt;/div&gt;
+    &lt;div id="note"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3-tile@1"&gt;&lt;/script&gt;
+  &lt;script&gt;
+  const W = 960, H = 560;
+  const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
+  const tooltip = d3.select("#tooltip");
+  const gBase = svg.append("g"), gRadar = svg.append("g").style("opacity", 0.6),
+        gRegions = svg.append("g").attr("pointer-events", "none"), gMark = svg.append("g").attr("pointer-events", "none");
+
+  // unit Mercator + a tile layout; the zoom transform drives both tiles and vectors (canonical d3-tile pattern)
+  const unit = d3.geoMercator().scale(1 / (2 * Math.PI)).translate([0, 0]);
+  const tile = d3.tile().extent([[0, 0], [W, H]]).tileSize(256).clampX(false);
+  const zoom = d3.zoom().scaleExtent([1 &lt;&lt; 10, 1 &lt;&lt; 19]).on("zoom", zoomed);
+
+  // RainViewer radar has no tiles past ~z7 (it serves a "Zoom Level Not Supported" placeholder),
+  // so we cap the radar layer there and upscale it — the basemap/vectors still zoom in fully.
+  const RADAR_MAX = 7;
+
+  const WMO = { 0: "Clear ☀️", 1: "Mainly clear 🌤️", 2: "Partly cloudy ⛅", 3: "Overcast ☁️",
+    45: "Fog 🌫️", 48: "Rime fog 🌫️", 51: "Light drizzle 🌦️", 53: "Drizzle 🌦️", 55: "Dense drizzle 🌧️",
+    61: "Light rain 🌦️", 63: "Rain 🌧️", 65: "Heavy rain 🌧️", 71: "Light snow 🌨️", 73: "Snow 🌨️", 75: "Heavy snow ❄️",
+    80: "Rain showers 🌦️", 81: "Showers 🌧️", 82: "Violent showers ⛈️", 95: "Thunderstorm ⛈️", 96: "Storm, hail ⛈️", 99: "Severe storm ⛈️" };
+  const DEFAULT = { lng: -0.12, lat: 51.5, z: 7 };
+
+  let radar = null, worldFC = null, regionsFC = null, currentIso = null, selected = null;
+  let proj = unit, path = d3.geoPath(unit);
+
+  const wrapX = (x, z) =&gt; { const n = 1 &lt;&lt; z; return ((x % n) + n) % n; };
+  const urlBase = (x, y, z) =&gt; `https://a.basemaps.cartocdn.com/light_all/${z}/${wrapX(x, z)}/${y}.png`;
+  const urlRadar = (x, y, z) =&gt; `${radar.host}${radar.path}/256/${z}/${wrapX(x, z)}/${y}/2/1_1.png`;
+
+  function renderTiles(g, tiles, url) {
+    g.selectAll("image").data(tiles, (d) =&gt; d[2] + "/" + d[0] + "/" + d[1]).join("image")
+      .attr("href", (d) =&gt; url(d[0], d[1], d[2]))
+      .attr("xlink:href", (d) =&gt; url(d[0], d[1], d[2]))
+      .attr("x", (d) =&gt; Math.round((d[0] + tiles.translate[0]) * tiles.scale))
+      .attr("y", (d) =&gt; Math.round((d[1] + tiles.translate[1]) * tiles.scale))
+      .attr("width", Math.ceil(tiles.scale)).attr("height", Math.ceil(tiles.scale))
+      .attr("preserveAspectRatio", "none");
+  }
+
+  // radar tiles capped at RADAR_MAX, positioned to cover the current viewport (upscaled when zoomed past the cap)
+  function radarTilesFor(t) {
+    const z = Math.min(RADAR_MAX, Math.max(0, Math.round(Math.log2(t.k / 256))));
+    const n = 1 &lt;&lt; z, tileScreen = t.k / n;             // one z-tile in screen px at the current scale
+    const originX = t.x - t.k / 2, originY = t.y - t.k / 2;   // screen position of world-fraction (0,0)
+    const x0 = Math.floor(-originX / tileScreen), x1 = Math.ceil((W - originX) / tileScreen);
+    const y0 = Math.max(0, Math.floor(-originY / tileScreen)), y1 = Math.min(n, Math.ceil((H - originY) / tileScreen));
+    const tiles = [];
+    for (let X = x0; X &lt; x1; X++) for (let Y = y0; Y &lt; y1; Y++) tiles.push([X, Y, z]);
+    tiles.scale = tileScreen;
+    tiles.translate = [originX / tileScreen, originY / tileScreen];
+    return tiles;
+  }
+
+  function zoomed(e) {
+    const t = (e &amp;&amp; e.transform) || d3.zoomTransform(svg.node());
+    if (radar) { renderTiles(gBase, tile(t), urlBase); renderTiles(gRadar, radarTilesFor(t), urlRadar); }
+    proj = d3.geoMercator().scale(t.k / (2 * Math.PI)).translate([t.x, t.y]);
+    path = d3.geoPath(proj);
+    gRegions.selectAll("path").attr("d", path);
+    if (selected) { const mp = proj(selected); gMark.attr("transform", `translate(${mp[0]},${mp[1]})`); }
+  }
+
+  svg.call(zoom);
+
+  // click-to-pick (ignore clicks that were really a drag)
+  let down = null;
+  svg.on("pointerdown", (e) =&gt; { down = d3.pointer(e); });
+  svg.on("click", (e) =&gt; {
+    const p = d3.pointer(e);
+    if (down &amp;&amp; Math.hypot(p[0] - down[0], p[1] - down[1]) &gt; 6) return;   // that was a pan
+    const ll = proj.invert(p);
+    if (ll) selectPoint(ll[0], ll[1]);
+  });
+
+  function goTo(lng, lat, z) {
+    const p = unit([lng, lat]);
+    svg.transition().duration(650).call(zoom.transform,
+      d3.zoomIdentity.translate(W / 2, H / 2).scale(256 * (1 &lt;&lt; z)).translate(-p[0], -p[1]));
+  }
+
+  async function selectPoint(lng, lat) {
+    selected = [lng, lat];
+    gMark.selectAll("*").remove();
+    gMark.append("circle").attr("r", 11).attr("fill", "none").attr("stroke", "#b0402f").attr("stroke-width", 2).attr("stroke-opacity", 0.55);
+    gMark.append("circle").attr("r", 4.5).attr("fill", "#b0402f").attr("stroke", "#fff").attr("stroke-width", 1.5);
+    const mp = proj(selected); gMark.attr("transform", `translate(${mp[0]},${mp[1]})`);
+
+    if (!worldFC) worldFC = await d3.json("https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=low&amp;properties=name,iso2&amp;format=geojson");
+    const country = worldFC.features.find((f) =&gt; d3.geoContains(f, [lng, lat]));
+
+    // load this country's regions once (refetch only when the country changes)
+    if (country &amp;&amp; country.properties.iso2 !== currentIso) {
+      currentIso = country.properties.iso2;
+      regionsFC = await d3.json(`https://api.mapjson.com/v1/geo?layer=regions&amp;filter=${currentIso}&amp;detail=auto&amp;properties=name&amp;format=geojson`);
+      gRegions.selectAll("path").data(regionsFC.features).join("path")
+        .attr("d", path).attr("fill", "none").attr("stroke", "#1a4a6a").attr("stroke-width", 0.8).attr("stroke-opacity", 0.5)
+        .attr("vector-effect", "non-scaling-stroke");
+    } else if (!country) { currentIso = null; regionsFC = null; gRegions.selectAll("*").remove(); }
+
+    let regionName = "";
+    if (regionsFC) {
+      gRegions.selectAll("path").attr("fill", "none").attr("fill-opacity", null).attr("stroke-width", 0.8).attr("stroke-opacity", 0.5);
+      const region = regionsFC.features.find((f) =&gt; d3.geoContains(f, [lng, lat]));
+      if (region) {
+        regionName = region.properties.name;
+        gRegions.selectAll("path").filter((d) =&gt; d === region)
+          .attr("fill", "#1a4a6a").attr("fill-opacity", 0.14).attr("stroke-width", 1.8).attr("stroke-opacity", 0.95).raise();
+      }
+    }
+
+    const wx = await d3.json(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&amp;longitude=${lng}&amp;current=temperature_2m,weather_code,wind_speed_10m`);
+    const c = wx.current, cond = WMO[c.weather_code] || `code ${c.weather_code}`;
+    const where = [regionName, country &amp;&amp; country.properties.name].filter(Boolean).join(", ") || `${lat.toFixed(2)}, ${lng.toFixed(2)}`;
+    document.getElementById("stat").innerHTML =
+      `📍 &lt;b&gt;${where}&lt;/b&gt; · ${Math.round(c.temperature_2m)}°C ${cond} · wind ${Math.round(c.wind_speed_10m)} km/h`;
+  }
+
+  function useMyLocation() {
+    if (!navigator.geolocation) { document.getElementById("note").textContent = "geolocation not supported — click the map instead"; return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) =&gt; { goTo(pos.coords.longitude, pos.coords.latitude, 9); selectPoint(pos.coords.longitude, pos.coords.latitude); },
+      () =&gt; { document.getElementById("note").textContent = "location blocked — open over https/localhost, or just click the map"; },
+      { timeout: 8000, maximumAge: 600000 }
+    );
+  }
+  document.getElementById("locate").addEventListener("click", useMyLocation);
+
+  // startup: fetch the latest radar frame, frame a default view, then try to jump to the user
+  d3.json("https://api.rainviewer.com/public/weather-maps.json").then((maps) =&gt; {
+    const f = maps.radar.past[maps.radar.past.length - 1];
+    radar = { host: maps.host, path: f.path, time: f.time };
+    document.getElementById("note").textContent =
+      `radar: RainViewer ${new Date(f.time * 1000).toLocaleTimeString()} · click a spot, or use my location`;
+    goTo(DEFAULT.lng, DEFAULT.lat, DEFAULT.z);
+    if (navigator.geolocation) navigator.geolocation.getCurrentPosition(
+      (pos) =&gt; { goTo(pos.coords.longitude, pos.coords.latitude, 9); selectPoint(pos.coords.longitude, pos.coords.latitude); },
+      () =&gt; {}, { timeout: 8000, maximumAge: 600000 });
+  }).catch(() =&gt; { document.getElementById("stat").textContent = "could not load radar data"; });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-tile@1"></script>
+<script>
+  const W = 960, H = 560;
+  const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
+  const tooltip = d3.select("#tooltip");
+  const gBase = svg.append("g"), gRadar = svg.append("g").style("opacity", 0.6),
+        gRegions = svg.append("g").attr("pointer-events", "none"), gMark = svg.append("g").attr("pointer-events", "none");
+
+  // unit Mercator + a tile layout; the zoom transform drives both tiles and vectors (canonical d3-tile pattern)
+  const unit = d3.geoMercator().scale(1 / (2 * Math.PI)).translate([0, 0]);
+  const tile = d3.tile().extent([[0, 0], [W, H]]).tileSize(256).clampX(false);
+  const zoom = d3.zoom().scaleExtent([1 << 10, 1 << 19]).on("zoom", zoomed);
+
+  // RainViewer radar has no tiles past ~z7 (it serves a "Zoom Level Not Supported" placeholder),
+  // so we cap the radar layer there and upscale it — the basemap/vectors still zoom in fully.
+  const RADAR_MAX = 7;
+
+  const WMO = { 0: "Clear ☀️", 1: "Mainly clear 🌤️", 2: "Partly cloudy ⛅", 3: "Overcast ☁️",
+    45: "Fog 🌫️", 48: "Rime fog 🌫️", 51: "Light drizzle 🌦️", 53: "Drizzle 🌦️", 55: "Dense drizzle 🌧️",
+    61: "Light rain 🌦️", 63: "Rain 🌧️", 65: "Heavy rain 🌧️", 71: "Light snow 🌨️", 73: "Snow 🌨️", 75: "Heavy snow ❄️",
+    80: "Rain showers 🌦️", 81: "Showers 🌧️", 82: "Violent showers ⛈️", 95: "Thunderstorm ⛈️", 96: "Storm, hail ⛈️", 99: "Severe storm ⛈️" };
+  const DEFAULT = { lng: -0.12, lat: 51.5, z: 7 };
+
+  let radar = null, worldFC = null, regionsFC = null, currentIso = null, selected = null;
+  let proj = unit, path = d3.geoPath(unit);
+
+  const wrapX = (x, z) => { const n = 1 << z; return ((x % n) + n) % n; };
+  const urlBase = (x, y, z) => `https://a.basemaps.cartocdn.com/light_all/${z}/${wrapX(x, z)}/${y}.png`;
+  const urlRadar = (x, y, z) => `${radar.host}${radar.path}/256/${z}/${wrapX(x, z)}/${y}/2/1_1.png`;
+
+  function renderTiles(g, tiles, url) {
+    g.selectAll("image").data(tiles, (d) => d[2] + "/" + d[0] + "/" + d[1]).join("image")
+      .attr("href", (d) => url(d[0], d[1], d[2]))
+      .attr("xlink:href", (d) => url(d[0], d[1], d[2]))
+      .attr("x", (d) => Math.round((d[0] + tiles.translate[0]) * tiles.scale))
+      .attr("y", (d) => Math.round((d[1] + tiles.translate[1]) * tiles.scale))
+      .attr("width", Math.ceil(tiles.scale)).attr("height", Math.ceil(tiles.scale))
+      .attr("preserveAspectRatio", "none");
+  }
+
+  // radar tiles capped at RADAR_MAX, positioned to cover the current viewport (upscaled when zoomed past the cap)
+  function radarTilesFor(t) {
+    const z = Math.min(RADAR_MAX, Math.max(0, Math.round(Math.log2(t.k / 256))));
+    const n = 1 << z, tileScreen = t.k / n;             // one z-tile in screen px at the current scale
+    const originX = t.x - t.k / 2, originY = t.y - t.k / 2;   // screen position of world-fraction (0,0)
+    const x0 = Math.floor(-originX / tileScreen), x1 = Math.ceil((W - originX) / tileScreen);
+    const y0 = Math.max(0, Math.floor(-originY / tileScreen)), y1 = Math.min(n, Math.ceil((H - originY) / tileScreen));
+    const tiles = [];
+    for (let X = x0; X < x1; X++) for (let Y = y0; Y < y1; Y++) tiles.push([X, Y, z]);
+    tiles.scale = tileScreen;
+    tiles.translate = [originX / tileScreen, originY / tileScreen];
+    return tiles;
+  }
+
+  function zoomed(e) {
+    const t = (e && e.transform) || d3.zoomTransform(svg.node());
+    if (radar) { renderTiles(gBase, tile(t), urlBase); renderTiles(gRadar, radarTilesFor(t), urlRadar); }
+    proj = d3.geoMercator().scale(t.k / (2 * Math.PI)).translate([t.x, t.y]);
+    path = d3.geoPath(proj);
+    gRegions.selectAll("path").attr("d", path);
+    if (selected) { const mp = proj(selected); gMark.attr("transform", `translate(${mp[0]},${mp[1]})`); }
+  }
+
+  svg.call(zoom);
+
+  // click-to-pick (ignore clicks that were really a drag)
+  let down = null;
+  svg.on("pointerdown", (e) => { down = d3.pointer(e); });
+  svg.on("click", (e) => {
+    const p = d3.pointer(e);
+    if (down && Math.hypot(p[0] - down[0], p[1] - down[1]) > 6) return;   // that was a pan
+    const ll = proj.invert(p);
+    if (ll) selectPoint(ll[0], ll[1]);
+  });
+
+  function goTo(lng, lat, z) {
+    const p = unit([lng, lat]);
+    svg.transition().duration(650).call(zoom.transform,
+      d3.zoomIdentity.translate(W / 2, H / 2).scale(256 * (1 << z)).translate(-p[0], -p[1]));
+  }
+
+  async function selectPoint(lng, lat) {
+    selected = [lng, lat];
+    gMark.selectAll("*").remove();
+    gMark.append("circle").attr("r", 11).attr("fill", "none").attr("stroke", "#b0402f").attr("stroke-width", 2).attr("stroke-opacity", 0.55);
+    gMark.append("circle").attr("r", 4.5).attr("fill", "#b0402f").attr("stroke", "#fff").attr("stroke-width", 1.5);
+    const mp = proj(selected); gMark.attr("transform", `translate(${mp[0]},${mp[1]})`);
+
+    if (!worldFC) worldFC = await d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=low&properties=name,iso2&format=geojson");
+    const country = worldFC.features.find((f) => d3.geoContains(f, [lng, lat]));
+
+    // load this country's regions once (refetch only when the country changes)
+    if (country && country.properties.iso2 !== currentIso) {
+      currentIso = country.properties.iso2;
+      regionsFC = await d3.json(`https://api.mapjson.com/v1/geo?layer=regions&filter=${currentIso}&detail=auto&properties=name&format=geojson`);
+      gRegions.selectAll("path").data(regionsFC.features).join("path")
+        .attr("d", path).attr("fill", "none").attr("stroke", "#1a4a6a").attr("stroke-width", 0.8).attr("stroke-opacity", 0.5)
+        .attr("vector-effect", "non-scaling-stroke");
+    } else if (!country) { currentIso = null; regionsFC = null; gRegions.selectAll("*").remove(); }
+
+    let regionName = "";
+    if (regionsFC) {
+      gRegions.selectAll("path").attr("fill", "none").attr("fill-opacity", null).attr("stroke-width", 0.8).attr("stroke-opacity", 0.5);
+      const region = regionsFC.features.find((f) => d3.geoContains(f, [lng, lat]));
+      if (region) {
+        regionName = region.properties.name;
+        gRegions.selectAll("path").filter((d) => d === region)
+          .attr("fill", "#1a4a6a").attr("fill-opacity", 0.14).attr("stroke-width", 1.8).attr("stroke-opacity", 0.95).raise();
+      }
+    }
+
+    const wx = await d3.json(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code,wind_speed_10m`);
+    const c = wx.current, cond = WMO[c.weather_code] || `code ${c.weather_code}`;
+    const where = [regionName, country && country.properties.name].filter(Boolean).join(", ") || `${lat.toFixed(2)}, ${lng.toFixed(2)}`;
+    document.getElementById("stat").innerHTML =
+      `📍 <b>${where}</b> · ${Math.round(c.temperature_2m)}°C ${cond} · wind ${Math.round(c.wind_speed_10m)} km/h`;
+  }
+
+  function useMyLocation() {
+    if (!navigator.geolocation) { document.getElementById("note").textContent = "geolocation not supported — click the map instead"; return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { goTo(pos.coords.longitude, pos.coords.latitude, 9); selectPoint(pos.coords.longitude, pos.coords.latitude); },
+      () => { document.getElementById("note").textContent = "location blocked — open over https/localhost, or just click the map"; },
+      { timeout: 8000, maximumAge: 600000 }
+    );
+  }
+  document.getElementById("locate").addEventListener("click", useMyLocation);
+
+  // startup: fetch the latest radar frame, frame a default view, then try to jump to the user
+  d3.json("https://api.rainviewer.com/public/weather-maps.json").then((maps) => {
+    const f = maps.radar.past[maps.radar.past.length - 1];
+    radar = { host: maps.host, path: f.path, time: f.time };
+    document.getElementById("note").textContent =
+      `radar: RainViewer ${new Date(f.time * 1000).toLocaleTimeString()} · click a spot, or use my location`;
+    goTo(DEFAULT.lng, DEFAULT.lat, DEFAULT.z);
+    if (navigator.geolocation) navigator.geolocation.getCurrentPosition(
+      (pos) => { goTo(pos.coords.longitude, pos.coords.latitude, 9); selectPoint(pos.coords.longitude, pos.coords.latitude); },
+      () => {}, { timeout: 8000, maximumAge: 600000 });
+  }).catch(() => { document.getElementById("stat").textContent = "could not load radar data"; });
+</script>
+<script src="example-widgets.js" defer></script>
+</body>
+</html>

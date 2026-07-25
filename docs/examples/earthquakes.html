@@ -222,21 +222,24 @@ https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson</pre
   <section>
     <h2>Code</h2>
     <pre>&lt;!DOCTYPE html&gt;
-&lt;html&gt;
+&lt;html lang="en"&gt;
 &lt;head&gt;
   &lt;meta charset="utf-8"&gt;
-  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
-  &lt;script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"&gt;&lt;/script&gt;
+  &lt;title&gt;30 Days of Earthquakes&lt;/title&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
   &lt;style&gt;
     body { margin: 0; background: #070c15; }
-    svg { width: 100%; height: auto; display: block; }
+    #map-wrap svg { width: 100%; height: auto; display: block; }
   &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
-  &lt;svg id="map"&gt;&lt;/svg&gt;
+  &lt;p class="live" id="live" style="font:12px ui-monospace,monospace;color:#8aa0b8;padding:12px 16px;margin:0"&gt;fetching live quakes from USGS…&lt;/p&gt;
+  &lt;div id="map-wrap"&gt;&lt;/div&gt;
+
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
   &lt;script&gt;
   const W = 1200, H = 620;
-  const svg = d3.select("#map").attr("viewBox", `0 0 ${W} ${H}`);
+  const svg = d3.select("#map-wrap").append("svg").attr("viewBox", `0 0 ${W} ${H}`).style("cursor","grab");
   const tt = d3.select("body").append("div").style("position","fixed").style("pointer-events","none").style("opacity",0).style("background","#0b1220").style("color","#eaf2ff").style("font","11px ui-monospace,monospace").style("padding","5px 9px").style("border","1px solid #24405f").style("border-radius","4px").style("z-index",10);
   const projection = d3.geoNaturalEarth1();
   const path = d3.geoPath(projection);
@@ -246,15 +249,26 @@ https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson</pre
   const mm = gl.append("feMerge"); mm.append("feMergeNode").attr("in","b"); mm.append("feMergeNode").attr("in","SourceGraphic");
   const rMag = d3.scaleSqrt().domain([4.5,8]).range([1.6,15]).clamp(true);
   const cDepth = d3.scaleSequential(t =&gt; d3.interpolateTurbo(1 - t)).domain([0,300]).clamp(true);
+  // one zoomable group holds land + quakes; borders use non-scaling strokes and dot radii are
+  // counter-scaled by k, so zooming into a dense cluster (Japan, Indonesia) spreads the dots apart
+  const gZoom = svg.append("g");
+  const gLand = gZoom.append("g");
+  const gQuakes = gZoom.append("g").attr("filter","url(#g)");
+  const zoom = d3.zoom().scaleExtent([1,14]).extent([[0,0],[W,H]]).translateExtent([[0,0],[W,H]])
+    .on("zoom", (e) =&gt; {
+      gZoom.attr("transform", e.transform);
+      gQuakes.selectAll("circle").attr("r", d=&gt;rMag(d.properties.mag)/e.transform.k).attr("stroke-width", 0.5/e.transform.k);
+    });
+  svg.call(zoom);
   Promise.all([
     d3.json("https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=low&amp;format=geojson"),
     d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson"),
   ]).then(([world, eq]) =&gt; {
     projection.fitExtent([[6,6],[W-6,H-6]], world);
-    svg.append("g").selectAll("path").data(world.features).join("path").attr("d", path)
-      .attr("fill","#16202e").attr("stroke","#243346").attr("stroke-width",0.4);
+    gLand.selectAll("path").data(world.features).join("path").attr("d", path)
+      .attr("fill","#16202e").attr("stroke","#243346").attr("stroke-width",0.4).attr("vector-effect","non-scaling-stroke");
     const quakes = eq.features.slice().sort((a,b)=&gt;(a.properties.mag||0)-(b.properties.mag||0));
-    svg.append("g").attr("filter","url(#g)").selectAll("circle").data(quakes).join("circle")
+    gQuakes.selectAll("circle").data(quakes).join("circle")
       .attr("cx", d=&gt;projection(d.geometry.coordinates)[0]).attr("cy", d=&gt;projection(d.geometry.coordinates)[1])
       .attr("r", d=&gt;rMag(d.properties.mag)).attr("fill", d=&gt;cDepth(d.geometry.coordinates[2]))
       .attr("fill-opacity",0.72).attr("stroke", d=&gt;cDepth(d.geometry.coordinates[2])).attr("stroke-opacity",0.9).attr("stroke-width",0.5)
@@ -263,11 +277,12 @@ https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson</pre
         .html(`&lt;b&gt;M ${d.properties.mag}&lt;/b&gt; · ${d.geometry.coordinates[2]} km deep&lt;br&gt;${d.properties.place||""}`);})
       .on("mouseout",()=&gt;tt.style("opacity",0));
     const live = document.getElementById("live");
-    if (live) live.innerHTML = `&lt;b&gt;${quakes.length}&lt;/b&gt; quakes M4.5+ in the last 30 days · live from USGS as of ${new Date(eq.metadata.generated).toLocaleString()}`;
+    if (live) live.innerHTML = `&lt;b&gt;${quakes.length}&lt;/b&gt; quakes M4.5+ in the last 30 days · live from USGS as of ${new Date(eq.metadata.generated).toLocaleString()} · drag to pan, scroll to zoom`;
   });
   &lt;/script&gt;
 &lt;/body&gt;
-&lt;/html&gt;</pre>
+&lt;/html&gt;
+</pre>
   </section>
 </div>
 
@@ -275,7 +290,7 @@ https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson</pre
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <script>
   const W = 1200, H = 620;
-  const svg = d3.select("#map-wrap").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
+  const svg = d3.select("#map-wrap").append("svg").attr("viewBox", `0 0 ${W} ${H}`).style("cursor","grab");
   const tt = d3.select("body").append("div").style("position","fixed").style("pointer-events","none").style("opacity",0).style("background","#0b1220").style("color","#eaf2ff").style("font","11px ui-monospace,monospace").style("padding","5px 9px").style("border","1px solid #24405f").style("border-radius","4px").style("z-index",10);
   const projection = d3.geoNaturalEarth1();
   const path = d3.geoPath(projection);
@@ -285,15 +300,26 @@ https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson</pre
   const mm = gl.append("feMerge"); mm.append("feMergeNode").attr("in","b"); mm.append("feMergeNode").attr("in","SourceGraphic");
   const rMag = d3.scaleSqrt().domain([4.5,8]).range([1.6,15]).clamp(true);
   const cDepth = d3.scaleSequential(t => d3.interpolateTurbo(1 - t)).domain([0,300]).clamp(true);
+  // one zoomable group holds land + quakes; borders use non-scaling strokes and dot radii are
+  // counter-scaled by k, so zooming into a dense cluster (Japan, Indonesia) spreads the dots apart
+  const gZoom = svg.append("g");
+  const gLand = gZoom.append("g");
+  const gQuakes = gZoom.append("g").attr("filter","url(#g)");
+  const zoom = d3.zoom().scaleExtent([1,14]).extent([[0,0],[W,H]]).translateExtent([[0,0],[W,H]])
+    .on("zoom", (e) => {
+      gZoom.attr("transform", e.transform);
+      gQuakes.selectAll("circle").attr("r", d=>rMag(d.properties.mag)/e.transform.k).attr("stroke-width", 0.5/e.transform.k);
+    });
+  svg.call(zoom);
   Promise.all([
     d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=low&format=geojson"),
     d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson"),
   ]).then(([world, eq]) => {
     projection.fitExtent([[6,6],[W-6,H-6]], world);
-    svg.append("g").selectAll("path").data(world.features).join("path").attr("d", path)
-      .attr("fill","#16202e").attr("stroke","#243346").attr("stroke-width",0.4);
+    gLand.selectAll("path").data(world.features).join("path").attr("d", path)
+      .attr("fill","#16202e").attr("stroke","#243346").attr("stroke-width",0.4).attr("vector-effect","non-scaling-stroke");
     const quakes = eq.features.slice().sort((a,b)=>(a.properties.mag||0)-(b.properties.mag||0));
-    svg.append("g").attr("filter","url(#g)").selectAll("circle").data(quakes).join("circle")
+    gQuakes.selectAll("circle").data(quakes).join("circle")
       .attr("cx", d=>projection(d.geometry.coordinates)[0]).attr("cy", d=>projection(d.geometry.coordinates)[1])
       .attr("r", d=>rMag(d.properties.mag)).attr("fill", d=>cDepth(d.geometry.coordinates[2]))
       .attr("fill-opacity",0.72).attr("stroke", d=>cDepth(d.geometry.coordinates[2])).attr("stroke-opacity",0.9).attr("stroke-width",0.5)
@@ -302,7 +328,7 @@ https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson</pre
         .html(`<b>M ${d.properties.mag}</b> · ${d.geometry.coordinates[2]} km deep<br>${d.properties.place||""}`);})
       .on("mouseout",()=>tt.style("opacity",0));
     const live = document.getElementById("live");
-    if (live) live.innerHTML = `<b>${quakes.length}</b> quakes M4.5+ in the last 30 days · live from USGS as of ${new Date(eq.metadata.generated).toLocaleString()}`;
+    if (live) live.innerHTML = `<b>${quakes.length}</b> quakes M4.5+ in the last 30 days · live from USGS as of ${new Date(eq.metadata.generated).toLocaleString()} · drag to pan, scroll to zoom`;
   });
 </script>
 <script src="example-widgets.js" defer></script>

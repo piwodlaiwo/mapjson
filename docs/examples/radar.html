@@ -84,7 +84,7 @@
   <header>
     <div class="tag">pan · zoom · click-to-pick · reverse-geocode · live radar + weather</div>
     <h1>Local Weather Radar</h1>
-    <p>A live map you can drag and zoom, with open-source weather radar (RainViewer) laid over the basemap. <strong>Click anywhere</strong> — or use <em>my location</em> — and mapjson reverse-geocodes that point: <code>d3.geoContains</code> finds the country, then its regions (at the right tier via <code>detail=auto</code>) name and highlight the exact admin area, while Open-Meteo returns the conditions there. Pan to a rainy part of the world to see the radar light up. The tiles show what's overhead; the vectors say <em>where</em> that is.</p>
+    <p>A live map you can drag and zoom, with open-source weather radar (RainViewer) laid over the basemap. <strong>Click anywhere</strong> — or use <em>my location</em> — and mapjson reverse-geocodes that point: <code>d3.geoContains</code> finds the country, then its regions (at the right tier via <code>detail=auto</code>) name and highlight the exact admin area, while Open-Meteo returns the conditions there. Pan to a rainy part of the world to see the radar light up.</p>
   </header>
 
   <div class="map-wrap" id="map"></div>
@@ -98,7 +98,7 @@
 
   <section>
     <h2>How it fits together</h2>
-    <p>A standard slippy map (<code>d3-tile</code> + <code>d3-zoom</code>) renders two tile layers — a Carto basemap and RainViewer's radar — in one SVG. On any click it inverts the screen point to a lng/lat, and that's where mapjson earns its place: the world geometry <strong>reverse-geocodes</strong> the point to a country, that country's regions (loaded once, at <code>detail=auto</code>) find the exact admin area, and it gets outlined and highlighted. Open-Meteo fills in the current weather. Tiles are pixels — they can't name a place or draw its boundary; the vector layer does both, and it re-projects cleanly as you zoom.</p>
+    <p>A standard slippy map (<code>d3-tile</code> + <code>d3-zoom</code>) renders two tile layers — a Carto basemap and RainViewer's radar — in one SVG. On any click it inverts the screen point to a lng/lat, and that's where mapjson earns its place: the world geometry <strong>reverse-geocodes</strong> the point to a country, that country's regions (loaded once, at <code>detail=auto</code>) find the exact admin area, and it gets outlined and highlighted. Open-Meteo fills in the current weather.</p>
   </section>
 
   <section>

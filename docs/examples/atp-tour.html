@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>The 2026 Tennis Season, Mapped | MapJSON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Every 2026 ATP Grand Slam, Masters 1000, and ATP 500 tournament plotted on a mapjson world map — colored by level, with dates and surface, plus a date-sorted schedule.">
+  <link rel="canonical" href="https://mapjson.com/examples/atp-tour.html">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --ink:#1a1a1a; --bg:#fafafa; --accent:#b0402f; --muted:#9b9a94; --border:#e5e4df; --code-bg:#efeeea; }
+    body { background: var(--bg); color: var(--ink); font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; line-height: 1.7; }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link { display:inline-block; padding: 2.5rem 0 0; font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; font-family: 'IBM Plex Mono', monospace; }
+    .back-link:hover { color: var(--ink); }
+    header { border-bottom: 1.5px solid var(--ink); padding: 1rem 0 1.5rem; margin-bottom: 2.5rem; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #a7a6a0; margin-bottom: 0.5rem; font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
+    header p { color: #4a4a45; margin-top: 0.6rem; font-size: 15px; max-width: 680px; line-height: 1.65; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; margin-bottom: 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+    section { margin-bottom: 2.5rem; }
+    section p { color: #4a4a45; font-size: 14px; }
+    .map-wrap { margin-bottom: 0.75rem; border: 1px solid var(--border); background: #e8edf0; line-height: 0; border-radius: 4px; overflow: hidden; }
+    .map-wrap svg { width: 100%; display: block; }
+    .legend { display: flex; gap: 1.4rem; flex-wrap: wrap; align-items: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4a4a45; margin-bottom: 1.5rem; }
+    .legend .it { display: inline-flex; align-items: center; gap: 0.45rem; }
+    .legend .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+    pre { background: var(--code-bg); border-left: 3px solid var(--ink); padding: 1rem 1.25rem; overflow-x: auto; font-size: 12px; line-height: 1.65; font-family: 'IBM Plex Mono', monospace; }
+    .tooltip { position: fixed; background: var(--ink); color: var(--bg); font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 0.4rem 0.65rem; pointer-events: none; opacity: 0; transition: opacity 0.1s; white-space: nowrap; border-radius: 3px; z-index: 200; line-height: 1.5; }
+    .tooltip b { color: #ffd7a0; }
+    nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 48px; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; text-decoration: none; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { display: inline-flex; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; text-decoration: none; color: var(--ink); letter-spacing: -0.01em; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 14px; height: 14px; background: var(--ink); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; background: var(--bg); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
+    /* schedule */
+    .sched { columns: 2; column-gap: 2.2rem; }
+    .row { break-inside: avoid; display: grid; grid-template-columns: 14px 1fr auto; gap: 0.55rem; align-items: baseline; padding: 0.32rem 0; border-bottom: 1px solid #efeee9; cursor: default; }
+    .row:hover { background: #f3f0e8; }
+    .row .dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; }
+    .row .nm { font-size: 13.5px; font-weight: 500; }
+    .row .ci { font-size: 11px; color: #8a897f; font-family: 'IBM Plex Mono', monospace; }
+    .row .dt { font-size: 11px; color: #6a6962; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
+    .swing { break-inside: avoid; margin-bottom: 1.1rem; }
+    .swing-h { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; margin-bottom: 0.3rem; cursor: default; }
+    .swing-h span { font-family: 'IBM Plex Mono', monospace; font-weight: 400; font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: #a7a6a0; margin-left: 0.4rem; }
+    .swing-h:hover { color: var(--accent); }
+    @media (max-width: 620px) { .sched { columns: 1; } header h1 { font-size: 2rem; } nav { padding: 0 0.6rem; } .nav-links { gap: 0.6rem; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <a class="back-link" href="/examples/">← Examples</a>
+
+  <header>
+    <div class="tag">ATP 2026 · Grand Slam / 1000 / 500 · dates + surface · data join</div>
+    <h1>The 2026 Tennis Season, Mapped</h1>
+    <p>Every 2026 ATP <strong>Grand Slam</strong>, <strong>Masters 1000</strong>, and <strong>ATP 500</strong>, placed on a mapjson world map by host city — <strong>colored by surface</strong>, sized by level. The tennis calendar is a chase around the planet after warm weather: hard courts through the Australian and American summers, a European <em>clay</em> spring, a short <em>grass</em> season, then indoor hard as Europe cools. The schedule below groups it into those <em>swings</em> — hover one to light up its region on the map.</p>
+  </header>
+
+  <div class="map-wrap" id="map"></div>
+  <div class="legend">
+    <span class="it"><span class="dot" style="background:#2b6ca3"></span> Hard</span>
+    <span class="it"><span class="dot" style="background:#c56a3a"></span> Clay</span>
+    <span class="it"><span class="dot" style="background:#4f9e5a"></span> Grass</span>
+    <span class="it" style="color:#8a897f">size = level (Slam · 1000 · 500) · drag to pan, scroll to zoom</span>
+  </div>
+  <div class="tooltip" id="tooltip"></div>
+
+  <section>
+    <h2>The schedule</h2>
+    <div class="sched" id="sched"></div>
+  </section>
+
+  <section>
+    <h2>How it uses mapjson</h2>
+    <p>The basemap is a single mapjson call — <code>layer=countries&amp;filter=world&amp;detail=low</code> — drawn in Equal Earth with the seam nudged into the Bering Strait so Russia stays whole. The tournament calendar is a small embedded dataset (the ATP tour changes little year to year); each event is projected to its host city's coordinates and joined visually onto that geometry.</p>
+  </section>
+
+  <section>
+    <h2>API Calls</h2>
+    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=low&amp;format=geojson</pre>
+  </section>
+
+  <section>
+    <h2>Code</h2>
+    <pre id="codeblock">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;The 2026 Tennis Season, Mapped&lt;/title&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+  &lt;style&gt;
+    body { margin: 0; font-family: system-ui, sans-serif; color: #1a1a1a; background: #fafafa; }
+    .wrap { max-width: 920px; margin: 2rem auto; padding: 0 1rem; }
+    #map { border: 1px solid #e5e4df; background: #e8edf0; border-radius: 4px; overflow: hidden; }
+    #map svg { width: 100%; display: block; cursor: grab; }
+    .legend { display: flex; gap: 1.2rem; flex-wrap: wrap; font: 12px ui-monospace, monospace; color: #4a4a45; margin: 0.7rem 0 1.4rem; }
+    .legend .it { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .legend .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .tooltip { position: fixed; background: #1a1a1a; color: #fff; font: 11px/1.5 ui-monospace, monospace; padding: 0.4rem 0.65rem; pointer-events: none; opacity: 0; white-space: nowrap; border-radius: 3px; }
+    .tooltip b { color: #ffd7a0; }
+    .sched { columns: 2; column-gap: 2rem; }
+    .swing { break-inside: avoid; margin-bottom: 1.1rem; }
+    .swing-h { font-weight: 700; font-size: 14px; margin-bottom: 0.3rem; }
+    .swing-h span { font: 10px ui-monospace, monospace; text-transform: uppercase; color: #a7a6a0; margin-left: 0.4rem; }
+    .row { display: grid; grid-template-columns: 14px 1fr auto; gap: 0.5rem; align-items: baseline; padding: 0.3rem 0; border-bottom: 1px solid #efeee9; }
+    .row:hover { background: #f3f0e8; }
+    .row .dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; }
+    .row .nm { font-size: 13px; font-weight: 600; }
+    .row .ci, .row .dt { font: 11px ui-monospace, monospace; color: #6a6962; }
+    @media (max-width: 620px) { .sched { columns: 1; } }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="wrap"&gt;
+    &lt;div id="map"&gt;&lt;/div&gt;
+    &lt;div class="legend"&gt;
+      &lt;span class="it"&gt;&lt;span class="dot" style="background:#2b6ca3"&gt;&lt;/span&gt; Hard&lt;/span&gt;
+      &lt;span class="it"&gt;&lt;span class="dot" style="background:#c56a3a"&gt;&lt;/span&gt; Clay&lt;/span&gt;
+      &lt;span class="it"&gt;&lt;span class="dot" style="background:#4f9e5a"&gt;&lt;/span&gt; Grass&lt;/span&gt;
+      &lt;span class="it" style="color:#8a897f"&gt;size = level · drag to pan, scroll to zoom&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class="sched" id="sched"&gt;&lt;/div&gt;
+    &lt;div class="tooltip" id="tooltip"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+  &lt;script&gt;
+  const W = 980, H = 520;
+  const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
+  const tip = d3.select("#tooltip");
+
+  const SIZE  = { slam: 8, m1000: 6, a500: 4.5 };                 // marker radius = level
+  const LEVEL = { slam: "Grand Slam", m1000: "Masters 1000", a500: "ATP 500" };
+  const SURF  = { Hard: "#2b6ca3", Clay: "#c56a3a", Grass: "#4f9e5a" };   // marker color = surface
+  const surfKey = (s) =&gt; s.indexOf("Hard") === 0 ? "Hard" : s;
+
+  // the tour chases warm weather around the globe; each swing is a region + a slice of the year
+  const SWINGS = [
+    { name: "Australian Summer",            when: "January",            region: "Oceania" },
+    { name: "Gulf · Indoor · Golden Swing", when: "February",           region: "Mid-East · Europe · S. America" },
+    { name: "Sunshine Double",              when: "March",              region: "United States" },
+    { name: "European Clay",                when: "April – early June", region: "Europe" },
+    { name: "Grass Season",                 when: "June – July",        region: "Europe" },
+    { name: "North American Hard",          when: "July – September",   region: "North America" },
+    { name: "Asian Swing",                  when: "September – October",region: "Asia" },
+    { name: "Indoor Europe",                when: "October – November", region: "Europe" },
+  ];
+
+  const T = [
+    { n: "Australian Open",     city: "Melbourne, Australia",   lng: 144.98, lat: -37.82, lvl: "slam",  surf: "Hard",     dt: "Jan 19 – Feb 1",  s: "2026-01-19", sw: 0 },
+    { n: "Dallas Open",         city: "Dallas, USA",            lng: -96.80, lat: 32.78,  lvl: "a500",  surf: "Hard (i)", dt: "Feb 9 – 15",      s: "2026-02-09", sw: 1 },
+    { n: "ABN AMRO Open",       city: "Rotterdam, Netherlands", lng: 4.48,   lat: 51.92,  lvl: "a500",  surf: "Hard (i)", dt: "Feb 9 – 15",      s: "2026-02-09", sw: 1 },
+    { n: "Qatar Open",          city: "Doha, Qatar",            lng: 51.53,  lat: 25.29,  lvl: "a500",  surf: "Hard",     dt: "Feb 16 – 22",     s: "2026-02-16", sw: 1 },
+    { n: "Rio Open",            city: "Rio de Janeiro, Brazil", lng: -43.17, lat: -22.91, lvl: "a500",  surf: "Clay",     dt: "Feb 16 – 22",     s: "2026-02-16", sw: 1 },
+    { n: "Dubai Championships", city: "Dubai, UAE",             lng: 55.27,  lat: 25.20,  lvl: "a500",  surf: "Hard",     dt: "Feb 23 – Mar 1",  s: "2026-02-23", sw: 1 },
+    { n: "Mexican Open",        city: "Acapulco, Mexico",       lng: -99.88, lat: 16.86,  lvl: "a500",  surf: "Hard",     dt: "Feb 23 – Mar 1",  s: "2026-02-23", sw: 1 },
+    { n: "Indian Wells Open",   city: "Indian Wells, USA",      lng: -116.30,lat: 33.72,  lvl: "m1000", surf: "Hard",     dt: "Mar 4 – 15",      s: "2026-03-04", sw: 2 },
+    { n: "Miami Open",          city: "Miami, USA",             lng: -80.24, lat: 25.96,  lvl: "m1000", surf: "Hard",     dt: "Mar 18 – 29",     s: "2026-03-18", sw: 2 },
+    { n: "Monte-Carlo Masters", city: "Monte-Carlo, Monaco",    lng: 7.44,   lat: 43.75,  lvl: "m1000", surf: "Clay",     dt: "Apr 5 – 12",      s: "2026-04-05", sw: 3 },
+    { n: "Barcelona Open",      city: "Barcelona, Spain",       lng: 2.16,   lat: 41.39,  lvl: "a500",  surf: "Clay",     dt: "Apr 13 – 19",     s: "2026-04-13", sw: 3 },
+    { n: "BMW Open",            city: "Munich, Germany",        lng: 11.57,  lat: 48.14,  lvl: "a500",  surf: "Clay",     dt: "Apr 20 – 26",     s: "2026-04-20", sw: 3 },
+    { n: "Madrid Open",         city: "Madrid, Spain",          lng: -3.68,  lat: 40.44,  lvl: "m1000", surf: "Clay",     dt: "Apr 22 – May 3",  s: "2026-04-22", sw: 3 },
+    { n: "Italian Open",        city: "Rome, Italy",            lng: 12.45,  lat: 41.93,  lvl: "m1000", surf: "Clay",     dt: "May 6 – 17",      s: "2026-05-06", sw: 3 },
+    { n: "Roland Garros",       city: "Paris, France",          lng: 2.25,   lat: 48.85,  lvl: "slam",  surf: "Clay",     dt: "May 24 – Jun 7",  s: "2026-05-24", sw: 3 },
+    { n: "Halle Open",          city: "Halle, Germany",         lng: 8.36,   lat: 51.97,  lvl: "a500",  surf: "Grass",    dt: "Jun 15 – 21",     s: "2026-06-15", sw: 4 },
+    { n: "Queen's Club",        city: "London, UK",             lng: -0.21,  lat: 51.48,  lvl: "a500",  surf: "Grass",    dt: "Jun 15 – 21",     s: "2026-06-15", sw: 4 },
+    { n: "Wimbledon",           city: "London, UK",             lng: -0.21,  lat: 51.43,  lvl: "slam",  surf: "Grass",    dt: "Jun 29 – Jul 12", s: "2026-06-29", sw: 4 },
+    { n: "Hamburg Open",        city: "Hamburg, Germany",       lng: 9.99,   lat: 53.55,  lvl: "a500",  surf: "Clay",     dt: "Jul 13 – 19",     s: "2026-07-13", sw: 5 },
+    { n: "Washington Open",     city: "Washington, USA",        lng: -77.03, lat: 38.91,  lvl: "a500",  surf: "Hard",     dt: "Jul 27 – Aug 2",  s: "2026-07-27", sw: 5 },
+    { n: "Canadian Open",       city: "Montreal, Canada",       lng: -73.61, lat: 45.50,  lvl: "m1000", surf: "Hard",     dt: "Aug 2 – 13",      s: "2026-08-02", sw: 5 },
+    { n: "Cincinnati Open",     city: "Cincinnati, USA",        lng: -84.28, lat: 39.35,  lvl: "m1000", surf: "Hard",     dt: "Aug 13 – 23",     s: "2026-08-13", sw: 5 },
+    { n: "US Open",             city: "New York, USA",          lng: -73.85, lat: 40.75,  lvl: "slam",  surf: "Hard",     dt: "Aug 31 – Sep 13", s: "2026-08-31", sw: 5 },
+    { n: "China Open",          city: "Beijing, China",         lng: 116.41, lat: 39.90,  lvl: "a500",  surf: "Hard",     dt: "Sep 28 – Oct 4",  s: "2026-09-28", sw: 6 },
+    { n: "Japan Open",          city: "Tokyo, Japan",           lng: 139.69, lat: 35.68,  lvl: "a500",  surf: "Hard",     dt: "Sep 28 – Oct 4",  s: "2026-09-28", sw: 6 },
+    { n: "Shanghai Masters",    city: "Shanghai, China",        lng: 121.47, lat: 31.23,  lvl: "m1000", surf: "Hard",     dt: "Oct 7 – 18",      s: "2026-10-07", sw: 6 },
+    { n: "Vienna Open",         city: "Vienna, Austria",        lng: 16.37,  lat: 48.21,  lvl: "a500",  surf: "Hard (i)", dt: "Oct 26 – Nov 1",  s: "2026-10-26", sw: 7 },
+    { n: "Swiss Indoors",       city: "Basel, Switzerland",     lng: 7.59,   lat: 47.56,  lvl: "a500",  surf: "Hard (i)", dt: "Oct 26 – Nov 1",  s: "2026-10-26", sw: 7 },
+    { n: "Paris Masters",       city: "Paris, France",          lng: 2.23,   lat: 48.89,  lvl: "m1000", surf: "Hard (i)", dt: "Nov 2 – 8",       s: "2026-11-02", sw: 7 },
+  ];
+
+  const projection = d3.geoEqualEarth().rotate([-11, 0]);
+  const path = d3.geoPath(projection);
+  const gZoom = svg.append("g");
+  const gLand = gZoom.append("g"), gDots = gZoom.append("g");
+
+  // pan + zoom; markers keep a constant screen size, a hovered swing/row is emphasized
+  let k = 1, hiPred = null;
+  function paint() {
+    gDots.selectAll("circle")
+      .attr("r", (d) =&gt; (SIZE[d.lvl] + (hiPred &amp;&amp; hiPred(d) ? 4 : 0)) / k)
+      .attr("fill-opacity", (d) =&gt; hiPred ? (hiPred(d) ? 1 : 0.15) : 0.85)
+      .attr("stroke-width", 1.2 / k);
+  }
+  const setHi = (pred) =&gt; { hiPred = pred; paint(); };
+  const zoom = d3.zoom().scaleExtent([1, 8]).extent([[0, 0], [W, H]]).translateExtent([[0, 0], [W, H]])
+    .on("zoom", (e) =&gt; { k = e.transform.k; gZoom.attr("transform", e.transform); paint(); });
+  svg.call(zoom).style("cursor", "grab");
+
+  function showTip(e, d) {
+    tip.style("opacity", 1).style("left", (e.clientX + 14) + "px").style("top", (e.clientY - 10) + "px")
+      .html(`&lt;b&gt;${d.n}&lt;/b&gt; · ${LEVEL[d.lvl]}&lt;br&gt;${d.city}&lt;br&gt;${d.dt} · ${d.surf}`);
+  }
+  const hideTip = () =&gt; tip.style("opacity", 0);
+
+  d3.json("https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=low&amp;format=geojson").then(world =&gt; {
+    projection.fitExtent([[8, 8], [W - 8, H - 8]], { type: "Sphere" });
+    gLand.selectAll("path").data(world.features).join("path").attr("d", path)
+      .attr("fill", "#e4e0d5").attr("stroke", "#fff").attr("stroke-width", 0.5).attr("vector-effect", "non-scaling-stroke");
+
+    const order = { slam: 0, m1000: 1, a500: 2 };
+    gDots.selectAll("circle").data(T.slice().sort((a, b) =&gt; order[a.lvl] - order[b.lvl])).join("circle")
+      .attr("cx", d =&gt; projection([d.lng, d.lat])[0]).attr("cy", d =&gt; projection([d.lng, d.lat])[1])
+      .attr("fill", d =&gt; SURF[surfKey(d.surf)]).attr("stroke", "#fff")
+      .style("cursor", "pointer").on("mousemove", showTip).on("mouseout", hideTip);
+    paint();
+  });
+
+  // schedule grouped into the season's swings; hover a swing header to light up its region
+  const sched = d3.select("#sched");
+  SWINGS.forEach((sw, i) =&gt; {
+    const g = sched.append("div").attr("class", "swing");
+    g.append("div").attr("class", "swing-h").html(`${sw.name} &lt;span&gt;${sw.when} · ${sw.region}&lt;/span&gt;`)
+      .on("mouseenter", () =&gt; setHi(c =&gt; c.sw === i)).on("mouseleave", () =&gt; setHi(null));
+    T.filter(t =&gt; t.sw === i).sort((a, b) =&gt; a.s.localeCompare(b.s)).forEach(d =&gt; {
+      const row = g.append("div").attr("class", "row")
+        .on("mouseenter", () =&gt; setHi(c =&gt; c.n === d.n)).on("mouseleave", () =&gt; setHi(null));
+      row.append("span").attr("class", "dot").style("background", SURF[surfKey(d.surf)]);
+      const mid = row.append("div");
+      mid.append("div").attr("class", "nm").text(d.n);
+      mid.append("div").attr("class", "ci").text(`${d.city} · ${d.surf}`);
+      row.append("div").attr("class", "dt").text(d.dt);
+    });
+  });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+  const W = 980, H = 520;
+  const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
+  const tip = d3.select("#tooltip");
+
+  const SIZE  = { slam: 8, m1000: 6, a500: 4.5 };                 // marker radius = level
+  const LEVEL = { slam: "Grand Slam", m1000: "Masters 1000", a500: "ATP 500" };
+  const SURF  = { Hard: "#2b6ca3", Clay: "#c56a3a", Grass: "#4f9e5a" };   // marker color = surface
+  const surfKey = (s) => s.indexOf("Hard") === 0 ? "Hard" : s;
+
+  // the tour chases warm weather around the globe; each swing is a region + a slice of the year
+  const SWINGS = [
+    { name: "Australian Summer",            when: "January",            region: "Oceania" },
+    { name: "Gulf · Indoor · Golden Swing", when: "February",           region: "Mid-East · Europe · S. America" },
+    { name: "Sunshine Double",              when: "March",              region: "United States" },
+    { name: "European Clay",                when: "April – early June", region: "Europe" },
+    { name: "Grass Season",                 when: "June – July",        region: "Europe" },
+    { name: "North American Hard",          when: "July – September",   region: "North America" },
+    { name: "Asian Swing",                  when: "September – October",region: "Asia" },
+    { name: "Indoor Europe",                when: "October – November", region: "Europe" },
+  ];
+
+  const T = [
+    { n: "Australian Open",     city: "Melbourne, Australia",   lng: 144.98, lat: -37.82, lvl: "slam",  surf: "Hard",     dt: "Jan 19 – Feb 1",  s: "2026-01-19", sw: 0 },
+    { n: "Dallas Open",         city: "Dallas, USA",            lng: -96.80, lat: 32.78,  lvl: "a500",  surf: "Hard (i)", dt: "Feb 9 – 15",      s: "2026-02-09", sw: 1 },
+    { n: "ABN AMRO Open",       city: "Rotterdam, Netherlands", lng: 4.48,   lat: 51.92,  lvl: "a500",  surf: "Hard (i)", dt: "Feb 9 – 15",      s: "2026-02-09", sw: 1 },
+    { n: "Qatar Open",          city: "Doha, Qatar",            lng: 51.53,  lat: 25.29,  lvl: "a500",  surf: "Hard",     dt: "Feb 16 – 22",     s: "2026-02-16", sw: 1 },
+    { n: "Rio Open",            city: "Rio de Janeiro, Brazil", lng: -43.17, lat: -22.91, lvl: "a500",  surf: "Clay",     dt: "Feb 16 – 22",     s: "2026-02-16", sw: 1 },
+    { n: "Dubai Championships", city: "Dubai, UAE",             lng: 55.27,  lat: 25.20,  lvl: "a500",  surf: "Hard",     dt: "Feb 23 – Mar 1",  s: "2026-02-23", sw: 1 },
+    { n: "Mexican Open",        city: "Acapulco, Mexico",       lng: -99.88, lat: 16.86,  lvl: "a500",  surf: "Hard",     dt: "Feb 23 – Mar 1",  s: "2026-02-23", sw: 1 },
+    { n: "Indian Wells Open",   city: "Indian Wells, USA",      lng: -116.30,lat: 33.72,  lvl: "m1000", surf: "Hard",     dt: "Mar 4 – 15",      s: "2026-03-04", sw: 2 },
+    { n: "Miami Open",          city: "Miami, USA",             lng: -80.24, lat: 25.96,  lvl: "m1000", surf: "Hard",     dt: "Mar 18 – 29",     s: "2026-03-18", sw: 2 },
+    { n: "Monte-Carlo Masters", city: "Monte-Carlo, Monaco",    lng: 7.44,   lat: 43.75,  lvl: "m1000", surf: "Clay",     dt: "Apr 5 – 12",      s: "2026-04-05", sw: 3 },
+    { n: "Barcelona Open",      city: "Barcelona, Spain",       lng: 2.16,   lat: 41.39,  lvl: "a500",  surf: "Clay",     dt: "Apr 13 – 19",     s: "2026-04-13", sw: 3 },
+    { n: "BMW Open",            city: "Munich, Germany",        lng: 11.57,  lat: 48.14,  lvl: "a500",  surf: "Clay",     dt: "Apr 20 – 26",     s: "2026-04-20", sw: 3 },
+    { n: "Madrid Open",         city: "Madrid, Spain",          lng: -3.68,  lat: 40.44,  lvl: "m1000", surf: "Clay",     dt: "Apr 22 – May 3",  s: "2026-04-22", sw: 3 },
+    { n: "Italian Open",        city: "Rome, Italy",            lng: 12.45,  lat: 41.93,  lvl: "m1000", surf: "Clay",     dt: "May 6 – 17",      s: "2026-05-06", sw: 3 },
+    { n: "Roland Garros",       city: "Paris, France",          lng: 2.25,   lat: 48.85,  lvl: "slam",  surf: "Clay",     dt: "May 24 – Jun 7",  s: "2026-05-24", sw: 3 },
+    { n: "Halle Open",          city: "Halle, Germany",         lng: 8.36,   lat: 51.97,  lvl: "a500",  surf: "Grass",    dt: "Jun 15 – 21",     s: "2026-06-15", sw: 4 },
+    { n: "Queen's Club",        city: "London, UK",             lng: -0.21,  lat: 51.48,  lvl: "a500",  surf: "Grass",    dt: "Jun 15 – 21",     s: "2026-06-15", sw: 4 },
+    { n: "Wimbledon",           city: "London, UK",             lng: -0.21,  lat: 51.43,  lvl: "slam",  surf: "Grass",    dt: "Jun 29 – Jul 12", s: "2026-06-29", sw: 4 },
+    { n: "Hamburg Open",        city: "Hamburg, Germany",       lng: 9.99,   lat: 53.55,  lvl: "a500",  surf: "Clay",     dt: "Jul 13 – 19",     s: "2026-07-13", sw: 5 },
+    { n: "Washington Open",     city: "Washington, USA",        lng: -77.03, lat: 38.91,  lvl: "a500",  surf: "Hard",     dt: "Jul 27 – Aug 2",  s: "2026-07-27", sw: 5 },
+    { n: "Canadian Open",       city: "Montreal, Canada",       lng: -73.61, lat: 45.50,  lvl: "m1000", surf: "Hard",     dt: "Aug 2 – 13",      s: "2026-08-02", sw: 5 },
+    { n: "Cincinnati Open",     city: "Cincinnati, USA",        lng: -84.28, lat: 39.35,  lvl: "m1000", surf: "Hard",     dt: "Aug 13 – 23",     s: "2026-08-13", sw: 5 },
+    { n: "US Open",             city: "New York, USA",          lng: -73.85, lat: 40.75,  lvl: "slam",  surf: "Hard",     dt: "Aug 31 – Sep 13", s: "2026-08-31", sw: 5 },
+    { n: "China Open",          city: "Beijing, China",         lng: 116.41, lat: 39.90,  lvl: "a500",  surf: "Hard",     dt: "Sep 28 – Oct 4",  s: "2026-09-28", sw: 6 },
+    { n: "Japan Open",          city: "Tokyo, Japan",           lng: 139.69, lat: 35.68,  lvl: "a500",  surf: "Hard",     dt: "Sep 28 – Oct 4",  s: "2026-09-28", sw: 6 },
+    { n: "Shanghai Masters",    city: "Shanghai, China",        lng: 121.47, lat: 31.23,  lvl: "m1000", surf: "Hard",     dt: "Oct 7 – 18",      s: "2026-10-07", sw: 6 },
+    { n: "Vienna Open",         city: "Vienna, Austria",        lng: 16.37,  lat: 48.21,  lvl: "a500",  surf: "Hard (i)", dt: "Oct 26 – Nov 1",  s: "2026-10-26", sw: 7 },
+    { n: "Swiss Indoors",       city: "Basel, Switzerland",     lng: 7.59,   lat: 47.56,  lvl: "a500",  surf: "Hard (i)", dt: "Oct 26 – Nov 1",  s: "2026-10-26", sw: 7 },
+    { n: "Paris Masters",       city: "Paris, France",          lng: 2.23,   lat: 48.89,  lvl: "m1000", surf: "Hard (i)", dt: "Nov 2 – 8",       s: "2026-11-02", sw: 7 },
+  ];
+
+  const projection = d3.geoEqualEarth().rotate([-11, 0]);
+  const path = d3.geoPath(projection);
+  const gZoom = svg.append("g");
+  const gLand = gZoom.append("g"), gDots = gZoom.append("g");
+
+  // pan + zoom; markers keep a constant screen size, a hovered swing/row is emphasized
+  let k = 1, hiPred = null;
+  function paint() {
+    gDots.selectAll("circle")
+      .attr("r", (d) => (SIZE[d.lvl] + (hiPred && hiPred(d) ? 4 : 0)) / k)
+      .attr("fill-opacity", (d) => hiPred ? (hiPred(d) ? 1 : 0.15) : 0.85)
+      .attr("stroke-width", 1.2 / k);
+  }
+  const setHi = (pred) => { hiPred = pred; paint(); };
+  const zoom = d3.zoom().scaleExtent([1, 8]).extent([[0, 0], [W, H]]).translateExtent([[0, 0], [W, H]])
+    .on("zoom", (e) => { k = e.transform.k; gZoom.attr("transform", e.transform); paint(); });
+  svg.call(zoom).style("cursor", "grab");
+
+  function showTip(e, d) {
+    tip.style("opacity", 1).style("left", (e.clientX + 14) + "px").style("top", (e.clientY - 10) + "px")
+      .html(`<b>${d.n}</b> · ${LEVEL[d.lvl]}<br>${d.city}<br>${d.dt} · ${d.surf}`);
+  }
+  const hideTip = () => tip.style("opacity", 0);
+
+  d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=low&format=geojson").then(world => {
+    projection.fitExtent([[8, 8], [W - 8, H - 8]], { type: "Sphere" });
+    gLand.selectAll("path").data(world.features).join("path").attr("d", path)
+      .attr("fill", "#e4e0d5").attr("stroke", "#fff").attr("stroke-width", 0.5).attr("vector-effect", "non-scaling-stroke");
+
+    const order = { slam: 0, m1000: 1, a500: 2 };
+    gDots.selectAll("circle").data(T.slice().sort((a, b) => order[a.lvl] - order[b.lvl])).join("circle")
+      .attr("cx", d => projection([d.lng, d.lat])[0]).attr("cy", d => projection([d.lng, d.lat])[1])
+      .attr("fill", d => SURF[surfKey(d.surf)]).attr("stroke", "#fff")
+      .style("cursor", "pointer").on("mousemove", showTip).on("mouseout", hideTip);
+    paint();
+  });
+
+  // schedule grouped into the season's swings; hover a swing header to light up its region
+  const sched = d3.select("#sched");
+  SWINGS.forEach((sw, i) => {
+    const g = sched.append("div").attr("class", "swing");
+    g.append("div").attr("class", "swing-h").html(`${sw.name} <span>${sw.when} · ${sw.region}</span>`)
+      .on("mouseenter", () => setHi(c => c.sw === i)).on("mouseleave", () => setHi(null));
+    T.filter(t => t.sw === i).sort((a, b) => a.s.localeCompare(b.s)).forEach(d => {
+      const row = g.append("div").attr("class", "row")
+        .on("mouseenter", () => setHi(c => c.n === d.n)).on("mouseleave", () => setHi(null));
+      row.append("span").attr("class", "dot").style("background", SURF[surfKey(d.surf)]);
+      const mid = row.append("div");
+      mid.append("div").attr("class", "nm").text(d.n);
+      mid.append("div").attr("class", "ci").text(`${d.city} · ${d.surf}`);
+      row.append("div").attr("class", "dt").text(d.dt);
+    });
+  });
+</script>
+<script src="example-widgets.js" defer></script>
+</body>
+</html>

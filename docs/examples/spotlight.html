@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <title>Country Spotlight on OpenStreetMap | MapJSON</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="An OpenStreetMap basemap dimmed everywhere except one country, with that country's administrative regions overlaid from mapjson — a vector mask and admin layer that raster tiles alone cannot provide. Uses detail=auto so each country's regions resolve to the right tier.">
+  <meta name="description" content="An OpenStreetMap basemap dimmed everywhere except one country, with that country's administrative regions overlaid from mapjson — a vector mask and admin layer over the tiles. Uses detail=auto so each country's regions resolve to the right tier.">
   <link rel="canonical" href="https://mapjson.com/examples/spotlight.html">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
@@ -84,7 +84,7 @@
   <header>
     <div class="tag">countries + regions · OpenStreetMap tiles · vector mask · detail=auto</div>
     <h1>Country Spotlight</h1>
-    <p>Real OpenStreetMap streets and terrain as the basemap — but the whole world is dimmed except one country, and that country's administrative regions are drawn on top with names on hover. The dark veil is a single vector polygon covering the world with a <em>country-shaped hole</em> cut through it; the region layer is vector geometry keyed to the tiles. Neither is possible from raster tiles alone — both come from mapjson. Switch countries below; the region tier is picked automatically with <code>detail=auto</code>.</p>
+    <p>Real OpenStreetMap streets and terrain as the basemap — but the whole world is dimmed except one country, and that country's administrative regions are drawn on top with names on hover. The dark veil is a single vector polygon covering the world with a <em>country-shaped hole</em> cut through it; the region layer is vector geometry keyed to the tiles, both from mapjson. Switch countries below; the region tier is picked automatically with <code>detail=auto</code>.</p>
   </header>
 
   <div class="map-wrap" id="map"></div>

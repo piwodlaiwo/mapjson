@@ -1,2 +1,4 @@
 # mapjson
-TopoJSON API for Geographic Map Data
+API for Geographic Map Data
+
+https://mapjson.com

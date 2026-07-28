@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Sketched Earth — hand-drawn contour world map | MapJSON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The world as a hand-drawn topographic sketch — wobbly doubled pen strokes stepping inland from every coastline, in warm ink on paper, from one mapjson call.">
+  <link rel="canonical" href="https://mapjson.com/examples/riley-relief.html">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --ink:#1a1a1a; --bg:#fafafa; --accent:#b0402f; --muted:#9b9a94; --border:#e5e4df; --code-bg:#efeeea; }
+    body { background: var(--bg); color: var(--ink); font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; line-height: 1.7; }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link { display:inline-block; padding: 2.5rem 0 0; font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; font-family: 'IBM Plex Mono', monospace; }
+    .back-link:hover { color: var(--ink); }
+    header { border-bottom: 1.5px solid var(--ink); padding: 1rem 0 1.5rem; margin-bottom: 2.5rem; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #a7a6a0; margin-bottom: 0.5rem; font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
+    header p { color: #4a4a45; margin-top: 0.6rem; font-size: 15px; max-width: 680px; line-height: 1.65; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; margin-bottom: 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+    section { margin-bottom: 2.5rem; }
+    section p { color: #4a4a45; font-size: 14px; }
+    .map-wrap { margin-bottom: 1.25rem; border: 1px solid var(--border); background: #f3ecdd; line-height: 0; border-radius: 4px; overflow: hidden; }
+    .map-wrap svg { width: 100%; display: block; }
+    .toolbar { display: flex; gap: 0.6rem; margin-bottom: 1.5rem; }
+    .btn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 6px 12px; background: #fff; border: 1px solid var(--border); border-radius: 4px; cursor: pointer; color: var(--ink); }
+    .btn:hover { border-color: var(--ink); }
+    pre { background: var(--code-bg); border-left: 3px solid var(--ink); padding: 1rem 1.25rem; overflow-x: auto; font-size: 12px; line-height: 1.65; font-family: 'IBM Plex Mono', monospace; }
+    nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 48px; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; text-decoration: none; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { display: inline-flex; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; text-decoration: none; color: var(--ink); letter-spacing: -0.01em; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 14px; height: 14px; background: var(--ink); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; background: var(--bg); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
+    @media (max-width: 620px) { header h1 { font-size: 2rem; } nav { padding: 0 0.6rem; } .nav-links { gap: 0.6rem; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <a class="back-link" href="/examples/">← Examples</a>
+
+  <header>
+    <div class="tag">hand-drawn · contour · ink sketch · art</div>
+    <h1>Sketched Earth</h1>
+    <p>The world as if drawn by hand in a field notebook. The same coast-following contours as <a href="riley-rings.html">Rings</a>, but every line is redrawn as a loose, wobbly pen stroke — doubled and slightly offset the way you'd retrace a line on paper — in warm ink on a toned page. Big landmasses fill with nested contours; the ocean stays blank. One <code>/v1/geo</code> call, sketched.</p>
+  </header>
+
+  <div class="map-wrap" id="map"></div>
+  <div class="toolbar"><button class="btn" id="repaint">↻ re-sketch</button></div>
+
+  <section>
+    <h2>How it's made</h2>
+    <p>One mapjson call is rasterized to a land mask; a distance transform grows a field inward from every coast, and <code>d3.contours</code> pulls nested rings from it. Then each ring is <em>sketched</em>: its points are jittered by a pixel or two, smoothed through a Catmull-Rom curve, and stroked twice with a translucent nib so the two passes overlap like a hand retracing the line. No fills, no straight edges — just ink that wobbles. Re-sketch for a fresh hand.</p>
+  </section>
+
+  <section>
+    <h2>API Calls</h2>
+    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=high&amp;format=geojson</pre>
+  </section>
+
+  <section>
+    <h2>Code</h2>
+    <pre id="codeblock">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;Sketched Earth — hand-drawn contour world map&lt;/title&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+  &lt;style&gt;
+    body { margin: 0; background: #fafafa; font-family: system-ui, sans-serif; }
+    .wrap { max-width: 980px; margin: 2rem auto; padding: 0 1rem; }
+    #map { background: #f3ecdd; border-radius: 4px; overflow: hidden; }
+    #map svg { width: 100%; display: block; }
+    button { margin-top: 0.7rem; font: 12px ui-monospace, monospace; padding: 6px 12px; background: #fff; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="wrap"&gt;
+    &lt;div id="map"&gt;&lt;/div&gt;
+    &lt;button id="repaint"&gt;↻ re-sketch&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+  &lt;script&gt;
+  const W = 960, H = 560;
+  const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
+  const off = document.createElement("canvas"); off.width = W; off.height = H;
+  const octx = off.getContext("2d");
+
+  const GW = 240, GH = 140, cw = W / GW, ch = H / GH;
+  let D = null;
+  function buildField(world) {
+    const proj = d3.geoEqualEarth().rotate([-11, 0]).fitExtent([[26, 22], [W - 26, H - 22]], { type: "Sphere" });
+    const p = d3.geoPath(proj, octx);
+    octx.fillStyle = "#000"; octx.fillRect(0, 0, W, H);
+    octx.beginPath(); world.features.forEach((f) =&gt; p(f)); octx.fillStyle = "#fff"; octx.fill();
+    const m = octx.getImageData(0, 0, W, H).data;
+    const B = new Uint8Array(GW * GH);
+    for (let gy = 0; gy &lt; GH; gy++) for (let gx = 0; gx &lt; GW; gx++) {
+      const x = ((gx + 0.5) * cw) | 0, y = ((gy + 0.5) * ch) | 0;
+      B[gy * GW + gx] = m[(y * W + x) * 4] &gt; 128 ? 1 : 0;
+    }
+    D = new Float32Array(GW * GH);
+    for (let i = 0; i &lt; D.length; i++) D[i] = B[i] ? 1e5 : 0;
+    for (let gy = 0; gy &lt; GH; gy++) for (let gx = 0; gx &lt; GW; gx++) {
+      const i = gy * GW + gx; if (!B[i]) continue;
+      let v = D[i]; if (gx &gt; 0) v = Math.min(v, D[i - 1] + 1); if (gy &gt; 0) v = Math.min(v, D[i - GW] + 1); D[i] = v;
+    }
+    for (let gy = GH - 1; gy &gt;= 0; gy--) for (let gx = GW - 1; gx &gt;= 0; gx--) {
+      const i = gy * GW + gx; if (!B[i]) continue;
+      let v = D[i]; if (gx &lt; GW - 1) v = Math.min(v, D[i + 1] + 1); if (gy &lt; GH - 1) v = Math.min(v, D[i + GW] + 1); D[i] = v;
+    }
+  }
+
+  const S = W / GW;                          // grid → canvas scale
+  const line = d3.line().curve(d3.curveCatmullRomClosed.alpha(0.5));
+
+  function paint() {
+    svg.selectAll("*").remove();
+    svg.append("rect").attr("width", W).attr("height", H).attr("fill", "#f3ecdd");
+    const maxD = d3.max(D) || 1;
+    const contours = d3.contours().size([GW, GH]).thresholds(d3.range(0.5 + Math.random() * 2, maxD, 2.2 + Math.random() * 0.6))(Array.from(D));
+    const g = svg.append("g").attr("fill", "none").attr("stroke", "#2b271f").attr("stroke-linecap", "round").attr("stroke-linejoin", "round");
+
+    contours.forEach((c, ci) =&gt; {
+      const amp = ci === 0 ? 1.7 : 1.15, w = ci === 0 ? 1.35 : 0.85;
+      c.coordinates.forEach((poly) =&gt; poly.forEach((ring) =&gt; {
+        if (ring.length &lt; 6) return;
+        for (let pass = 0; pass &lt; 2; pass++) {
+          const pts = ring.map(([x, y]) =&gt; [x * S + (Math.random() * 2 - 1) * amp, y * S + (Math.random() * 2 - 1) * amp]);
+          g.append("path").attr("d", line(pts)).attr("stroke-width", w).attr("stroke-opacity", 0.5);
+        }
+      }));
+    });
+  }
+
+  d3.json("https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=high&amp;format=geojson")
+    .then((w) =&gt; { buildField(w); paint(); });
+  document.getElementById("repaint").addEventListener("click", paint);
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+  const W = 960, H = 560;
+  const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
+  const off = document.createElement("canvas"); off.width = W; off.height = H;
+  const octx = off.getContext("2d");
+
+  const GW = 240, GH = 140, cw = W / GW, ch = H / GH;
+  let D = null;
+  function buildField(world) {
+    const proj = d3.geoEqualEarth().rotate([-11, 0]).fitExtent([[26, 22], [W - 26, H - 22]], { type: "Sphere" });
+    const p = d3.geoPath(proj, octx);
+    octx.fillStyle = "#000"; octx.fillRect(0, 0, W, H);
+    octx.beginPath(); world.features.forEach((f) => p(f)); octx.fillStyle = "#fff"; octx.fill();
+    const m = octx.getImageData(0, 0, W, H).data;
+    const B = new Uint8Array(GW * GH);
+    for (let gy = 0; gy < GH; gy++) for (let gx = 0; gx < GW; gx++) {
+      const x = ((gx + 0.5) * cw) | 0, y = ((gy + 0.5) * ch) | 0;
+      B[gy * GW + gx] = m[(y * W + x) * 4] > 128 ? 1 : 0;
+    }
+    D = new Float32Array(GW * GH);
+    for (let i = 0; i < D.length; i++) D[i] = B[i] ? 1e5 : 0;
+    for (let gy = 0; gy < GH; gy++) for (let gx = 0; gx < GW; gx++) {
+      const i = gy * GW + gx; if (!B[i]) continue;
+      let v = D[i]; if (gx > 0) v = Math.min(v, D[i - 1] + 1); if (gy > 0) v = Math.min(v, D[i - GW] + 1); D[i] = v;
+    }
+    for (let gy = GH - 1; gy >= 0; gy--) for (let gx = GW - 1; gx >= 0; gx--) {
+      const i = gy * GW + gx; if (!B[i]) continue;
+      let v = D[i]; if (gx < GW - 1) v = Math.min(v, D[i + 1] + 1); if (gy < GH - 1) v = Math.min(v, D[i + GW] + 1); D[i] = v;
+    }
+  }
+
+  const S = W / GW;                          // grid → canvas scale
+  const line = d3.line().curve(d3.curveCatmullRomClosed.alpha(0.5));
+
+  function paint() {
+    svg.selectAll("*").remove();
+    svg.append("rect").attr("width", W).attr("height", H).attr("fill", "#f3ecdd");
+    const maxD = d3.max(D) || 1;
+    const contours = d3.contours().size([GW, GH]).thresholds(d3.range(0.5 + Math.random() * 2, maxD, 2.2 + Math.random() * 0.6))(Array.from(D));
+    const g = svg.append("g").attr("fill", "none").attr("stroke", "#2b271f").attr("stroke-linecap", "round").attr("stroke-linejoin", "round");
+
+    contours.forEach((c, ci) => {
+      const amp = ci === 0 ? 1.7 : 1.15, w = ci === 0 ? 1.35 : 0.85;
+      c.coordinates.forEach((poly) => poly.forEach((ring) => {
+        if (ring.length < 6) return;
+        for (let pass = 0; pass < 2; pass++) {
+          const pts = ring.map(([x, y]) => [x * S + (Math.random() * 2 - 1) * amp, y * S + (Math.random() * 2 - 1) * amp]);
+          g.append("path").attr("d", line(pts)).attr("stroke-width", w).attr("stroke-opacity", 0.5);
+        }
+      }));
+    });
+  }
+
+  d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=high&format=geojson")
+    .then((w) => { buildField(w); paint(); });
+  document.getElementById("repaint").addEventListener("click", paint);
+</script>
+<script src="example-widgets.js" defer></script>
+</body>
+</html>

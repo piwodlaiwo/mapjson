@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Constellation Earth — a see-through star globe | MapJSON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Countries as stars on a transparent, graticuled globe you can spin — each joined to its nearest neighbors, borders turned to constellations. From one mapjson call.">
+  <link rel="canonical" href="https://mapjson.com/examples/constellation-earth.html">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --ink:#1a1a1a; --bg:#fafafa; --accent:#b0402f; --muted:#9b9a94; --border:#e5e4df; --code-bg:#efeeea; }
+    body { background: var(--bg); color: var(--ink); font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; line-height: 1.7; }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link { display:inline-block; padding: 2.5rem 0 0; font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; font-family: 'IBM Plex Mono', monospace; }
+    .back-link:hover { color: var(--ink); }
+    header { border-bottom: 1.5px solid var(--ink); padding: 1rem 0 1.5rem; margin-bottom: 2.5rem; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #a7a6a0; margin-bottom: 0.5rem; font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
+    header p { color: #4a4a45; margin-top: 0.6rem; font-size: 15px; max-width: 680px; line-height: 1.65; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; margin-bottom: 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+    section { margin-bottom: 2.5rem; }
+    section p { color: #4a4a45; font-size: 14px; }
+    .map-wrap { margin-bottom: 1.25rem; border: 1px solid var(--border); background: #05070f; line-height: 0; border-radius: 4px; overflow: hidden; }
+    .map-wrap svg { width: 100%; display: block; cursor: grab; }
+    .tooltip { position: fixed; background: #0b1224; color: #dbe6ff; font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 0.35rem 0.6rem; pointer-events: none; opacity: 0; transition: opacity 0.1s; white-space: nowrap; border-radius: 3px; z-index: 200; border: 1px solid #24406a; }
+    pre { background: var(--code-bg); border-left: 3px solid var(--ink); padding: 1rem 1.25rem; overflow-x: auto; font-size: 12px; line-height: 1.65; font-family: 'IBM Plex Mono', monospace; }
+    nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 48px; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; text-decoration: none; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { display: inline-flex; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; text-decoration: none; color: var(--ink); letter-spacing: -0.01em; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 14px; height: 14px; background: var(--ink); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; background: var(--bg); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
+    @media (max-width: 620px) { header h1 { font-size: 2rem; } nav { padding: 0 0.6rem; } .nav-links { gap: 0.6rem; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <a class="back-link" href="/examples/">← Examples</a>
+
+  <header>
+    <div class="tag">constellation · see-through globe · graticule · art</div>
+    <h1>Constellation Earth</h1>
+    <p>The atlas turned astral — and spherical. Every country is a <strong>star</strong> on a transparent, graticuled globe: sized by its land area, joined to its nearest neighbours, so the borders of the world become constellations. Because the globe is see-through, the stars on the far side glimmer faintly through the grid. <strong>Drag to spin it.</strong> One <code>/v1/geo</code> call.</p>
+  </header>
+
+  <div class="map-wrap" id="map"></div>
+  <div class="tooltip" id="tooltip"></div>
+
+  <section>
+    <h2>How it's made</h2>
+    <p>One mapjson call gives each country's polygon and <code>areakm2</code>. The geographic centroid of each becomes a star, joined by great-circle arcs to its three nearest neighbours (nearest by <code>d3.geoDistance</code>). Everything is drawn through a <code>d3.geoOrthographic</code> projection with its clip opened to the whole sphere, so the back hemisphere renders too — graticule, arcs and stars all show through, the far-side stars dimmed. Drag updates the rotation and the whole globe re-projects.</p>
+  </section>
+
+  <section>
+    <h2>API Calls</h2>
+    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=low&amp;properties=name,areakm2&amp;format=geojson</pre>
+  </section>
+
+  <section>
+    <h2>Code</h2>
+    <pre id="codeblock">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;Constellation Earth — see-through star globe&lt;/title&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+  &lt;style&gt;
+    body { margin: 0; background: #05070f; font-family: system-ui, sans-serif; }
+    .wrap { max-width: 980px; margin: 0 auto; }
+    #map { overflow: hidden; }
+    #map svg { width: 100%; display: block; cursor: grab; }
+    .tooltip { position: fixed; background: #0b1224; color: #dbe6ff; font: 11px ui-monospace, monospace; padding: 4px 8px; pointer-events: none; opacity: 0; border-radius: 3px; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="wrap"&gt;&lt;div id="map"&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div class="tooltip" id="tooltip"&gt;&lt;/div&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+  &lt;script&gt;
+  const W = 960, H = 560;
+  const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
+  const tip = d3.select("#tooltip");
+  const projection = d3.geoOrthographic().rotate([-11, -8]);
+  projection.fitExtent([[40, 30], [W - 40, H - 30]], { type: "Sphere" });
+  projection.clipAngle(180);                    // open the clip → render the far hemisphere too (see-through)
+  const graticule = d3.geoGraticule().step([20, 20])();
+  const geoPathC = d3.geoPath(projection);
+
+  d3.json("https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=low&amp;properties=name,areakm2&amp;format=geojson").then((w) =&gt; {
+    const rScale = d3.scaleSqrt([0, d3.max(w.features, (f) =&gt; f.properties.areakm2 || 0)], [0.8, 5.2]);
+    const stars = w.features.map((f) =&gt; { const ll = d3.geoCentroid(f), a = f.properties.areakm2 || 0; return a &gt; 0 ? { ll, r: rScale(a), name: f.properties.name } : null; }).filter(Boolean);
+    const links = [];
+    const seen = new Set();
+    stars.forEach((s, i) =&gt; {
+      stars.map((t, j) =&gt; ({ j, d: j === i ? 9 : d3.geoDistance(s.ll, t.ll) })).sort((a, b) =&gt; a.d - b.d).slice(1, 4)
+        .forEach((o) =&gt; { const key = i &lt; o.j ? i + "-" + o.j : o.j + "-" + i; if (seen.has(key)) return; seen.add(key); links.push([s.ll, stars[o.j].ll]); });
+    });
+
+    svg.append("rect").attr("width", W).attr("height", H).attr("fill", "#05070f");
+    const dust = svg.append("g");
+    for (let i = 0; i &lt; 220; i++) dust.append("circle").attr("cx", Math.random() * W).attr("cy", Math.random() * H).attr("r", Math.random() * 0.8 + 0.2).attr("fill", "#8ea6d0").attr("fill-opacity", Math.random() * 0.35 + 0.08);
+    const disc = svg.append("circle").attr("fill", "#0a1024").attr("fill-opacity", 0.55).attr("stroke", "#2b4a7f").attr("stroke-width", 0.9);
+    const grat = svg.append("path").attr("fill", "none").attr("stroke", "#20365f").attr("stroke-width", 0.5).attr("stroke-opacity", 0.6);
+    const linkG = svg.append("g").attr("fill", "none").attr("stroke", "#3a5487");
+    const linkSel = linkG.selectAll("path").data(links).join("path").attr("stroke-width", 0.5);
+    const starG = svg.append("g");
+    const starSel = starG.selectAll("g").data(stars).join("g");
+    starSel.append("circle").attr("class", "halo");
+    starSel.append("circle").attr("class", "core").style("cursor", "pointer")
+      .on("mousemove", (e, d) =&gt; tip.style("opacity", 1).style("left", (e.clientX + 12) + "px").style("top", (e.clientY - 8) + "px").text(d.name))
+      .on("mouseout", () =&gt; tip.style("opacity", 0));
+
+    function update() {
+      const t = projection.translate(), R = projection.scale();
+      disc.attr("cx", t[0]).attr("cy", t[1]).attr("r", R);
+      grat.attr("d", geoPathC(graticule));
+      const center = [-projection.rotate()[0], -projection.rotate()[1]];
+      linkSel.attr("d", (d) =&gt; geoPathC({ type: "LineString", coordinates: d }))
+        .attr("stroke-opacity", (d) =&gt; (d3.geoDistance(center, d[0]) &lt; 1.6 &amp;&amp; d3.geoDistance(center, d[1]) &lt; 1.6) ? 0.42 : 0.12);
+      starSel.each(function (d) {
+        const p = projection(d.ll); const front = d3.geoDistance(center, d.ll) &lt; Math.PI / 2;
+        const g = d3.select(this).attr("transform", `translate(${p[0]},${p[1]})`);
+        g.select(".halo").attr("r", d.r * 2.6).attr("fill", "#cfe0ff").attr("fill-opacity", front ? 0.16 : 0.0);
+        g.select(".core").attr("r", front ? d.r : d.r * 0.75).attr("fill", front ? "#f4f8ff" : "#5f79ad").attr("fill-opacity", front ? 1 : 0.55);
+      });
+    }
+    update();
+
+    let dragging = false;
+    svg.call(d3.drag()
+      .on("start", () =&gt; { dragging = true; svg.style("cursor", "grabbing"); })
+      .on("drag", (e) =&gt; { const r = projection.rotate(), k = 0.28; projection.rotate([r[0] + e.dx * k, Math.max(-90, Math.min(90, r[1] - e.dy * k))]); update(); })
+      .on("end", () =&gt; { dragging = false; svg.style("cursor", "grab"); }));
+    let idle = 0;
+    d3.timer(() =&gt; { if (!dragging) { idle++; if (idle &gt; 60) { const r = projection.rotate(); projection.rotate([r[0] + 0.15, r[1]]); update(); } } });
+  });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+  const W = 960, H = 560;
+  const svg = d3.select("#map").append("svg").attr("viewBox", `0 0 ${W} ${H}`);
+  const tip = d3.select("#tooltip");
+  const projection = d3.geoOrthographic().rotate([-11, -8]);
+  projection.fitExtent([[40, 30], [W - 40, H - 30]], { type: "Sphere" });
+  projection.clipAngle(180);                    // open the clip → render the far hemisphere too (see-through)
+  const graticule = d3.geoGraticule().step([20, 20])();
+  const geoPathC = d3.geoPath(projection);
+
+  d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=low&properties=name,areakm2&format=geojson").then((w) => {
+    const rScale = d3.scaleSqrt([0, d3.max(w.features, (f) => f.properties.areakm2 || 0)], [0.8, 5.2]);
+    const stars = w.features.map((f) => { const ll = d3.geoCentroid(f), a = f.properties.areakm2 || 0; return a > 0 ? { ll, r: rScale(a), name: f.properties.name } : null; }).filter(Boolean);
+    const links = [];
+    const seen = new Set();
+    stars.forEach((s, i) => {
+      stars.map((t, j) => ({ j, d: j === i ? 9 : d3.geoDistance(s.ll, t.ll) })).sort((a, b) => a.d - b.d).slice(1, 4)
+        .forEach((o) => { const key = i < o.j ? i + "-" + o.j : o.j + "-" + i; if (seen.has(key)) return; seen.add(key); links.push([s.ll, stars[o.j].ll]); });
+    });
+
+    svg.append("rect").attr("width", W).attr("height", H).attr("fill", "#05070f");
+    const dust = svg.append("g");
+    for (let i = 0; i < 220; i++) dust.append("circle").attr("cx", Math.random() * W).attr("cy", Math.random() * H).attr("r", Math.random() * 0.8 + 0.2).attr("fill", "#8ea6d0").attr("fill-opacity", Math.random() * 0.35 + 0.08);
+    const disc = svg.append("circle").attr("fill", "#0a1024").attr("fill-opacity", 0.55).attr("stroke", "#2b4a7f").attr("stroke-width", 0.9);
+    const grat = svg.append("path").attr("fill", "none").attr("stroke", "#20365f").attr("stroke-width", 0.5).attr("stroke-opacity", 0.6);
+    const linkG = svg.append("g").attr("fill", "none").attr("stroke", "#3a5487");
+    const linkSel = linkG.selectAll("path").data(links).join("path").attr("stroke-width", 0.5);
+    const starG = svg.append("g");
+    const starSel = starG.selectAll("g").data(stars).join("g");
+    starSel.append("circle").attr("class", "halo");
+    starSel.append("circle").attr("class", "core").style("cursor", "pointer")
+      .on("mousemove", (e, d) => tip.style("opacity", 1).style("left", (e.clientX + 12) + "px").style("top", (e.clientY - 8) + "px").text(d.name))
+      .on("mouseout", () => tip.style("opacity", 0));
+
+    function update() {
+      const t = projection.translate(), R = projection.scale();
+      disc.attr("cx", t[0]).attr("cy", t[1]).attr("r", R);
+      grat.attr("d", geoPathC(graticule));
+      const center = [-projection.rotate()[0], -projection.rotate()[1]];
+      linkSel.attr("d", (d) => geoPathC({ type: "LineString", coordinates: d }))
+        .attr("stroke-opacity", (d) => (d3.geoDistance(center, d[0]) < 1.6 && d3.geoDistance(center, d[1]) < 1.6) ? 0.42 : 0.12);
+      starSel.each(function (d) {
+        const p = projection(d.ll); const front = d3.geoDistance(center, d.ll) < Math.PI / 2;
+        const g = d3.select(this).attr("transform", `translate(${p[0]},${p[1]})`);
+        g.select(".halo").attr("r", d.r * 2.6).attr("fill", "#cfe0ff").attr("fill-opacity", front ? 0.16 : 0.0);
+        g.select(".core").attr("r", front ? d.r : d.r * 0.75).attr("fill", front ? "#f4f8ff" : "#5f79ad").attr("fill-opacity", front ? 1 : 0.55);
+      });
+    }
+    update();
+
+    let dragging = false;
+    svg.call(d3.drag()
+      .on("start", () => { dragging = true; svg.style("cursor", "grabbing"); })
+      .on("drag", (e) => { const r = projection.rotate(), k = 0.28; projection.rotate([r[0] + e.dx * k, Math.max(-90, Math.min(90, r[1] - e.dy * k))]); update(); })
+      .on("end", () => { dragging = false; svg.style("cursor", "grab"); }));
+    let idle = 0;
+    d3.timer(() => { if (!dragging) { idle++; if (idle > 60) { const r = projection.rotate(); projection.rotate([r[0] + 0.15, r[1]]); update(); } } });
+  });
+</script>
+<script src="example-widgets.js" defer></script>
+</body>
+</html>

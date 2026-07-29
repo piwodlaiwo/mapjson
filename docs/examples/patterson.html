@@ -218,7 +218,7 @@
   <div class="panel" id="panel">
     <div class="panel-empty">Click a country on the map above.</div>
   </div>
-  <p style="margin-bottom:2.5rem; font-size:12px; color:var(--muted); max-width:640px; line-height:1.7;">Neighbours come from the API's <code>borders</code> property — authoritative land-border adjacency (ISO2 codes), complete for every country including the ones whose geometry is stitched from a different source (France, Norway, the Netherlands, Morocco). Island nations correctly report no land borders.</p>
+  <p style="margin-bottom:2.5rem; font-size:12px; color:var(--muted); max-width:640px; line-height:1.7;">Neighbours come from the API's <code>borders</code> property — authoritative land-border adjacency (ISO2 codes), complete for every country including the ones whose geometry is stitched from a different source (France, Norway, the Netherlands, Morocco). Island nations correctly report no land borders. A neighbour too small to appear at this detail tier (e.g. Gibraltar) has its name filled in from the <code>/v1/catalog</code> endpoint — a complete ISO2 → name list.</p>
 
   <section>
     <h2>API Call</h2>
@@ -251,10 +251,16 @@
     const svg = d3.select("#map").attr("viewBox", `0 0 ${width} ${height}`);
     const out = document.getElementById("out");
 
-    d3.json(url).then(topo =&gt; {
+    Promise.all([
+      d3.json(url),
+      d3.json("https://api.mapjson.com/v1/catalog"),   // complete iso2 → name list
+    ]).then(([topo, catalog]) =&gt; {
       const fc = topojson.feature(topo, topo.objects.geo);
-      // Neighbours come from the API's `borders` property (arrays of iso2 codes).
+      // Neighbours come from the `borders` property (iso2 codes). Resolve to names via the
+      // map data, and fall back to the catalog for territories absent at this detail tier
+      // (e.g. Gibraltar), so a neighbour never shows as a bare code.
       const nameByIso2 = new Map(fc.features.map(f =&gt; [f.properties.iso2, f.properties.name]));
+      for (const c of catalog) if (/^[A-Z]{2}$/.test(c.gid) &amp;&amp; !nameByIso2.has(c.gid)) nameByIso2.set(c.gid, c.name);
 
       const projection = d3.geoPatterson().rotate([-11, 0]).fitExtent([[8, 8], [width - 8, height - 8]], fc);
       const path = d3.geoPath(projection);
@@ -351,10 +357,16 @@
     `;
   }
 
-  d3.json(url).then(topo => {
+  Promise.all([
+    d3.json(url),
+    d3.json("https://api.mapjson.com/v1/catalog"),   // complete iso2 → name list (every territory)
+  ]).then(([topo, catalog]) => {
     const fc = topojson.feature(topo, topo.objects.geo);
-    // Resolve the borders property (arrays of iso2 codes) to country names.
+    // Resolve the borders property (arrays of iso2 codes) to names. Shown countries use the
+    // map data's names; the catalog fills in any neighbour absent from this detail tier —
+    // e.g. Gibraltar, which only exists at detail=high — so it never shows as a bare code.
     const nameByIso2 = new Map(fc.features.map((f) => [f.properties.iso2, f.properties.name || f.properties.gid]));
+    for (const c of catalog) if (/^[A-Z]{2}$/.test(c.gid) && !nameByIso2.has(c.gid)) nameByIso2.set(c.gid, c.name);
 
     const projection = d3.geoPatterson().rotate([-11, 0]).fitExtent([[8, 8], [width - 8, height - 8]], fc);
     const path = d3.geoPath(projection);

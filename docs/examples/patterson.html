@@ -380,6 +380,7 @@
       .attr("fill", "#d9d0be")
       .attr("stroke", "#fff")
       .attr("stroke-width", 0.5)
+      .attr("vector-effect", "non-scaling-stroke")
       .attr("d", path)
       .style("cursor", "pointer")
       .on("mousemove", function(event, d) {
@@ -393,7 +394,7 @@
       });
   });
 
-  const zoom = d3.zoom().scaleExtent([1, 12]).on("zoom", (event) => g.attr("transform", event.transform));
+  const zoom = d3.zoom().scaleExtent([1, 80]).on("zoom", (event) => g.attr("transform", event.transform));
   svg.call(zoom);
 </script>
 <script src="example-widgets.js" defer></script>

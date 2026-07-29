@@ -208,21 +208,21 @@
   <a class="back-link" href="/examples/">← Examples</a>
 
   <header>
-    <div class="tag">countries · Patterson projection · hover · d3.geoCentroid · d3.geoBounds · topojson.neighbors</div>
+    <div class="tag">countries · Patterson projection · click · d3.geoCentroid · d3.geoBounds · borders</div>
     <h1>Country Details</h1>
-    <p>World countries on the Patterson projection (<code>d3.geoPatterson</code>, from the d3-geo-projection extension) — a compromise cylindrical designed to keep high-latitude countries from ballooning the way they do on Mercator. Hover any country for every opt-in property the API returns, plus three things computed client-side that the API doesn't provide at all: its centroid and bounding box (<code>d3.geoCentroid</code> / <code>d3.geoBounds</code>), and its topologically adjacent neighbors (<code>topojson.neighbors</code>, derived from shared arcs in the same response — no separate borders dataset).</p>
+    <p>World countries on the Patterson projection (<code>d3.geoPatterson</code>, from the d3-geo-projection extension) — a compromise cylindrical designed to keep high-latitude countries from ballooning the way they do on Mercator. Click any country for every opt-in property the API returns — including <code>population</code>, <code>gdp</code>, and its land neighbours from the <code>borders</code> property — plus its centroid and bounding box, computed client-side (<code>d3.geoCentroid</code> / <code>d3.geoBounds</code>).</p>
   </header>
 
   <div class="map-wrap" id="map-wrap"></div>
 
   <div class="panel" id="panel">
-    <div class="panel-empty">Hover a country on the map above.</div>
+    <div class="panel-empty">Click a country on the map above.</div>
   </div>
-  <p style="margin-bottom:2.5rem; font-size:12px; color:var(--muted); max-width:640px; line-height:1.7;">Neighbor detection is exact — it comes from arcs literally shared between two borders in the topology — with one honest gap: a handful of countries (France, Norway, the Netherlands, Morocco/Western Sahara) get their boundary from a different source than their neighbors, so the shared-arc check has nothing to match. Try France to see how that's reported, rather than silently showing an empty list.</p>
+  <p style="margin-bottom:2.5rem; font-size:12px; color:var(--muted); max-width:640px; line-height:1.7;">Neighbours come from the API's <code>borders</code> property — authoritative land-border adjacency (ISO2 codes), complete for every country including the ones whose geometry is stitched from a different source (France, Norway, the Netherlands, Morocco). Island nations correctly report no land borders.</p>
 
   <section>
     <h2>API Call</h2>
-    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;detail=medium&amp;properties=name,nameOfficial,iso2,iso3,isoNum,continent,subregion,areakm2,capital,capitalLat,capitalLng,currencies,languages,idd,demonym</pre>
+    <pre>https://api.mapjson.com/v1/geo?layer=countries&amp;detail=medium&amp;properties=name,nameOfficial,iso2,iso3,isoNum,continent,subregion,areakm2,population,gdp,capital,capitalLat,capitalLng,currencies,languages,idd,demonym,borders</pre>
   </section>
 
   <section>
@@ -242,9 +242,9 @@
 &lt;/head&gt;
 &lt;body&gt;
   &lt;svg id="map"&gt;&lt;/svg&gt;
-  &lt;pre id="out"&gt;hover a country&lt;/pre&gt;
+  &lt;pre id="out"&gt;click a country&lt;/pre&gt;
   &lt;script&gt;
-    const PROPS = "name,nameOfficial,iso2,iso3,isoNum,continent,subregion,areakm2,capital,capitalLat,capitalLng,currencies,languages,idd,demonym";
+    const PROPS = "name,nameOfficial,iso2,iso3,isoNum,continent,subregion,areakm2,population,gdp,capital,capitalLat,capitalLng,currencies,languages,idd,demonym,borders";
     const url = `https://api.mapjson.com/v1/geo?layer=countries&detail=medium&properties=${PROPS}`;
 
     const width = 960, height = 500;
@@ -252,11 +252,9 @@
     const out = document.getElementById("out");
 
     d3.json(url).then(topo =&gt; {
-      const objects = topo.objects.geo.geometries;
       const fc = topojson.feature(topo, topo.objects.geo);
-
-      // Adjacency from the topology's shared arcs — no separate borders file
-      const neighborIdx = topojson.neighbors(objects);
+      // Neighbours come from the API's `borders` property (arrays of iso2 codes).
+      const nameByIso2 = new Map(fc.features.map(f =&gt; [f.properties.iso2, f.properties.name]));
 
       const projection = d3.geoPatterson().rotate([-11, 0]).fitExtent([[8, 8], [width - 8, height - 8]], fc);
       const path = d3.geoPath(projection);
@@ -268,12 +266,11 @@
         .attr("fill", "#d9d0be")
         .attr("stroke", "#fff")
         .attr("stroke-width", 0.5)
-        .on("mousemove", (event, d) =&gt; {
-          const i = fc.features.indexOf(d);
+        .on("click", (event, d) =&gt; {
           const p = d.properties;
           const centroid = d3.geoCentroid(d);           // [lon, lat]
           const bounds = d3.geoBounds(d);                // [[w,s],[e,n]]
-          const neighbors = neighborIdx[i].map(j =&gt; fc.features[j].properties.name);
+          const neighbors = (p.borders || []).map(code =&gt; nameByIso2.get(code) || code);
 
           out.textContent = JSON.stringify({
             ...p,
@@ -294,7 +291,7 @@
 <script src="https://cdn.jsdelivr.net/npm/d3-geo-projection@4/dist/d3-geo-projection.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <script>
-  const PROPS = "name,nameOfficial,iso2,iso3,isoNum,continent,subregion,areakm2,capital,capitalLat,capitalLng,currencies,languages,idd,demonym";
+  const PROPS = "name,nameOfficial,iso2,iso3,isoNum,continent,subregion,areakm2,population,gdp,capital,capitalLat,capitalLng,currencies,languages,idd,demonym,borders";
   const url = `https://api.mapjson.com/v1/geo?layer=countries&detail=medium&properties=${PROPS}`;
 
   const width = 960, height = 500;
@@ -310,21 +307,6 @@
 
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const fmtList = (arr, render) => (arr && arr.length ? arr.map(render).join(", ") : "—");
-
-  // topojson.neighbors() finds adjacency from shared arcs — it's exact, but
-  // only when both sides of a border were built from the same source. These
-  // gids are spliced in from a different shapefile than their neighbors (the
-  // pipeline's own de-facto/de-jure boundary fixes for France, Norway, the
-  // Netherlands, and Morocco/Western Sahara), so their border never shares an
-  // arc with the country next to it — real neighbors, zero detected.
-  const NO_SHARED_ARCS = new Set(["FR", "NO", "NL", "MA", "EH", "GF"]);
-  function neighborsText(gid, names) {
-    if (names.length) return names.join(", ");
-    if (NO_SHARED_ARCS.has(gid)) {
-      return "not detected — this boundary is stitched in from a different source than its neighbors, so they share no topology";
-    }
-    return "none (island or isolated)";
-  }
 
   function renderPanel(d, neighborNames) {
     const p = d.properties;
@@ -347,6 +329,8 @@
           ${row("Continent", esc(p.continent || "—"))}
           ${row("Subregion", esc(p.subregion || "—"))}
           ${row("Area", p.areakm2 ? p.areakm2.toLocaleString() + " km²" : "—")}
+          ${row("Population", p.population != null ? p.population.toLocaleString() : "—")}
+          ${row("GDP", p.gdp != null ? "$" + p.gdp.toLocaleString() + "M" : "—")}
           <div class="section-label">Capital</div>
           ${row("Capital", esc(p.capital || "—"))}
           ${row("Lat / Lng", p.capitalLat != null ? `${p.capitalLat}, ${p.capitalLng}` : "—")}
@@ -357,23 +341,25 @@
           ${row("Languages", fmtList(p.languages, (l) => esc(l.name)))}
           ${row("Calling code", p.idd ? `${esc(p.idd.root)}${p.idd.suffixes[0] || ""}` + (p.idd.suffixes.length > 1 ? ` (+${p.idd.suffixes.length - 1} more)` : "") : "—")}
           ${row("Demonym", esc(p.demonym || "—"))}
+          <div class="section-label">Land borders</div>
+          ${row("Neighbors", neighborNames.length ? esc(neighborNames.join(", ")) : "none (no land borders)")}
           <div class="section-label">Computed client-side</div>
           ${row("Centroid (lon, lat)", `${centroid[0]}, ${centroid[1]}`, true)}
           ${row("Bounding box", `[${bounds[0].join(", ")}] – [${bounds[1].join(", ")}]`, true)}
-          ${row("Neighbors", esc(neighborsText(p.gid, neighborNames)), true)}
         </div>
       </div>
     `;
   }
 
   d3.json(url).then(topo => {
-    const objects = topo.objects.geo.geometries;
     const fc = topojson.feature(topo, topo.objects.geo);
-    const neighborIdx = topojson.neighbors(objects);
+    // Resolve the borders property (arrays of iso2 codes) to country names.
+    const nameByIso2 = new Map(fc.features.map((f) => [f.properties.iso2, f.properties.name || f.properties.gid]));
 
     const projection = d3.geoPatterson().rotate([-11, 0]).fitExtent([[8, 8], [width - 8, height - 8]], fc);
     const path = d3.geoPath(projection);
 
+    let selected = null;
     g.selectAll("path")
       .data(fc.features)
       .join("path")
@@ -383,14 +369,11 @@
       .attr("vector-effect", "non-scaling-stroke")
       .attr("d", path)
       .style("cursor", "pointer")
-      .on("mousemove", function(event, d) {
-        const i = fc.features.indexOf(d);
-        const names = neighborIdx[i].map((j) => fc.features[j].properties.name || fc.features[j].properties.gid);
-        d3.select(this).attr("fill", "#b8ad9e");
+      .on("click", function(event, d) {
+        if (selected) selected.attr("fill", "#d9d0be");
+        selected = d3.select(this).attr("fill", "#b8ad9e");
+        const names = (d.properties.borders || []).map((code) => nameByIso2.get(code) || code);
         renderPanel(d, names);
-      })
-      .on("mouseleave", function() {
-        d3.select(this).attr("fill", "#d9d0be");
       });
   });
 

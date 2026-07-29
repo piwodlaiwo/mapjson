@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Map Shape Guess Game | MapJSON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A single country silhouette appears — pick its name from four choices. Distractors are countries of similar size, so you have to know the shape, not just the scale. Geometry and names both come from the MapJSON API.">
+  <link rel="canonical" href="https://mapjson.com/examples/shape-guess.html">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1a1a1a;
+      --bg: #fafafa;
+      --accent: #b0402f;
+      --muted: #9b9a94;
+      --border: #e5e4df;
+      --code-bg: #efeeea;
+    }
+    body { background: var(--bg); color: var(--ink); font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; line-height: 1.7; }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link { display: inline-block; padding: 2.5rem 0 0; font-size: 11px; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; font-family: 'IBM Plex Mono', monospace; }
+    .back-link:hover { color: var(--ink); }
+    header { border-bottom: 1.5px solid var(--ink); padding: 1rem 0 1.5rem; margin-bottom: 2rem; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: #a7a6a0; margin-bottom: 0.5rem; font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
+    header p { color: #4a4a45; margin-top: 0.6rem; font-size: 15px; max-width: 680px; line-height: 1.65; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; margin-bottom: 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+    section { margin-bottom: 2.5rem; }
+
+    /* ── Game ── */
+    .game-bar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .prompt-msg { font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: var(--ink); flex: 1 1 200px; min-width: 180px; }
+    .prompt-msg.ok { color: #2f8f5b; }
+    .prompt-msg.no { color: #c0392b; }
+    .btn { font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 0.55rem 0.9rem; border: 1px solid var(--border); border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; }
+    .btn:hover { border-color: var(--ink); }
+
+    .map-wrap { margin-bottom: 1rem; border: 1px solid var(--border); background: #e9e5dd; line-height: 0; position: relative; border-radius: 4px; overflow: hidden; }
+    .map-wrap svg { width: 100%; display: block; }
+    .score { position: absolute; top: 10px; right: 10px; z-index: 5; background: rgba(26,26,26,0.86); color: #fff; font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 6px 12px; border-radius: 20px; display: flex; gap: 12px; line-height: 1.2; }
+    .score .s-ok { color: #7fdca9; }
+    .score .s-no { color: #f2a0a0; }
+    .loading { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.5; color: #8a857c; letter-spacing: 0.08em; z-index: 4; }
+
+    .choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; margin-bottom: 1rem; }
+    .choice { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 500; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--ink); cursor: pointer; text-align: left; transition: border-color 0.12s; }
+    .choice:hover:not(:disabled) { border-color: var(--ink); }
+    .choice:disabled { cursor: default; }
+    .choice.ok { background: #e6f4ec; border-color: #4caf7d; color: #256f47; }
+    .choice.no { background: #f9e7e6; border-color: #d6534e; color: #a23530; }
+
+    .hint { font-size: 13px; color: var(--muted); margin-bottom: 2.5rem; }
+    pre { background: var(--code-bg); border-left: 3px solid var(--ink); padding: 1rem 1.25rem; overflow-x: auto; font-size: 12px; line-height: 1.65; font-family: 'IBM Plex Mono', monospace; }
+    nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 48px; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    .nav-links a, nav .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; text-decoration: none; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { display: inline-flex; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; text-decoration: none; color: var(--ink); letter-spacing: -0.01em; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 14px; height: 14px; background: var(--ink); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; background: var(--bg); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
+    @media (max-width: 640px) {
+      html, body { overflow-x: hidden; }
+      nav { padding: 0 0.6rem; }
+      .nav-links { gap: 0.55rem; }
+      .nav-links a { font-size: 11px !important; letter-spacing: 0.08em !important; }
+      header h1 { font-size: 2rem; letter-spacing: -0.02em; line-height: 1.1; }
+      .choices { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <a class="back-link" href="/examples/">← Examples</a>
+
+  <header>
+    <div class="tag">countries · shape quiz · interactive game · Natural Earth</div>
+    <h1>Map Shape Guess Game</h1>
+    <p>One country silhouette, north-up and centered — pick its name from four choices. The three decoys are countries of <em>similar area</em> (chosen with the <code>areakm2</code> property), so the size gives nothing away — you have to know the outline. Both the geometry and the country names come straight from the MapJSON <code>/v1/geo</code> endpoint.</p>
+  </header>
+
+  <div class="game-bar">
+    <div class="prompt-msg" id="prompt-msg">Loading countries…</div>
+    <button class="btn" id="hint" type="button">Hint</button>
+    <button class="btn" id="skip" type="button">Skip →</button>
+  </div>
+
+  <div class="map-wrap" id="map-wrap">
+    <div class="score" id="score"></div>
+    <div class="loading" id="loading">loading…</div>
+  </div>
+
+  <div class="choices" id="choices"></div>
+  <p class="hint">Stuck? <strong>Hint</strong> zooms out to the neighbouring countries — or, for an island, just the nearest land around it. <strong>Skip</strong> sets one aside to come back around later. Each shape loads fast (the world comes in at a light <code>auto</code> tier), then sharpens to high detail for the country on screen; silhouettes are re-centered on their own longitude so they never split at the map's edge.</p>
+
+  <section>
+    <h2>API Call</h2>
+    <pre>1 · the whole world at auto detail — a light tier, fast first paint, drives the choices + hint
+https://api.mapjson.com/v1/geo?layer=countries&amp;detail=auto&amp;properties=name,iso2,areakm2&amp;format=geojson
+
+2 · then just the country on screen, at high detail — a crisp silhouette (filter={iso2})
+https://api.mapjson.com/v1/geo?layer=countries&amp;detail=high&amp;filter=FR&amp;properties=name,iso2,areakm2&amp;format=geojson</pre>
+    <p class="hint" style="margin-top:0.75rem;">The first call uses <code>detail=auto</code>, so the server returns the lightest world tier that still contains every country — enough to build the choices and the hint's context. Each round then fetches <em>only</em> the shown country at <code>detail=high</code> (cached by ISO2): the game starts fast, yet every silhouette sharpens to the 10&thinsp;m coastline. (Using <code>auto</code> on a single country would go the other way — the coarsest tier it appears in, a blocky outline.)</p>
+  </section>
+
+  <section>
+    <h2>Code</h2>
+    <pre>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;Map Shape Guess&lt;/title&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"&gt;&lt;/script&gt;
+  &lt;style&gt;
+    body { font-family: sans-serif; margin: 2rem; max-width: 820px; }
+    #map-wrap { position: relative; background: #e9e5dd; border-radius: 4px; overflow: hidden; }
+    #map-wrap svg { width: 100%; display: block; }
+    .score { position: absolute; top: 10px; right: 10px; background: #1a1a1a; color: #fff;
+             font: 13px monospace; padding: 6px 12px; border-radius: 20px; display: flex; gap: 12px; }
+    .s-ok { color: #7fdca9; } .s-no { color: #f2a0a0; }
+    .loading { position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+               font: 13px monospace; color: #8a857c; }
+    #choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; margin: 1rem 0; }
+    .choice { font: 500 15px sans-serif; padding: 0.75rem 1rem; border: 1px solid #ddd;
+              border-radius: 8px; background: #fff; cursor: pointer; text-align: left; }
+    .choice.ok { background: #e6f4ec; border-color: #4caf7d; color: #256f47; }
+    .choice.no { background: #f9e7e6; border-color: #d6534e; color: #a23530; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id="bar"&gt;&lt;span id="prompt-msg"&gt;Loading…&lt;/span&gt; &lt;button id="hint"&gt;Hint&lt;/button&gt; &lt;button id="skip"&gt;Skip →&lt;/button&gt;&lt;/div&gt;
+  &lt;div id="map-wrap"&gt;&lt;div class="score" id="score"&gt;&lt;/div&gt;&lt;div class="loading" id="loading"&gt;loading…&lt;/div&gt;&lt;/div&gt;
+  &lt;div id="choices"&gt;&lt;/div&gt;
+
+  &lt;script&gt;
+    const BG = "#e9e5dd", SHAPE = "#3a5e70", SHAPE_OK = "#4caf7d", SHAPE_NO = "#d6534e", LAND_CTX = "#c9c0b0";
+    const MIN_AREA_KM2 = 25000;   // drop specks too small to recognize
+    const NUM_CHOICES = 4;
+    const NEIGHBORS = 5;          // nearby countries the Hint frames around the target
+    const width = 800, height = 480;
+    const API = "https://api.mapjson.com/v1/geo?layer=countries&amp;properties=name,iso2,areakm2&amp;format=geojson";
+
+    const wrap = document.getElementById("map-wrap");
+    const promptEl = document.getElementById("prompt-msg");
+    const scoreEl = document.getElementById("score");
+    const choicesEl = document.getElementById("choices");
+    const hintBtn = document.getElementById("hint");
+    const loadingEl = document.getElementById("loading");
+
+    const svg = d3.select(wrap).append("svg")
+      .attr("viewBox", `0 0 ${width} ${height}`).style("width", "100%").style("height", "auto");
+    svg.append("rect").attr("width", width).attr("height", height).attr("fill", BG);
+    const g = svg.append("g");
+    const projection = d3.geoNaturalEarth1();
+    const path = d3.geoPath(projection);
+
+    let allFeatures = [], features = [], queue = [], qi = 0, target = null, hero = null,
+        locked = false, hintOn = false, lastCorrect = false, correct = 0, wrong = 0;
+    const hiCache = {}, pending = {};   // high-detail geometry cached by ISO2
+
+    // Whole world at auto (the server picks a light tier) for a fast first paint; it drives
+    // the choices + hint. Each country is then re-fetched at high detail so its silhouette
+    // is razor-sharp — auto on a single country would return a coarse, blocky outline.
+    d3.json(API + "&amp;detail=auto")
+      .then((geo) =&gt; {
+        allFeatures = geo.features.filter((d) =&gt; d.properties &amp;&amp; d.properties.name !== "Antarctica");
+        allFeatures.forEach((f) =&gt; (f._c = d3.geoCentroid(f)));   // cache centroids for the Hint
+        features = allFeatures.filter((d) =&gt; {
+          const p = d.properties;
+          return p.iso2 &amp;&amp; p.name &amp;&amp; (p.areakm2 || 0) &gt;= MIN_AREA_KM2;
+        });
+        queue = shuffle(features.slice());
+        updateScore();
+        next();
+      });
+
+    function shuffle(a) { for (let i = a.length - 1; i &gt; 0; i--) { const j = (Math.random() * (i + 1)) | 0; const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+    function updateScore() { scoreEl.innerHTML = `&lt;span class="s-ok"&gt;✓ ${correct}&lt;/span&gt;&lt;span class="s-no"&gt;✗ ${wrong}&lt;/span&gt;`; }
+    function targetFill() { return locked ? (lastCorrect ? SHAPE_OK : SHAPE_NO) : SHAPE; }
+    function setLoading(on) { loadingEl.style.display = on ? "flex" : "none"; }
+
+    // Draw a set of features, re-centered on `center` longitude so nothing splits at the
+    // antimeridian and fit to `fitTo`; `heroFeat` is filled dark, the rest muted context.
+    function paint(list, center, fitTo, pad, heroFeat) {
+      hero = heroFeat; setLoading(false);
+      projection.rotate([-center, 0]).fitExtent([[pad, pad], [width - pad, height - pad]], fitTo);
+      g.selectAll("path").data(list, (d) =&gt; d.properties.iso2 || d.properties.name).join("path")
+        .attr("d", path)
+        .attr("fill", (d) =&gt; d === hero ? targetFill() : LAND_CTX)
+        .attr("stroke", BG).attr("stroke-width", (d) =&gt; d === hero ? 1.2 : 0.5)
+        .attr("stroke-linejoin", "round");
+    }
+
+    // Plain mode: the silhouette alone, always at high detail. Rather than flash the coarse
+    // world-tier shape first, we wait for the high fetch — the country pops in already sharp
+    // (usually instantly, since next() prefetches upcoming countries into the cache).
+    function drawShape() {
+      const hi = hiCache[target.properties.iso2];
+      if (hi) { paint([hi], hi._c[0], hi, 30, hi); }
+      else { g.selectAll("path").remove(); setLoading(true); fetchHigh(target); }
+    }
+
+    // The N countries whose centroids sit closest to the target's.
+    function neighbors(t, n) {
+      return allFeatures
+        .filter((f) =&gt; f !== t)
+        .sort((a, b) =&gt; d3.geoDistance(t._c, a._c) - d3.geoDistance(t._c, b._c))
+        .slice(0, n);
+    }
+
+    // Hint mode: frame the map around the target plus its nearest neighbours — so a
+    // bordered country shows the ones it touches, and an island pulls back only to the
+    // nearest land around it, never the whole world. All land in view is drawn for context.
+    function drawHint() {
+      const fit = { type: "FeatureCollection", features: [target, ...neighbors(target, NEIGHBORS)] };
+      paint(allFeatures, target._c[0], fit, 26, target);
+    }
+
+    function render() { hintOn ? drawHint() : drawShape(); }
+
+    // Fetch just this country at high detail (filter={ISO2}) and cache it, then redraw if
+    // it's still the one on screen. Choices and area still come from the world set.
+    function fetchHigh(t) {
+      const iso = t.properties.iso2;
+      if (hiCache[iso] || pending[iso]) return;
+      pending[iso] = true;
+      d3.json(`${API}&amp;detail=high&amp;filter=${iso}`).then((geo) =&gt; {
+        pending[iso] = false;
+        const f = (geo.features || []).find((x) =&gt; x.properties.iso2 === iso) || (geo.features || [])[0];
+        if (!f) return;
+        f._c = t._c;   // reuse the world-tier centroid so framing stays put
+        hiCache[iso] = f;
+        if (target === t &amp;&amp; !hintOn) drawShape();
+      }).catch(() =&gt; { pending[iso] = false; });
+    }
+
+    // Correct answer + 3 decoys drawn from the countries CLOSEST in area — so scale
+    // is no hint. (fitExtent normalizes on-screen size anyway; this fights memory.)
+    function sampleChoices(t) {
+      const ta = t.properties.areakm2 || 0;
+      const near = features
+        .filter((f) =&gt; f.properties.iso2 !== t.properties.iso2)
+        .sort((a, b) =&gt; Math.abs((a.properties.areakm2 || 0) - ta) - Math.abs((b.properties.areakm2 || 0) - ta))
+        .slice(0, 40);
+      shuffle(near);
+      return shuffle([t, ...near.slice(0, NUM_CHOICES - 1)]);
+    }
+
+    function renderChoices(opts) {
+      choicesEl.innerHTML = "";
+      for (const f of opts) {
+        const b = document.createElement("button");
+        b.className = "choice";
+        b.textContent = f.properties.name;
+        b.addEventListener("click", () =&gt; guess(f, b));
+        choicesEl.appendChild(b);
+      }
+    }
+
+    function next() {
+      if (qi &gt;= queue.length) { shuffle(queue); qi = 0; }
+      target = queue[qi++]; locked = false; hintOn = false;
+      hintBtn.textContent = "Hint"; hintBtn.disabled = false;
+      promptEl.textContent = "Which country has this shape?";
+      render();
+      renderChoices(sampleChoices(target));
+      for (let i = 0; i &lt; 3 &amp;&amp; i &lt; queue.length; i++) fetchHigh(queue[(qi + i) % queue.length]);  // warm the next few
+    }
+
+    function guess(f, btn) {
+      if (locked) return;
+      locked = true; hintBtn.disabled = true;
+      lastCorrect = f.properties.iso2 === target.properties.iso2;
+      const buttons = choicesEl.querySelectorAll("button");
+      buttons.forEach((b) =&gt; (b.disabled = true));
+      g.selectAll("path").filter((d) =&gt; d === hero).attr("fill", targetFill());
+      if (lastCorrect) {
+        correct++; btn.classList.add("ok");
+        promptEl.textContent = `✓ Correct — ${target.properties.name}`;
+        updateScore(); setTimeout(next, 900);
+      } else {
+        wrong++; btn.classList.add("no");
+        buttons.forEach((b) =&gt; { if (b.textContent === target.properties.name) b.classList.add("ok"); });
+        promptEl.textContent = `✗ You picked ${f.properties.name} — it was ${target.properties.name}`;
+        updateScore(); setTimeout(next, 1600);
+      }
+    }
+
+    hintBtn.addEventListener("click", () =&gt; {
+      if (locked) return;
+      hintOn = !hintOn;
+      hintBtn.textContent = hintOn ? "Hide hint" : "Hint";
+      render();
+    });
+
+    document.getElementById("skip").addEventListener("click", () =&gt; {
+      if (locked) return;
+      queue.push(target);  // re-ask later, no reveal
+      next();
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+  </section>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+  const BG = "#e9e5dd", SHAPE = "#3a5e70", SHAPE_OK = "#4caf7d", SHAPE_NO = "#d6534e", LAND_CTX = "#c9c0b0";
+  const MIN_AREA_KM2 = 25000;   // drop specks too small to recognize
+  const NUM_CHOICES = 4;
+  const NEIGHBORS = 5;          // nearby countries the Hint frames around the target
+  const width = 800, height = 480;
+
+  const wrap = document.getElementById("map-wrap");
+  const promptEl = document.getElementById("prompt-msg");
+  const scoreEl = document.getElementById("score");
+  const choicesEl = document.getElementById("choices");
+  const hintBtn = document.getElementById("hint");
+  const loadingEl = document.getElementById("loading");
+
+  const svg = d3.select(wrap).append("svg")
+    .attr("viewBox", `0 0 ${width} ${height}`).style("width", "100%").style("height", "auto");
+  svg.append("rect").attr("width", width).attr("height", height).attr("fill", BG);
+  const g = svg.append("g");
+  const projection = d3.geoNaturalEarth1();
+  const path = d3.geoPath(projection);
+
+  const API = "https://api.mapjson.com/v1/geo?layer=countries&properties=name,iso2,areakm2&format=geojson";
+  let allFeatures = [], features = [], queue = [], qi = 0, target = null, hero = null,
+      locked = false, hintOn = false, lastCorrect = false, correct = 0, wrong = 0;
+  const hiCache = {}, pending = {};   // high-detail geometry cached by ISO2
+
+  // Whole world at auto (the server picks a light tier) for a fast first paint; it drives
+  // the choices + hint. Each country is then re-fetched at high detail so its silhouette
+  // is razor-sharp — auto on a single country would return a coarse, blocky outline.
+  d3.json(API + "&detail=auto")
+    .then((geo) => {
+      allFeatures = geo.features.filter((d) => d.properties && d.properties.name !== "Antarctica");
+      allFeatures.forEach((f) => (f._c = d3.geoCentroid(f)));   // cache centroids for the Hint
+      features = allFeatures.filter((d) => {
+        const p = d.properties;
+        return p.iso2 && p.name && (p.areakm2 || 0) >= MIN_AREA_KM2;
+      });
+      queue = shuffle(features.slice());
+      updateScore();
+      next();
+    });
+
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function updateScore() { scoreEl.innerHTML = `<span class="s-ok">✓ ${correct}</span><span class="s-no">✗ ${wrong}</span>`; }
+  function targetFill() { return locked ? (lastCorrect ? SHAPE_OK : SHAPE_NO) : SHAPE; }
+  function setLoading(on) { loadingEl.style.display = on ? "flex" : "none"; }
+
+  // Draw a set of features, re-centered on `center` longitude so nothing splits at the
+  // antimeridian; `heroFeat` is filled dark, everything else is muted context.
+  function paint(list, center, fitTo, pad, heroFeat) {
+    hero = heroFeat; setLoading(false);
+    projection.rotate([-center, 0]).fitExtent([[pad, pad], [width - pad, height - pad]], fitTo);
+    g.selectAll("path").data(list, (d) => d.properties.iso2 || d.properties.name).join("path")
+      .attr("d", path)
+      .attr("fill", (d) => d === hero ? targetFill() : LAND_CTX)
+      .attr("stroke", BG).attr("stroke-width", (d) => d === hero ? 1.2 : 0.5)
+      .attr("stroke-linejoin", "round");
+  }
+
+  // Plain mode: the silhouette alone, always at high detail. Rather than flash the coarse
+  // world-tier shape first, we wait for the high fetch — the country pops in already sharp
+  // (usually instantly, since next() prefetches upcoming countries into the cache).
+  function drawShape() {
+    const hi = hiCache[target.properties.iso2];
+    if (hi) { paint([hi], hi._c[0], hi, 30, hi); }
+    else { g.selectAll("path").remove(); setLoading(true); fetchHigh(target); }
+  }
+
+  // The N countries whose centroids sit closest to the target's.
+  function neighbors(t, n) {
+    return allFeatures
+      .filter((f) => f !== t)
+      .sort((a, b) => d3.geoDistance(t._c, a._c) - d3.geoDistance(t._c, b._c))
+      .slice(0, n);
+  }
+
+  // Hint mode: frame the map around the target plus its nearest neighbours — so a
+  // bordered country shows the ones it touches, and an island pulls back only to the
+  // nearest land around it, never the whole world. All land in view is drawn for context.
+  function drawHint() {
+    const fit = { type: "FeatureCollection", features: [target, ...neighbors(target, NEIGHBORS)] };
+    paint(allFeatures, target._c[0], fit, 26, target);
+  }
+
+  // Fetch just this country at high detail (filter={ISO2}) and cache it, then redraw if
+  // it's still the one on screen. Choices and area still come from the world set.
+  function fetchHigh(t) {
+    const iso = t.properties.iso2;
+    if (hiCache[iso] || pending[iso]) return;
+    pending[iso] = true;
+    d3.json(`${API}&detail=high&filter=${iso}`).then((geo) => {
+      pending[iso] = false;
+      const f = (geo.features || []).find((x) => x.properties.iso2 === iso) || (geo.features || [])[0];
+      if (!f) return;
+      f._c = t._c;   // reuse the world-tier centroid so framing stays put
+      hiCache[iso] = f;
+      if (target === t && !hintOn) drawShape();
+    }).catch(() => { pending[iso] = false; });
+  }
+
+  function render() { hintOn ? drawHint() : drawShape(); }
+
+  // Correct answer + 3 decoys drawn from the countries CLOSEST in area — so scale
+  // is no hint. (fitExtent normalizes on-screen size anyway; this fights memory.)
+  function sampleChoices(t) {
+    const ta = t.properties.areakm2 || 0;
+    const near = features
+      .filter((f) => f.properties.iso2 !== t.properties.iso2)
+      .sort((a, b) => Math.abs((a.properties.areakm2 || 0) - ta) - Math.abs((b.properties.areakm2 || 0) - ta))
+      .slice(0, 40);
+    shuffle(near);
+    return shuffle([t, ...near.slice(0, NUM_CHOICES - 1)]);
+  }
+
+  function renderChoices(opts) {
+    choicesEl.innerHTML = "";
+    for (const f of opts) {
+      const b = document.createElement("button");
+      b.className = "choice";
+      b.textContent = f.properties.name;
+      b.addEventListener("click", () => guess(f, b));
+      choicesEl.appendChild(b);
+    }
+  }
+
+  function next() {
+    if (qi >= queue.length) { shuffle(queue); qi = 0; }
+    target = queue[qi++]; locked = false; hintOn = false;
+    hintBtn.textContent = "Hint"; hintBtn.disabled = false;
+    promptEl.textContent = "Which country has this shape?"; promptEl.className = "prompt-msg";
+    render();
+    renderChoices(sampleChoices(target));
+    for (let i = 0; i < 3 && i < queue.length; i++) fetchHigh(queue[(qi + i) % queue.length]);  // warm the next few
+  }
+
+  function guess(f, btn) {
+    if (locked) return;
+    locked = true; hintBtn.disabled = true;
+    lastCorrect = f.properties.iso2 === target.properties.iso2;
+    const buttons = choicesEl.querySelectorAll("button");
+    buttons.forEach((b) => (b.disabled = true));
+    g.selectAll("path").filter((d) => d === hero).attr("fill", targetFill());   // recolor just the shown country
+    if (lastCorrect) {
+      correct++; btn.classList.add("ok");
+      promptEl.textContent = `✓ Correct — ${target.properties.name}`; promptEl.className = "prompt-msg ok";
+      updateScore(); setTimeout(next, 900);
+    } else {
+      wrong++; btn.classList.add("no");
+      buttons.forEach((b) => { if (b.textContent === target.properties.name) b.classList.add("ok"); });
+      promptEl.textContent = `✗ You picked ${f.properties.name} — it was ${target.properties.name}`; promptEl.className = "prompt-msg no";
+      updateScore(); setTimeout(next, 1600);
+    }
+  }
+
+  hintBtn.addEventListener("click", () => {
+    if (locked) return;
+    hintOn = !hintOn;
+    hintBtn.textContent = hintOn ? "Hide hint" : "Hint";
+    render();
+  });
+
+  document.getElementById("skip").addEventListener("click", () => {
+    if (locked) return;
+    queue.push(target);  // re-ask later, no reveal
+    next();
+  });
+</script>
+<script src="example-widgets.js" defer></script>
+</body>
+</html>

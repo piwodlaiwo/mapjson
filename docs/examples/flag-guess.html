@@ -56,6 +56,11 @@
     .score { position: absolute; top: 10px; right: 10px; z-index: 5; background: rgba(26,26,26,0.86); color: #fff; font-family: 'IBM Plex Mono', monospace; font-size: 13px; padding: 6px 12px; border-radius: 20px; display: flex; gap: 12px; line-height: 1.2; }
     .score .s-ok { color: #7fdca9; }
     .score .s-no { color: #f2a0a0; }
+    .zoom-ctrl { position: absolute; left: 10px; bottom: 10px; z-index: 5; display: flex; flex-direction: column; gap: 4px; }
+    .zoom-ctrl button { width: 30px; height: 30px; border: 1px solid var(--border); background: rgba(255,255,255,0.92); color: var(--ink); font-family: 'IBM Plex Mono', monospace; font-size: 16px; line-height: 1; cursor: pointer; border-radius: 5px; padding: 0; }
+    .zoom-ctrl button:hover { border-color: var(--ink); }
+    .tip { position: absolute; z-index: 6; pointer-events: none; background: rgba(26,26,26,0.9); color: #fff; font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.5; padding: 3px 8px; border-radius: 4px; white-space: nowrap; transform: translate(-50%, -145%); opacity: 0; transition: opacity 0.08s; }
+    .tip.show { opacity: 1; }
     .hint { font-size: 13px; color: var(--muted); margin-bottom: 2.5rem; }
     pre { background: var(--code-bg); border-left: 3px solid var(--ink); padding: 1rem 1.25rem; overflow-x: auto; font-size: 12px; line-height: 1.65; font-family: 'IBM Plex Mono', monospace; }
     nav { position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 48px; }
@@ -104,13 +109,20 @@
   <div class="game-bar">
     <img class="flag" id="flag" alt="Flag to guess">
     <div class="prompt-msg" id="prompt-msg">Loading countries…</div>
+    <button class="btn" id="hint" type="button">Hint</button>
     <button class="btn" id="skip" type="button">Skip →</button>
   </div>
 
   <div class="map-wrap" id="map-wrap">
     <div class="score" id="score"></div>
+    <div class="tip" id="tip"></div>
+    <div class="zoom-ctrl" id="zoom-ctrl">
+      <button type="button" data-z="in" aria-label="Zoom in">+</button>
+      <button type="button" data-z="out" aria-label="Zoom out">−</button>
+      <button type="button" data-z="reset" aria-label="Reset view">⟳</button>
+    </div>
   </div>
-  <p class="hint">No country names on hover — that would give it away. Guess from the shape and location, or skip to set a flag aside — skipped flags come back around later.</p>
+  <p class="hint">Hover any country to see its name, and scroll/pinch to zoom or drag to pan — handy for the smaller ones. Stuck? <strong>Hint</strong> nudges the map toward the country whose flag is showing. Or skip to set a flag aside — skipped flags come back around later.</p>
 
   <section>
     <h2>API Call</h2>
@@ -135,15 +147,30 @@
     .score { position: absolute; top: 10px; right: 10px; background: #1a1a1a; color: #fff;
              font: 13px monospace; padding: 6px 12px; border-radius: 20px; display: flex; gap: 12px; }
     .s-ok { color: #7fdca9; } .s-no { color: #f2a0a0; }
+    .zoom-ctrl { position: absolute; left: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 4px; }
+    .zoom-ctrl button { width: 30px; height: 30px; font: 16px monospace; cursor: pointer; }
+    .tip { position: absolute; pointer-events: none; background: rgba(26,26,26,0.9); color: #fff;
+           font: 12px monospace; padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+           transform: translate(-50%, -145%); opacity: 0; transition: opacity 0.08s; }
+    .tip.show { opacity: 1; }
   &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
   &lt;div class="game-bar"&gt;
     &lt;img class="flag" id="flag" alt="Flag to guess"&gt;
     &lt;div id="prompt-msg"&gt;Loading…&lt;/div&gt;
+    &lt;button id="hint" type="button"&gt;Hint&lt;/button&gt;
     &lt;button id="skip" type="button"&gt;Skip →&lt;/button&gt;
   &lt;/div&gt;
-  &lt;div id="map-wrap"&gt;&lt;div class="score" id="score"&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div id="map-wrap"&gt;
+    &lt;div class="score" id="score"&gt;&lt;/div&gt;
+    &lt;div class="tip" id="tip"&gt;&lt;/div&gt;
+    &lt;div class="zoom-ctrl" id="zoom-ctrl"&gt;
+      &lt;button type="button" data-z="in"&gt;+&lt;/button&gt;
+      &lt;button type="button" data-z="out"&gt;−&lt;/button&gt;
+      &lt;button type="button" data-z="reset"&gt;⟳&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
 
   &lt;script&gt;
     const OCEAN = "#eaf0f2", LAND = "#c9c3b6", STROKE = "#ffffff",
@@ -156,6 +183,7 @@
     const flag = document.getElementById("flag");
     const promptEl = document.getElementById("prompt-msg");
     const scoreEl = document.getElementById("score");
+    const tip = document.getElementById("tip");
 
     const svg = d3.select(wrap).append("svg")
       .attr("viewBox", `0 0 ${width} ${height}`).style("width", "100%").style("height", "auto");
@@ -176,15 +204,51 @@
 
         paths = g.selectAll("path").data(eligible).join("path")
           .attr("d", path).attr("fill", LAND).attr("stroke", STROKE).attr("stroke-width", 0.6)
+          .attr("vector-effect", "non-scaling-stroke")
           .style("cursor", "pointer")
-          .on("mouseenter", function () { if (!locked) d3.select(this).attr("stroke", HILITE).attr("stroke-width", 1).raise(); })
-          .on("mouseleave", function () { d3.select(this).attr("stroke", STROKE).attr("stroke-width", 0.6); })
+          .on("mouseenter", function (event, d) { if (!locked) d3.select(this).attr("stroke", HILITE).attr("stroke-width", 1).raise(); showTip(event, d); })
+          .on("mousemove", showTip)
+          .on("mouseleave", function () { d3.select(this).attr("stroke", STROKE).attr("stroke-width", 0.6); hideTip(); })
           .on("click", (event, d) =&gt; guess(d));
 
         queue = shuffle(eligible.slice());
         updateScore();
         next();
       });
+
+    // Zoom + pan: scroll/pinch to zoom, drag to pan. A short drag still fires the click.
+    const zoom = d3.zoom().scaleExtent([1, 14])
+      .extent([[0, 0], [width, height]])
+      .translateExtent([[0, 0], [width, height]])
+      .on("zoom", (ev) =&gt; g.attr("transform", ev.transform));
+    svg.call(zoom).on("dblclick.zoom", null);
+
+    document.getElementById("zoom-ctrl").addEventListener("click", (e) =&gt; {
+      const btn = e.target.closest("button"); if (!btn) return;
+      const z = btn.dataset.z;
+      if (z === "reset") svg.transition().duration(300).call(zoom.transform, d3.zoomIdentity);
+      else svg.transition().duration(200).call(zoom.scaleBy, z === "in" ? 1.6 : 1 / 1.6);
+    });
+
+    // Hover tooltip — name follows the cursor over the map.
+    function showTip(event, d) {
+      const r = wrap.getBoundingClientRect();
+      tip.textContent = d.properties.name;
+      tip.style.left = (event.clientX - r.left) + "px";
+      tip.style.top = (event.clientY - r.top) + "px";
+      tip.classList.add("show");
+    }
+    function hideTip() { tip.classList.remove("show"); }
+
+    // Hint — zoom in a little toward the target country's centre (not too much).
+    document.getElementById("hint").addEventListener("click", () =&gt; {
+      if (!target || locked) return;
+      const [cx, cy] = path.centroid(target);
+      if (!isFinite(cx)) return;
+      const k = 3;
+      const t = d3.zoomIdentity.translate(width / 2, height / 2).scale(k).translate(-cx, -cy);
+      svg.transition().duration(650).call(zoom.transform, t);
+    });
 
     function shuffle(a) { for (let i = a.length - 1; i &gt; 0; i--) { const j = (Math.random() * (i + 1)) | 0; const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
     function paint(d, color) { paths.filter((x) =&gt; x === d).attr("fill", color); }
@@ -194,6 +258,8 @@
       if (qi &gt;= queue.length) { shuffle(queue); qi = 0; }
       target = queue[qi++]; locked = false;
       paths.attr("fill", LAND);
+      hideTip();
+      svg.call(zoom.transform, d3.zoomIdentity);   // back to the full view for the new flag
       promptEl.textContent = "Which country flies this flag?"; promptEl.className = "";
       flag.src = flagURL(target.properties.iso2);
     }
@@ -239,6 +305,7 @@
   const flag = document.getElementById("flag");
   const promptEl = document.getElementById("prompt-msg");
   const scoreEl = document.getElementById("score");
+  const tip = document.getElementById("tip");
 
   const svg = d3.select(wrap).append("svg")
     .attr("viewBox", `0 0 ${width} ${height}`).style("width", "100%").style("height", "auto");
@@ -259,15 +326,52 @@
 
       paths = g.selectAll("path").data(eligible).join("path")
         .attr("d", path).attr("fill", LAND).attr("stroke", STROKE).attr("stroke-width", 0.6)
+        .attr("vector-effect", "non-scaling-stroke")
         .style("cursor", "pointer")
-        .on("mouseenter", function () { if (!locked) d3.select(this).attr("stroke", HILITE).attr("stroke-width", 1).raise(); })
-        .on("mouseleave", function () { d3.select(this).attr("stroke", STROKE).attr("stroke-width", 0.6); })
+        .on("mouseenter", function (event, d) { if (!locked) d3.select(this).attr("stroke", HILITE).attr("stroke-width", 1).raise(); showTip(event, d); })
+        .on("mousemove", showTip)
+        .on("mouseleave", function () { d3.select(this).attr("stroke", STROKE).attr("stroke-width", 0.6); hideTip(); })
         .on("click", (event, d) => guess(d));
 
       queue = shuffle(eligible.slice());
       updateScore();
       next();
     });
+
+  // Zoom + pan — scroll/pinch to zoom, drag to pan. A short drag doesn't cancel
+  // the click, so guessing still works. Borders use non-scaling-stroke so they stay crisp.
+  const zoom = d3.zoom().scaleExtent([1, 14])
+    .extent([[0, 0], [width, height]])
+    .translateExtent([[0, 0], [width, height]])
+    .on("zoom", (ev) => g.attr("transform", ev.transform));
+  svg.call(zoom).on("dblclick.zoom", null);
+
+  document.getElementById("zoom-ctrl").addEventListener("click", (e) => {
+    const btn = e.target.closest("button"); if (!btn) return;
+    const z = btn.dataset.z;
+    if (z === "reset") svg.transition().duration(300).call(zoom.transform, d3.zoomIdentity);
+    else svg.transition().duration(200).call(zoom.scaleBy, z === "in" ? 1.6 : 1 / 1.6);
+  });
+
+  // Hover tooltip — name follows the cursor over the map.
+  function showTip(event, d) {
+    const r = wrap.getBoundingClientRect();
+    tip.textContent = d.properties.name;
+    tip.style.left = (event.clientX - r.left) + "px";
+    tip.style.top = (event.clientY - r.top) + "px";
+    tip.classList.add("show");
+  }
+  function hideTip() { tip.classList.remove("show"); }
+
+  // Hint — zoom in a little toward the target country's centre (not too much).
+  document.getElementById("hint").addEventListener("click", () => {
+    if (!target || locked) return;
+    const [cx, cy] = path.centroid(target);
+    if (!isFinite(cx)) return;
+    const k = 3;
+    const t = d3.zoomIdentity.translate(width / 2, height / 2).scale(k).translate(-cx, -cy);
+    svg.transition().duration(650).call(zoom.transform, t);
+  });
 
   function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function paint(d, color) { paths.filter((x) => x === d).attr("fill", color); }
@@ -277,6 +381,8 @@
     if (qi >= queue.length) { shuffle(queue); qi = 0; }
     target = queue[qi++]; locked = false;
     paths.attr("fill", LAND);
+    hideTip();
+    svg.call(zoom.transform, d3.zoomIdentity);   // back to the full view for the new flag
     promptEl.textContent = "Which country flies this flag?"; promptEl.className = "prompt-msg";
     flag.src = flagURL(target.properties.iso2);
   }

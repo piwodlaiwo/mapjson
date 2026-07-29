@@ -37,19 +37,23 @@ const MLEDOZE_FILE = 'data/mledoze/countries.json';
 
 function loadMledoze() {
   if (!fs.existsSync(MLEDOZE_FILE)) {
-    console.warn(`  ⚠ ${MLEDOZE_FILE} not found — currencies/languages/idd/demonym will be null. Run: npm run download-mledoze`);
-    return {};
+    console.warn(`  ⚠ ${MLEDOZE_FILE} not found — currencies/languages/idd/demonym/flag/borders will be null. Run: npm run download-mledoze`);
+    return { byIso2: {}, cca3ToIso2: {} };
   }
   const list = JSON.parse(fs.readFileSync(MLEDOZE_FILE, 'utf8'));
   const byIso2 = {};
-  for (const c of list) if (c.cca2) byIso2[c.cca2] = c;
-  return byIso2;
+  const cca3ToIso2 = {};   // borders[] in mledoze are cca3 (ISO3); map them to our iso2 gids
+  for (const c of list) {
+    if (c.cca2) byIso2[c.cca2] = c;
+    if (c.cca3 && c.cca2) cca3ToIso2[c.cca3] = c.cca2;
+  }
+  return { byIso2, cca3ToIso2 };
 }
 
 // Shapes chosen to stay flat/simple like the rest of properties.json, while keeping
 // enough fidelity for real use (a country can have 2+ currencies or languages).
-function mledozeFields(entry) {
-  if (!entry) return { currencies: null, languages: null, idd: null, demonym: null };
+function mledozeFields(entry, cca3ToIso2 = {}) {
+  if (!entry) return { currencies: null, languages: null, idd: null, demonym: null, flag: null, borders: null };
 
   const currencies = entry.currencies
     ? Object.entries(entry.currencies).map(([code, c]) => ({ code, name: c.name || null, symbol: c.symbol || null }))
@@ -68,7 +72,19 @@ function mledozeFields(entry) {
   // than a gendered/multi-language object.
   const demonym = entry.demonyms?.eng?.m || entry.demonyms?.eng?.f || null;
 
-  return { currencies, languages, idd, demonym };
+  // Unicode flag emoji (e.g. 🇫🇷).
+  const flag = entry.flag || null;
+
+  // Land-border adjacency: mledoze ships cca3 (ISO3) codes — convert to iso2 to match
+  // our gid scheme. This gives complete adjacency even for countries whose geometry is
+  // stitched from a different source (France, Norway, NL, Morocco), which topojson.neighbors
+  // can't detect from shared arcs.
+  const borderIso2 = Array.isArray(entry.borders)
+    ? entry.borders.map((c) => cca3ToIso2[c]).filter(Boolean)
+    : [];
+  const borders = borderIso2.length ? borderIso2 : null;
+
+  return { currencies, languages, idd, demonym, flag, borders };
 }
 
 // .dbf fixed-width char fields are padded with NUL () bytes
@@ -344,6 +360,9 @@ async function main() {
       subregion: r.SUBREGION || null,
       // 10m geometry rounds sub-km² micro-states to 0 — fall back to a published land area
       areakm2: geoArea > 0 ? geoArea : (AREA_FALLBACK[iso2] ?? null),
+      // Natural Earth estimates (POP_EST/GDP_MD, 2019 vintage); -99/0 sentinels → null.
+      population: +r.POP_EST > 0 ? +r.POP_EST : null,
+      gdp: +r.GDP_MD > 0 ? +r.GDP_MD : null,
       capital: null,
       capitalLat: null,
       capitalLng: null,
@@ -362,6 +381,8 @@ async function main() {
       continent: data.continent,
       subregion: data.subregion,
       areakm2: SPLIT_TERRITORY_AREAS[key] || null,
+      population: null,
+      gdp: null,
       capital: null,
       capitalLat: null,
       capitalLng: null,
@@ -418,12 +439,12 @@ async function main() {
   const withRegion = cityPoints.filter((c) => c.properties.region).length;
   console.log(`  ${cityPoints.length} city points (${capitalCount} capitals, ${withRegion} with a region)`);
 
-  console.log('Merging mledoze/countries (currencies, languages, idd, demonym)...');
-  const mledoze = loadMledoze();
+  console.log('Merging mledoze/countries (currencies, languages, idd, demonym, flag, borders)...');
+  const { byIso2: mledoze, cca3ToIso2 } = loadMledoze();
   let mledozeMatched = 0;
   for (const entry of Object.values(props)) {
     const md = entry.iso2 ? mledoze[entry.iso2] : null;
-    const fields = mledozeFields(md);
+    const fields = mledozeFields(md, cca3ToIso2);
     Object.assign(entry, fields);
     // authoritative published area (total km²) — replaces the coarse 10m-polygon estimate,
     // which badly over/understates micro-states (Monaco 19 → 2.02). Territories not in mledoze

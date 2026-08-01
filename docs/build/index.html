@@ -297,6 +297,26 @@ const FILTER_SUGGESTIONS = {
   postal:    ["US-MA", "US-CA", "US-TX", "US-NY", "US-FL", "US-WA"],
 };
 
+// Full country list for the regions dropdown — every country that actually has admin-1
+// regions (regionMinDetail != null), from the API catalog. Loaded once, cached.
+// Options carry iso2 as the value (keeps the US→Albers heuristic and is canonical) and
+// the country name as the label, so you can type a name or a code and still pick from the list.
+let COUNTRY_OPTIONS = null, countryFetch = null;
+function loadCountryOptions() {
+  if (countryFetch) return countryFetch;
+  countryFetch = fetch("https://api.mapjson.com/v1/catalog")
+    .then((r) => r.json())
+    .then((cat) => {
+      COUNTRY_OPTIONS = cat
+        .filter((e) => e.layer === "countries" && e.regionMinDetail)
+        .map((e) => ({ code: e.iso2 || e.gid, name: e.name }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      return COUNTRY_OPTIONS;
+    })
+    .catch(() => { countryFetch = null; });   // allow a retry on next open
+  return countryFetch;
+}
+
 // Sample = what the cleaner hands you for a messy state file with a value column
 const SAMPLE = `state,unemployment,gid,matched_name,match_status,confidence,iso2,iso3,fips,postal
 Mass,2.9,US-MA,Massachusetts,resolved,0.99,,,25,MA
@@ -667,11 +687,23 @@ function clearRows() {
 function syncFilterSuggestions() {
   const dl = $("filterlist");
   dl.innerHTML = "";
-  for (const v of FILTER_SUGGESTIONS[state.layer]) {
-    const o = document.createElement("option"); o.value = v; dl.appendChild(o);
+  if (state.layer === "regions" && COUNTRY_OPTIONS) {
+    // Full country list — pick a country (or its regions won't exist and render says so).
+    for (const c of COUNTRY_OPTIONS) {
+      const o = document.createElement("option"); o.value = c.code; o.textContent = c.name; dl.appendChild(o);
+    }
+  } else {
+    for (const v of FILTER_SUGGESTIONS[state.layer]) {
+      const o = document.createElement("option"); o.value = v; dl.appendChild(o);
+    }
+    // On regions, the full list isn't in yet — show the curated few now, then repopulate.
+    if (state.layer === "regions")
+      loadCountryOptions().then(() => { if (state.layer === "regions") syncFilterSuggestions(); });
   }
   $("filter").placeholder = state.layer === "countries" ? "world" :
-    state.layer === "postal" ? "US-MA (required)" : "e.g. " + FILTER_SUGGESTIONS[state.layer][0];
+    state.layer === "postal" ? "US-MA (required)" :
+    state.layer === "regions" ? "US, or a country name" :
+    "e.g. " + FILTER_SUGGESTIONS[state.layer][0];
 }
 
 // districts and postal are served at a single resolution — lock the detail
@@ -775,6 +807,7 @@ window.addEventListener("resize", () => render());
 // ---- boot: cleaner handoff or blank world -------------------------------
 
 syncFilterSuggestions();
+loadCountryOptions().then(() => { if (state.layer === "regions") syncFilterSuggestions(); });   // warm the country list
 const handoff = localStorage.getItem("mapjson-build");
 if (handoff) {
   localStorage.removeItem("mapjson-build");

@@ -748,7 +748,140 @@ GET /v1/catalog?layer=districts&amp;filter=US-MA</pre>
 }</pre>
 
     <h3 style="font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:600; margin-bottom:0.75rem; margin-top:1.5rem;">Joining to external data</h3>
-    <p style="font-size:12px; color:var(--muted); line-height:1.7;">The <code>gid</code> is chosen to match codes your data already uses. Census, CDC, BLS, and most US federal sources use 5-digit FIPS for counties — join on <code>gid</code> directly. For countries, ISO alpha-2 is the most widely used identifier in web APIs and statistical databases. For states and international regions, ISO 3166-2 is used by Eurostat, NUTS crosswalks, and most administrative data sources. Where a dataset uses a different code system, use the catalog to build a translation table.</p>
+    <p style="font-size:12px; color:var(--muted); line-height:1.7;">The <code>gid</code> is chosen to match codes your data already uses. Census, CDC, BLS, and most US federal sources use 5-digit FIPS for counties — join on <code>gid</code> directly. For countries, ISO alpha-2 is the most widely used identifier in web APIs and statistical databases. For states and international regions, ISO 3166-2 is used by Eurostat, NUTS crosswalks, and most administrative data sources. Where a dataset uses a different code system, use the catalog to build a translation table. Where it uses names rather than codes — <code>Deutschland</code>, <code>Mass</code>, <code>Calif.</code> — post them to <a href="#resolve">/v1/resolve</a> and get gids back.</p>
+  </section>
+
+  <!-- ── Resolve ── -->
+  <section id="resolve">
+    <h2>Resolve</h2>
+    <p>Your data rarely uses <code>gid</code> values. It uses names — <code>Deutschland</code>, <code>Mass</code>, <code>Calif.</code>, <code>Türkiye</code>, a column of FIPS codes. <code>/v1/resolve</code> maps those keys to gids so you can join them to geometry. It is the only <code>POST</code> endpoint, because it takes a batch of keys as a JSON body.</p>
+
+    <div class="endpoint">
+      <span class="method">POST</span><span class="path">https://api.mapjson.com/v1/resolve</span>
+    </div>
+
+    <p style="margin-bottom:0.75rem;">Send <code>Content-Type: application/json</code> and a body with a <code>keys</code> array:</p>
+    <pre>curl -X POST https://api.mapjson.com/v1/resolve \
+  -H "Content-Type: application/json" \
+  -d '{"keys": ["Mass", "Calif.", "N.Y."]}'</pre>
+
+    <div class="tablewrap" style="margin-top:1.5rem;">
+    <table>
+      <thead>
+        <tr>
+          <th>Body field</th>
+          <th>Required</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="param-name">keys</code></td>
+          <td>yes</td>
+          <td>Array of the keys to resolve, 1–1000 per request. Values are coerced to strings, so a numeric FIPS column works as-is. Order is preserved: <code>results[i]</code> corresponds to <code>keys[i]</code>.</td>
+        </tr>
+        <tr>
+          <td><code class="param-name">context</code></td>
+          <td>no</td>
+          <td>Object of hints that bias matching — <code>layer</code>, <code>country</code>, <code>parent</code> (see below). Omit it entirely if you don't know what your keys are.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div class="tablewrap" style="margin-top:1rem;">
+    <table>
+      <thead>
+        <tr>
+          <th>Context field</th>
+          <th>Options</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="param-name">layer</code></td>
+          <td>
+            <div class="options">
+              <span class="opt">countries</span>
+              <span class="opt">regions</span>
+              <span class="opt">districts</span>
+              <span class="opt">postal</span>
+            </div>
+          </td>
+          <td>What the keys are. Any other value is a <code>400</code>. Without it the layer is inferred.</td>
+        </tr>
+        <tr>
+          <td><code class="param-name">country</code></td>
+          <td><div class="options"><span class="opt">{ISO2}</span></div></td>
+          <td>Restrict to one country — <code>{"country": "US"}</code> keeps <code>Georgia</code> the state rather than the country. Case-insensitive.</td>
+        </tr>
+        <tr>
+          <td><code class="param-name">parent</code></td>
+          <td><div class="options"><span class="opt">{gid}</span></div></td>
+          <td>Restrict to one parent region — <code>{"parent": "US-TX"}</code> for a column of Texas counties.</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p class="note" style="margin-top:1rem;">Context is a bias, not a filter: a contradicted hint lowers a candidate's score rather than removing it, so a stray country name in a column of US states still resolves — with a lower <code>confidence</code>. Beyond three keys the resolver also derives its own <em>consensus</em> from the keys that matched cleanly, which is why a batch of state names disambiguates itself without any context at all.</p>
+
+    <h3 style="margin-top:2rem; margin-bottom:0.75rem; font-size:14px; letter-spacing:0.05em; text-transform:uppercase; color:var(--muted);">Response</h3>
+    <p style="margin-bottom:1rem;"><code>{"keys": ["Mass", "Deutschland", "Xanadu"]}</code>, abridged:</p>
+    <pre>{
+  "requestId":     "3379f2cd-…",
+  "indexBuiltAt":  "2026-07-14T15:50:01.140Z",
+  "consensus":     { "layer": "regions", "country": "US", "anchorCount": 3 },
+  "counts":        { "resolved": 1, "low_confidence": 1, "miss": 1 },
+  "results": [
+    {
+      "key":        "Mass",
+      "status":     "resolved",
+      "confidence": 0.99,
+      "gid":        "US-MA",
+      "name":       "Massachusetts",
+      "layer":      "regions",
+      "parent":     "US",
+      "crosswalk":  { "fipsState": "25", "postal": "MA" },
+      "explanation": {
+        "normalized": "mass",
+        "tier":       "exact_name",
+        "matched":    "mass",
+        "nameType":   "alias",
+        "source":     "us-states.json",
+        "factors":    ["consensus_layer_match", "consensus_country_match"]
+      }
+    },
+    { "key": "Deutschland", "status": "low_confidence", "gid": "DE", "…": "…" },
+    { "key": "Xanadu", "status": "miss", "confidence": 0, "…": "…" }
+  ]
+}</pre>
+
+    <p style="margin-top:1rem;">The <code>gid</code> on each result is the join key for <code>/v1/geo</code> — that is the whole point of the call. <code>crosswalk</code> carries the entity's other known codes (<code>iso2</code>, <code>iso3</code>, <code>isoNum</code>, <code>fips</code>, <code>fipsState</code>, <code>postal</code>, <code>zcta</code>), and <code>explanation</code> records why the match was made, so a bad resolution is auditable rather than mysterious.</p>
+
+    <div class="param-grid" style="margin-top:1.5rem;">
+      <div class="param-row">
+        <div class="param-name">resolved</div>
+        <div class="param-desc">Confident single match. Use <code>gid</code> directly.</div>
+      </div>
+      <div class="param-row">
+        <div class="param-name">ambiguous</div>
+        <div class="param-desc">A strong match, but the runner-up is close behind. <code>gid</code> holds the best guess and <code>candidates</code> lists the top 3 with their confidences — the place to prompt a human or apply your own tie-break.</div>
+      </div>
+      <div class="param-row">
+        <div class="param-name">low_confidence</div>
+        <div class="param-desc">Best match scored below the resolution threshold. <code>gid</code> and <code>candidates</code> are still returned; treat as a suggestion, not an answer.</div>
+      </div>
+      <div class="param-row">
+        <div class="param-name">miss</div>
+        <div class="param-desc">Nothing matched. Only <code>key</code>, <code>status</code>, <code>confidence: 0</code>, and <code>explanation.normalized</code> are present — there is no <code>gid</code>, so guard for it.</div>
+      </div>
+    </div>
+
+    <p class="note" style="margin-top:1rem;"><code>counts</code> tallies the statuses so you can check a batch without walking it. A malformed body — <code>keys</code> missing, empty, not an array, over 1000 entries, or an invalid <code>context.layer</code> — returns <code>400</code> with <code>{"error": "…"}</code>.</p>
+
+    <p style="margin-top:1rem; font-size:12px; color:var(--muted);">No key required, CORS enabled — call it straight from the browser. <a href="/clean/">Clean</a> is this endpoint with a UI: paste a column, see what resolved, download the gids. The <a href="/examples/renewable-electricity.html">renewable electricity</a> example joins a real dataset by country name in one call.</p>
   </section>
 
   <!-- ── ISO Reference ── -->

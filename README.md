@@ -14,6 +14,6 @@ It covers countries, administrative regions and districts, postal areas, cities
 and capitals, and physical layers like rivers, lakes, and coastlines —
 filterable by continent or country and available at low, medium, or high
 resolution. See the [documentation](https://mapjson.com/docs/) for the full
-parameter reference and browse [30+ live examples](https://mapjson.com/examples/)
+parameter reference and browse [50+ live examples](https://mapjson.com/examples/)
 — world maps, choropleths, orthographic globes, US counties, and generative map
 art — each with copy-paste code. Learn more at [mapjson.com](https://mapjson.com).

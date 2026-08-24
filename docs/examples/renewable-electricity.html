@@ -217,7 +217,7 @@
   <section>
     <h2>API Calls</h2>
     <pre>// live data — Our World in Data (keyed by country names)
-https://ourworldindata.org/grapher/share-electricity-renewables.csv?csvType=filtered
+https://ourworldindata.org/grapher/electricity-mix.csv?frequency=annual&amp;metric=share_of_generation&amp;source=renewables&amp;csvType=filtered
 
 // resolve those names to countries — mapjson ontology (up to 1000 keys per call)
 POST https://api.mapjson.com/v1/resolve  { "keys": ["Turkey", "East Timor", "Czechia", …] }
@@ -266,7 +266,7 @@ https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=mediu
 
   (async function(){
     const [rows, world] = await Promise.all([
-      d3.csv("https://ourworldindata.org/grapher/share-electricity-renewables.csv?csvType=filtered&amp;useColumnShortNames=true"),
+      d3.csv("https://ourworldindata.org/grapher/electricity-mix.csv?frequency=annual&amp;metric=share_of_generation&amp;source=renewables&amp;csvType=filtered&amp;useColumnShortNames=true"),
       d3.json("https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=medium&amp;properties=iso2,name&amp;format=geojson"),
     ]);
     const valByName = {}; rows.forEach(r =&gt; { if (r[COL] !== "" &amp;&amp; r[COL] != null) valByName[r.entity] = +r[COL]; });
@@ -318,7 +318,7 @@ https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=mediu
 
   (async function(){
     const [rows, world] = await Promise.all([
-      d3.csv("https://ourworldindata.org/grapher/share-electricity-renewables.csv?csvType=filtered&useColumnShortNames=true"),
+      d3.csv("https://ourworldindata.org/grapher/electricity-mix.csv?frequency=annual&metric=share_of_generation&source=renewables&csvType=filtered&useColumnShortNames=true"),
       d3.json("https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=medium&properties=iso2,name&format=geojson"),
     ]);
     const valByName = {}; rows.forEach(r => { if (r[COL] !== "" && r[COL] != null) valByName[r.entity] = +r[COL]; });

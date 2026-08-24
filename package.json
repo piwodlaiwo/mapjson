@@ -19,7 +19,8 @@
     "upload": "node pipeline/upload.js",
     "deploy": "wrangler deploy",
     "preview": "wrangler dev",
-    "test": "node test.js"
+    "test": "node test.js",
+    "test:links": "node test-links.js"
   },
   "dependencies": {
     "mapshaper": "^0.6.79",

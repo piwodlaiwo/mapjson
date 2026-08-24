@@ -42,7 +42,7 @@ There are **three separate deployments**. Never confuse them.
 mapjson/
 ├── docs/                  # GitHub Pages site (mapjson.com)
 │   ├── index.html         # Homepage with live globe map
-│   ├── docs.html          # API reference
+│   ├── docs/index.html    # API reference (served at /docs/)
 │   └── examples/          # Example maps
 │       └── index.html     # Examples gallery — must stay in sync with example files
 ├── worker/                # Cloudflare API worker (api.mapjson.com)
@@ -63,7 +63,8 @@ mapjson/
 │   ├── process.js         # mapshaper: convert + simplify
 │   ├── build-properties.js
 │   └── upload.js          # Push processed topojson to R2 bucket
-├── test.js                # Consistency check: examples ↔ VALID_LAYERS ↔ docs.html
+├── test.js                # Consistency check: examples ↔ VALID_LAYERS ↔ docs
+├── test-links.js          # Check 4: external data sources still browser-reachable
 └── wrangler.jsonc         # Pipeline worker config — NOT the API, NOT docs
 ```
 
@@ -78,7 +79,16 @@ mapjson/
 After adding a new layer or example, always run `npm test` before deploying. It checks:
 1. Every example file is linked from `docs/examples/index.html`
 2. Every `layer=` used in examples exists in `worker/src/validate.js` `VALID_LAYERS`
-3. Every `VALID_LAYERS` entry is documented in `docs/docs.html`
+3. Every `VALID_LAYERS` entry is documented in `docs/docs/index.html`
+4. Every external data URL the pages fetch is still reachable **from a browser** —
+   sent with an `Origin` header, redirects not followed, missing CORS treated as a
+   failure. This is the check that catches a third-party dataset moving out from
+   under an example (see `test-links.js`). It needs network: with none it warns and
+   skips rather than failing, and `SKIP_LINK_CHECK=1 npm test` opts out. Run it alone
+   with `npm run test:links`. URLs that only ever appear as templates in the pages
+   (`${lat}`, tile `{z}/{x}/{y}`) can't be scanned — they have stand-in entries in
+   `EXTRA_URLS`, so **add one there when an example starts using a new templated
+   source**, or it goes unchecked.
 
 ## API quick reference
 
@@ -105,7 +115,7 @@ When adding a new opt-in property, these places must ALL be updated or the prope
 
 1. **`pipeline/build-properties.js`** — compute and store the value in `props[key]`
 2. **`worker/src/merge-props.js`** — add the key to `ALL_PROP_KEYS` (the allowlist that gates what `mergeProperties` returns)
-3. **`docs/docs.html`** — add the key to the `properties` options list in the params table AND add a row to the Properties section below — both exist and can drift independently
+3. **`docs/docs/index.html`** — add the key to the `properties` options list in the params table AND add a row to the Properties section below — both exist and can drift independently
 4. **Regenerate and ship the data**: `npm run build-props` (rebuilds `processed/properties.json` locally) → `npm run upload` (pushes it to R2) → `cd worker && npm run deploy` (redeploys the worker so the new allowlist key takes effect) — steps 1–3 alone only change source files, not the live API
 
 Missing step 2 means the API silently ignores the property even though it's in properties.json. Missing step 4 means the code is correct but the live API still doesn't reflect it.
@@ -128,7 +138,7 @@ Missing step 2 means the API silently ignores the property even though it's in p
 ### Examples that pull external data
 
 - The best examples **join outside data to mapjson geometry** (the map API's actual purpose); pure geometry-derived visuals are weaker shares. Where the external dataset is keyed by messy country names, join via **`POST /v1/resolve`** (up to 1000 keys/call) — it maps aliases/spellings/ISO codes to gids and drops non-country aggregates.
-- External sources must be **browser-CORS-enabled** (fetched client-side). Verified working: **USGS** earthquake feeds, **Open-Meteo**, **Our World in Data** grapher CSVs (`ourworldindata.org/grapher/<slug>.csv?csvType=filtered`), anything on **raw.githubusercontent.com**. **World Bank `api.worldbank.org` is browser-blocked** (sends no `Access-Control-Allow-Origin` to a request with an `Origin` header) — a plain `curl` check misses this because curl sends no `Origin`; test CORS with `curl -H "Origin: http://localhost:8000" -D -`.
+- External sources must be **browser-CORS-enabled** (fetched client-side). Verified working: **USGS** earthquake feeds, **Open-Meteo**, **Our World in Data** grapher CSVs (`ourworldindata.org/grapher/<slug>.csv?csvType=filtered`), anything on **raw.githubusercontent.com**. Always test CORS with an explicit Origin — `curl -H "Origin: https://mapjson.com" -D -` — because a plain `curl` sends no `Origin` and servers that block cross-origin requests answer it happily. (`api.worldbank.org` was browser-blocked and was listed here as unusable; as of 2026-08-23 it returns `access-control-allow-origin: *` and works client-side.) Note a redirect is a CORS hop too: if the 3xx response itself carries no `Access-Control-Allow-Origin`, the browser refuses to follow it even when the destination is fine — that is how the OWID renewables example broke when the grapher slug was renamed.
 
 ## frame.js — prototype library (in `frame/`, UNCOMMITTED)
 

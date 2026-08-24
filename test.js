@@ -4,10 +4,12 @@
  * 1. Every example .html file is linked from docs/examples/index.html
  * 2. Every layer= value used in any example exists in worker/src/validate.js VALID_LAYERS
  * 3. Every layer in VALID_LAYERS is documented in docs/docs.html
+ * 4. Every external data URL the pages fetch is still browser-reachable
  */
 
 const fs   = require('fs');
 const path = require('path');
+const { checkLinks } = require('./test-links');
 
 const ROOT     = __dirname;
 const EXAMPLES = path.join(ROOT, 'docs/examples');
@@ -82,6 +84,18 @@ for (const layer of validLayers) {
                               : fail(`layer=${layer} is in VALID_LAYERS but missing from docs.html`);
 }
 
-// ── Result ────────────────────────────────────────────────────────────────────
-console.log('\n' + (failures === 0 ? 'All checks passed.' : `${failures} check(s) failed.`));
-process.exit(failures > 0 ? 1 : 0);
+// ── Check 4: external data sources ───────────────────────────────────────────
+// Network-dependent, so it runs last and reports 'skipped' rather than failing
+// when there is no connection. SKIP_LINK_CHECK=1 opts out entirely.
+(async () => {
+  if (process.env.SKIP_LINK_CHECK) {
+    console.log('\nCheck 4: external data sources (skipped — SKIP_LINK_CHECK set)');
+  } else {
+    console.log('\nCheck 4: external data sources reachable from a browser');
+    await checkLinks({ pass, fail, warn }, path.join(ROOT, 'docs'));
+  }
+
+  // ── Result ──────────────────────────────────────────────────────────────────
+  console.log('\n' + (failures === 0 ? 'All checks passed.' : `${failures} check(s) failed.`));
+  process.exit(failures > 0 ? 1 : 0);
+})();

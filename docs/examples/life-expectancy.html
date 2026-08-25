@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Sixty Years of Life Expectancy | MapJSON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An animated world choropleth of life expectancy from 1960 to 2023, joining World Bank indicator data to mapjson geometry on ISO2 country codes.">
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1a1a1a;
+      --bg: #fafafa;
+      --accent: #b0402f;
+      --muted: #9b9a94;
+      --border: #e5e4df;
+      --code-bg: #efeeea;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 300;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link {
+      display: inline-block;
+      padding: 2.5rem 0 0;
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .back-link:hover { color: var(--ink); }
+    header {
+      border-bottom: 1.5px solid var(--ink);
+      padding: 1rem 0 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    header .tag {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.25rem;
+      font-weight: 400;
+      line-height: 1.1;
+    }
+    header p { color: var(--muted); margin-top: 0.6rem; font-size: 12px; max-width: 640px; line-height: 1.7; }
+    h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    section { margin-bottom: 2.5rem; }
+    section p { max-width: 680px; }
+    section p + p { margin-top: 0.9rem; }
+    .map-wrap {
+      margin-bottom: 1.25rem;
+      border: 1px solid var(--border);
+      background: #1b3a4b;
+      line-height: 0;
+      position: relative;
+    }
+    .map-wrap svg { width: 100%; display: block; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.45rem; }
+    .legend-swatch { width: 14px; height: 14px; border: 1px solid var(--border); flex-shrink: 0; }
+    pre {
+      background: var(--code-bg);
+      border-left: 3px solid var(--ink);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.65;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 48px;
+    }
+    .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink); text-decoration: none; letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); }
+    .tooltip {
+      position: absolute;
+      background: #1a1a1a;
+      color: #fafafa;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      padding: 6px 10px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      white-space: nowrap;
+      line-height: 1.6;
+    }
+    .nav-brand { display: inline-flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink, #1a1a1a); text-decoration: none; }
+    .nav-brand .b { font-size: 19px; font-weight: 500; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 12px; height: 12px; background: var(--ink, #1a1a1a); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 4.5px; height: 4.5px; background: var(--bg, #fafafa); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 5px; }
+    /* type system: Space Grotesk display/body, IBM Plex Mono labels/params/code */
+    body { font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; }
+    .back-link, .tag, pre, code { font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; color: #a7a6a0; }
+    header p { font-size: 15px; line-height: 1.65; color: #4a4a45; max-width: 680px; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; }
+    section .note { font-size: 13px; }
+    section p { font-size: 15px; line-height: 1.65; color: #4a4a45; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    /* type system: nav + lockup (TYPOGRAPHY.md) */
+    .nav-links a { font-size: 12px; letter-spacing: 0.18em; color: #9b9a94; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { gap: 4px; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; }
+    .nav-brand .pin { width: 14px; height: 14px; }
+    .nav-brand .pin i { width: 5px; height: 5px; }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  </style>
+<style>
+  /* nav type: definitive — IBM Plex Mono per TYPOGRAPHY.md, identical on every page */
+  .nav-links a, nav .nav-links a, .topnav .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; }
+  .nav-links a:hover, .topnav .nav-links a:hover { color: var(--ink, #1a1a1a); }
+  .nav-links a.here, .topnav .nav-links a.here { color: var(--ink, #1a1a1a); font-weight: 500; }
+  .nav-brand, .topnav .nav-brand { display: inline-flex; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; text-decoration: none; color: var(--ink, #1a1a1a); letter-spacing: -0.01em; }
+  .nav-brand .b, .topnav .nav-brand .b { font-size: 21px; font-weight: 400; color: #c8c6c0; line-height: 1; }
+  .nav-brand .pin, .topnav .nav-brand .pin { width: 14px; height: 14px; }
+  .nav-brand .pin i, .topnav .nav-brand .pin i { width: 5px; height: 5px; }
+  .nav-brand .word, .topnav .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
+</style>
+  <style>
+  /* mobile: nav + page headers (TYPOGRAPHY.md responsive pass) */
+  @media (max-width: 640px) {
+    html, body { overflow-x: hidden; }
+    nav, .topnav { padding: 0 0.6rem; }
+    .nav-links, .topnav .nav-links { gap: 0.55rem; }
+    .nav-links a, nav .nav-links a, .topnav .nav-links a { font-size: 11px !important; letter-spacing: 0.08em !important; }
+    .nav-brand .b, .topnav .nav-brand .b { font-size: 16px; }
+    .nav-brand .pin, .topnav .nav-brand .pin { width: 9px; height: 9px; }
+    .nav-brand .pin i, .topnav .nav-brand .pin i { width: 3.2px; height: 3.2px; }
+    .nav-brand .word, .topnav .nav-brand .word { font-size: 13px; margin-left: 4px; }
+
+    header h1, .hero h1 { font-size: 2rem !important; letter-spacing: -0.02em !important; line-height: 1.1 !important; }
+    header .tag, header .tagline, .hero-eyebrow, header p.tagline { font-size: 10px !important; letter-spacing: 0.18em !important; }
+    header p:not(.tagline), .hero p { font-size: 13px !important; }
+    .card { padding: 24px 20px 20px !important; }
+  }
+  </style>
+<style>
+.map-wrap{background:#efece6;}
+  .live{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6b6a63;margin:0 0 1.25rem;}
+  .live b{color:#2c5f7c;}
+  .controls{display:flex;align-items:center;gap:14px;margin:0 0 2.5rem;}
+  .controls button{font-family:'IBM Plex Mono',monospace;font-size:13px;width:72px;padding:5px 0;
+                   border:1px solid #3b3a35;background:#fff;color:#3b3a35;cursor:pointer;}
+  .controls button:hover{background:#3b3a35;color:#fafafa;}
+  .controls input{flex:1;accent-color:#2c5f7c;}
+  .tip{position:absolute;background:#26251f;color:#f4f1ea;font-family:'IBM Plex Mono',monospace;
+       font-size:11px;padding:5px 9px;pointer-events:none;opacity:0;white-space:nowrap;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+
+<div class="page">
+  <a class="back-link" href="/examples/">&larr; Examples</a>
+  <header>
+    <div class="tag">World Bank · 1960–2023 · animated choropleth</div>
+    <h1>Sixty years of life expectancy</h1>
+    <p>The World Bank publishes life expectancy at birth for every country back to 1960 — 64 years of it arrive in a single call. Each year is a frame: press play and watch the map lighten as the post-war gains spread, with the dips where they happened — Cambodia in the late 1970s, Rwanda in 1994.</p>
+  </header>
+  <p class="live" id="live">fetching 64 years from the World Bank…</p>
+  <div class="map-wrap" id="map-wrap"><div class="tip" id="tip"></div></div>
+  <div class="controls">
+    <button id="play">play</button>
+    <input type="range" id="slider" min="1960" max="2023" value="1960" step="1">
+  </div>
+  <section>
+    <h2>API Calls</h2>
+    <pre>// which World Bank codes are countries rather than aggregates
+https://api.worldbank.org/v2/country?format=json&amp;per_page=400
+
+// 64 years of life expectancy for every country, in one call
+https://api.worldbank.org/v2/country/all/indicator/SP.DYN.LE00.IN?format=json&amp;per_page=20000&amp;date=1960:2023
+
+// geometry — mapjson
+https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=medium&amp;properties=iso2,name</pre>
+  </section>
+  <section>
+    <h2>Joining on gid</h2>
+    <p>The World Bank keys its rows by ISO alpha-2 in <code>country.id</code>, which is exactly
+      mapjson's <code>gid</code> for the countries layer — so the join is a straight lookup, with no
+      name matching involved. (When a dataset gives you names instead, that is what
+      <a href="/docs/#resolve">/v1/resolve</a> is for; the
+      <a href="renewable-electricity.html">renewable electricity</a> example takes that route.)</p>
+    <p>One catch is worth knowing about. The World Bank returns regional and income aggregates in
+      the same response as countries, and eleven of their aggregate codes collide with mapjson gids
+      for tiny territories — <code>XD</code> is <em>High income</em> to them and Dhekelia to us,
+      <code>XT</code> is <em>Upper middle income</em> and Bir Tawil. A naive join paints those
+      aggregate values onto real map features, and because the features are specks you would never
+      notice. The fix is the first call above: <code>/v2/country</code> marks every aggregate with
+      <code>region.id === "NA"</code>, so they can be dropped before the join.</p>
+  </section>
+  <section>
+    <h2>Code</h2>
+    <pre>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;title&gt;Life expectancy, 1960–2023&lt;/title&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js&quot;&gt;&lt;/script&gt;
+&lt;style&gt;
+  body { margin: 0; background: #efece6; font: 13px &#x27;IBM Plex Mono&#x27;, ui-monospace, monospace; color: #3b3a35; }
+  #map-wrap { position: relative; }
+  #map-wrap svg { width: 100%; display: block; }
+  .controls { display: flex; align-items: center; gap: 14px; padding: 12px 14px; }
+  .controls button { font: inherit; width: 64px; padding: 5px 0; border: 1px solid #3b3a35; background: #fff; cursor: pointer; }
+  .controls input { flex: 1; accent-color: #2c5f7c; }
+  .tip { position: absolute; background: #26251f; color: #f4f1ea; font-size: 11px; padding: 5px 9px;
+         pointer-events: none; opacity: 0; white-space: nowrap; }
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&quot;map-wrap&quot;&gt;&lt;div class=&quot;tip&quot; id=&quot;tip&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;controls&quot;&gt;
+  &lt;button id=&quot;play&quot;&gt;play&lt;/button&gt;
+  &lt;input type=&quot;range&quot; id=&quot;slider&quot; min=&quot;1960&quot; max=&quot;2023&quot; value=&quot;1960&quot; step=&quot;1&quot;&gt;
+&lt;/div&gt;
+&lt;script&gt;
+const FROM = 1960, TO = 2023, STEP_MS = 200;
+const WB_SERIES = &quot;https://api.worldbank.org/v2/country/all/indicator/SP.DYN.LE00.IN&quot;
+                + &quot;?format=json&amp;per_page=20000&amp;date=&quot; + FROM + &quot;:&quot; + TO;
+const WB_COUNTRIES = &quot;https://api.worldbank.org/v2/country?format=json&amp;per_page=400&quot;;
+const GEO = &quot;https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=medium&quot;
+          + &quot;&amp;properties=iso2,name&amp;format=geojson&quot;;
+
+// The World Bank mixes regional and income aggregates in with countries, and
+// eleven of their aggregate codes collide with real mapjson gids for tiny
+// territories — &quot;XD&quot; is High income to them and Dhekelia to us, &quot;XT&quot; is Upper
+// middle income and Bir Tawil. /v2/country flags aggregates with region.id
+// &quot;NA&quot;, so this drops them before the join instead of painting them on the map.
+async function realCountryCodes() {
+  const [, rows] = await d3.json(WB_COUNTRIES);
+  return new Set(rows.filter(r =&gt; r.region.id !== &quot;NA&quot;).map(r =&gt; r.iso2Code));
+}
+
+(async function () {
+  const [codes, wb, world] = await Promise.all([
+    realCountryCodes(),
+    d3.json(WB_SERIES),
+    d3.json(GEO),
+  ]);
+
+  // year -&gt; Map(iso2 -&gt; life expectancy)
+  const byYear = new Map();
+  for (const r of wb[1]) {
+    if (r.value == null || !codes.has(r.country.id)) continue;
+    if (!byYear.has(r.date)) byYear.set(r.date, new Map());
+    byYear.get(r.date).set(r.country.id, r.value);
+  }
+
+  const W = 1200, H = 600;
+  const svg = d3.select(&quot;#map-wrap&quot;).append(&quot;svg&quot;).attr(&quot;viewBox&quot;, &quot;0 0 &quot; + W + &quot; &quot; + H);
+  const projection = d3.geoEqualEarth().rotate([-11, 0]);
+  const path = d3.geoPath(projection);
+  projection.fitExtent([[10, 10], [W - 10, H - 70]], world);
+
+  const color = d3.scaleSequential(d3.interpolateYlGnBu).domain([35, 85]).clamp(true);
+  const tip = d3.select(&quot;#tip&quot;);
+
+  const shapes = svg.append(&quot;g&quot;).selectAll(&quot;path&quot;).data(world.features).join(&quot;path&quot;)
+    .attr(&quot;d&quot;, path)
+    .attr(&quot;stroke&quot;, &quot;#efece6&quot;)
+    .attr(&quot;stroke-width&quot;, 0.4)
+    .on(&quot;mousemove&quot;, function (e, d) {
+      const v = byYear.get(String(year))?.get(d.properties.iso2);
+      tip.style(&quot;opacity&quot;, 1)
+         .style(&quot;left&quot;, (e.offsetX + 14) + &quot;px&quot;)
+         .style(&quot;top&quot;, (e.offsetY - 6) + &quot;px&quot;)
+         .html(d.properties.name + (v == null ? &quot; · no data&quot; : &quot; · &lt;b&gt;&quot; + v.toFixed(1) + &quot;&lt;/b&gt; years&quot;));
+    })
+    .on(&quot;mouseout&quot;, () =&gt; tip.style(&quot;opacity&quot;, 0));
+
+  // Baked into the SVG rather than the HTML controls so a saved PNG says which
+  // year it is.
+  const stamp = svg.append(&quot;text&quot;).attr(&quot;x&quot;, 16).attr(&quot;y&quot;, H - 22)
+    .attr(&quot;font-family&quot;, &quot;&#x27;IBM Plex Mono&#x27;, ui-monospace, monospace&quot;)
+    .attr(&quot;font-size&quot;, 40).attr(&quot;font-weight&quot;, 600).attr(&quot;fill&quot;, &quot;#26251f&quot;);
+
+  const legend = svg.append(&quot;g&quot;).attr(&quot;transform&quot;, &quot;translate(&quot; + (W - 330) + &quot;,&quot; + (H - 46) + &quot;)&quot;);
+  const grad = svg.append(&quot;defs&quot;).append(&quot;linearGradient&quot;).attr(&quot;id&quot;, &quot;ramp&quot;);
+  grad.selectAll(&quot;stop&quot;).data(d3.range(0, 1.01, 0.1)).join(&quot;stop&quot;)
+    .attr(&quot;offset&quot;, d =&gt; (d * 100) + &quot;%&quot;)
+    .attr(&quot;stop-color&quot;, d =&gt; color(35 + d * 50));
+  legend.append(&quot;rect&quot;).attr(&quot;width&quot;, 240).attr(&quot;height&quot;, 10).attr(&quot;fill&quot;, &quot;url(#ramp)&quot;);
+  legend.append(&quot;text&quot;).attr(&quot;y&quot;, 26).attr(&quot;font-size&quot;, 12).attr(&quot;fill&quot;, &quot;#6b6a63&quot;)
+    .attr(&quot;font-family&quot;, &quot;&#x27;IBM Plex Mono&#x27;, ui-monospace, monospace&quot;).text(&quot;35&quot;);
+  legend.append(&quot;text&quot;).attr(&quot;x&quot;, 240).attr(&quot;y&quot;, 26).attr(&quot;text-anchor&quot;, &quot;end&quot;).attr(&quot;font-size&quot;, 12)
+    .attr(&quot;font-family&quot;, &quot;&#x27;IBM Plex Mono&#x27;, ui-monospace, monospace&quot;)
+    .attr(&quot;fill&quot;, &quot;#6b6a63&quot;).text(&quot;85 years&quot;);
+
+  let year = FROM, timer = null;
+  const slider = document.getElementById(&quot;slider&quot;);
+  const playBtn = document.getElementById(&quot;play&quot;);
+
+  function draw() {
+    const vals = byYear.get(String(year)) || new Map();
+    shapes.attr(&quot;fill&quot;, d =&gt; {
+      const v = vals.get(d.properties.iso2);
+      return v == null ? &quot;#d9d5cc&quot; : color(v);
+    });
+    stamp.text(year);
+    slider.value = year;
+  }
+
+  function stop() { if (timer) { timer.stop(); timer = null; } playBtn.textContent = &quot;play&quot;; }
+  function start() {
+    if (year &gt;= TO) year = FROM;
+    playBtn.textContent = &quot;pause&quot;;
+    timer = d3.interval(() =&gt; {
+      year = year &gt;= TO ? FROM : year + 1;
+      draw();
+    }, STEP_MS);
+  }
+
+  playBtn.onclick = () =&gt; (timer ? stop() : start());
+  slider.oninput = () =&gt; { stop(); year = +slider.value; draw(); };
+
+  draw();
+  start();
+
+  // The example page on mapjson.com has a status line; the standalone does not.
+  const live = document.getElementById(&quot;live&quot;);
+  if (live) live.innerHTML = &quot;&lt;b&gt;&quot; + byYear.get(String(TO)).size + &quot;&lt;/b&gt; countries in &quot; + TO
+    + &quot;, &quot; + byYear.size + &quot; years of them, from one World Bank call — press play.&quot;; 
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+const FROM = 1960, TO = 2023, STEP_MS = 200;
+const WB_SERIES = "https://api.worldbank.org/v2/country/all/indicator/SP.DYN.LE00.IN"
+                + "?format=json&per_page=20000&date=" + FROM + ":" + TO;
+const WB_COUNTRIES = "https://api.worldbank.org/v2/country?format=json&per_page=400";
+const GEO = "https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=medium"
+          + "&properties=iso2,name&format=geojson";
+
+// The World Bank mixes regional and income aggregates in with countries, and
+// eleven of their aggregate codes collide with real mapjson gids for tiny
+// territories — "XD" is High income to them and Dhekelia to us, "XT" is Upper
+// middle income and Bir Tawil. /v2/country flags aggregates with region.id
+// "NA", so this drops them before the join instead of painting them on the map.
+async function realCountryCodes() {
+  const [, rows] = await d3.json(WB_COUNTRIES);
+  return new Set(rows.filter(r => r.region.id !== "NA").map(r => r.iso2Code));
+}
+
+(async function () {
+  const [codes, wb, world] = await Promise.all([
+    realCountryCodes(),
+    d3.json(WB_SERIES),
+    d3.json(GEO),
+  ]);
+
+  // year -> Map(iso2 -> life expectancy)
+  const byYear = new Map();
+  for (const r of wb[1]) {
+    if (r.value == null || !codes.has(r.country.id)) continue;
+    if (!byYear.has(r.date)) byYear.set(r.date, new Map());
+    byYear.get(r.date).set(r.country.id, r.value);
+  }
+
+  const W = 1200, H = 600;
+  const svg = d3.select("#map-wrap").append("svg").attr("viewBox", "0 0 " + W + " " + H);
+  const projection = d3.geoEqualEarth().rotate([-11, 0]);
+  const path = d3.geoPath(projection);
+  projection.fitExtent([[10, 10], [W - 10, H - 70]], world);
+
+  const color = d3.scaleSequential(d3.interpolateYlGnBu).domain([35, 85]).clamp(true);
+  const tip = d3.select("#tip");
+
+  const shapes = svg.append("g").selectAll("path").data(world.features).join("path")
+    .attr("d", path)
+    .attr("stroke", "#efece6")
+    .attr("stroke-width", 0.4)
+    .on("mousemove", function (e, d) {
+      const v = byYear.get(String(year))?.get(d.properties.iso2);
+      tip.style("opacity", 1)
+         .style("left", (e.offsetX + 14) + "px")
+         .style("top", (e.offsetY - 6) + "px")
+         .html(d.properties.name + (v == null ? " · no data" : " · <b>" + v.toFixed(1) + "</b> years"));
+    })
+    .on("mouseout", () => tip.style("opacity", 0));
+
+  // Baked into the SVG rather than the HTML controls so a saved PNG says which
+  // year it is.
+  const stamp = svg.append("text").attr("x", 16).attr("y", H - 22)
+    .attr("font-family", "'IBM Plex Mono', ui-monospace, monospace")
+    .attr("font-size", 40).attr("font-weight", 600).attr("fill", "#26251f");
+
+  const legend = svg.append("g").attr("transform", "translate(" + (W - 330) + "," + (H - 46) + ")");
+  const grad = svg.append("defs").append("linearGradient").attr("id", "ramp");
+  grad.selectAll("stop").data(d3.range(0, 1.01, 0.1)).join("stop")
+    .attr("offset", d => (d * 100) + "%")
+    .attr("stop-color", d => color(35 + d * 50));
+  legend.append("rect").attr("width", 240).attr("height", 10).attr("fill", "url(#ramp)");
+  legend.append("text").attr("y", 26).attr("font-size", 12).attr("fill", "#6b6a63")
+    .attr("font-family", "'IBM Plex Mono', ui-monospace, monospace").text("35");
+  legend.append("text").attr("x", 240).attr("y", 26).attr("text-anchor", "end").attr("font-size", 12)
+    .attr("font-family", "'IBM Plex Mono', ui-monospace, monospace")
+    .attr("fill", "#6b6a63").text("85 years");
+
+  let year = FROM, timer = null;
+  const slider = document.getElementById("slider");
+  const playBtn = document.getElementById("play");
+
+  function draw() {
+    const vals = byYear.get(String(year)) || new Map();
+    shapes.attr("fill", d => {
+      const v = vals.get(d.properties.iso2);
+      return v == null ? "#d9d5cc" : color(v);
+    });
+    stamp.text(year);
+    slider.value = year;
+  }
+
+  function stop() { if (timer) { timer.stop(); timer = null; } playBtn.textContent = "play"; }
+  function start() {
+    if (year >= TO) year = FROM;
+    playBtn.textContent = "pause";
+    timer = d3.interval(() => {
+      year = year >= TO ? FROM : year + 1;
+      draw();
+    }, STEP_MS);
+  }
+
+  playBtn.onclick = () => (timer ? stop() : start());
+  slider.oninput = () => { stop(); year = +slider.value; draw(); };
+
+  draw();
+  start();
+
+  // The example page on mapjson.com has a status line; the standalone does not.
+  const live = document.getElementById("live");
+  if (live) live.innerHTML = "<b>" + byYear.get(String(TO)).size + "</b> countries in " + TO
+    + ", " + byYear.size + " years of them, from one World Bank call — press play."; 
+})();
+</script>
+<script src="example-widgets.js" defer></script>
+</body>
+</html>

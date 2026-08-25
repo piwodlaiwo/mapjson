@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Wealth and Health | MapJSON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A linked scatter and world map of GDP per capita against life expectancy, coloured by mapjson continent — hover either one to highlight the other.">
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1a1a1a;
+      --bg: #fafafa;
+      --accent: #b0402f;
+      --muted: #9b9a94;
+      --border: #e5e4df;
+      --code-bg: #efeeea;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 300;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link {
+      display: inline-block;
+      padding: 2.5rem 0 0;
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .back-link:hover { color: var(--ink); }
+    header {
+      border-bottom: 1.5px solid var(--ink);
+      padding: 1rem 0 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    header .tag {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.25rem;
+      font-weight: 400;
+      line-height: 1.1;
+    }
+    header p { color: var(--muted); margin-top: 0.6rem; font-size: 12px; max-width: 640px; line-height: 1.7; }
+    h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    section { margin-bottom: 2.5rem; }
+    section p { max-width: 680px; }
+    section p + p { margin-top: 0.9rem; }
+    .map-wrap {
+      margin-bottom: 1.25rem;
+      border: 1px solid var(--border);
+      background: #1b3a4b;
+      line-height: 0;
+      position: relative;
+    }
+    .map-wrap svg { width: 100%; display: block; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.45rem; }
+    .legend-swatch { width: 14px; height: 14px; border: 1px solid var(--border); flex-shrink: 0; }
+    pre {
+      background: var(--code-bg);
+      border-left: 3px solid var(--ink);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.65;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 48px;
+    }
+    .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink); text-decoration: none; letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); }
+    .tooltip {
+      position: absolute;
+      background: #1a1a1a;
+      color: #fafafa;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      padding: 6px 10px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      white-space: nowrap;
+      line-height: 1.6;
+    }
+    .nav-brand { display: inline-flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink, #1a1a1a); text-decoration: none; }
+    .nav-brand .b { font-size: 19px; font-weight: 500; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 12px; height: 12px; background: var(--ink, #1a1a1a); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 4.5px; height: 4.5px; background: var(--bg, #fafafa); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 5px; }
+    /* type system: Space Grotesk display/body, IBM Plex Mono labels/params/code */
+    body { font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; }
+    .back-link, .tag, pre, code { font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; color: #a7a6a0; }
+    header p { font-size: 15px; line-height: 1.65; color: #4a4a45; max-width: 680px; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; }
+    section .note { font-size: 13px; }
+    section p { font-size: 15px; line-height: 1.65; color: #4a4a45; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    /* type system: nav + lockup (TYPOGRAPHY.md) */
+    .nav-links a { font-size: 12px; letter-spacing: 0.18em; color: #9b9a94; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { gap: 4px; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; }
+    .nav-brand .pin { width: 14px; height: 14px; }
+    .nav-brand .pin i { width: 5px; height: 5px; }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  </style>
+<style>
+  /* nav type: definitive — IBM Plex Mono per TYPOGRAPHY.md, identical on every page */
+  .nav-links a, nav .nav-links a, .topnav .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; }
+  .nav-links a:hover, .topnav .nav-links a:hover { color: var(--ink, #1a1a1a); }
+  .nav-links a.here, .topnav .nav-links a.here { color: var(--ink, #1a1a1a); font-weight: 500; }
+  .nav-brand, .topnav .nav-brand { display: inline-flex; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; text-decoration: none; color: var(--ink, #1a1a1a); letter-spacing: -0.01em; }
+  .nav-brand .b, .topnav .nav-brand .b { font-size: 21px; font-weight: 400; color: #c8c6c0; line-height: 1; }
+  .nav-brand .pin, .topnav .nav-brand .pin { width: 14px; height: 14px; }
+  .nav-brand .pin i, .topnav .nav-brand .pin i { width: 5px; height: 5px; }
+  .nav-brand .word, .topnav .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
+</style>
+  <style>
+  /* mobile: nav + page headers (TYPOGRAPHY.md responsive pass) */
+  @media (max-width: 640px) {
+    html, body { overflow-x: hidden; }
+    nav, .topnav { padding: 0 0.6rem; }
+    .nav-links, .topnav .nav-links { gap: 0.55rem; }
+    .nav-links a, nav .nav-links a, .topnav .nav-links a { font-size: 11px !important; letter-spacing: 0.08em !important; }
+    .nav-brand .b, .topnav .nav-brand .b { font-size: 16px; }
+    .nav-brand .pin, .topnav .nav-brand .pin { width: 9px; height: 9px; }
+    .nav-brand .pin i, .topnav .nav-brand .pin i { width: 3.2px; height: 3.2px; }
+    .nav-brand .word, .topnav .nav-brand .word { font-size: 13px; margin-left: 4px; }
+
+    header h1, .hero h1 { font-size: 2rem !important; letter-spacing: -0.02em !important; line-height: 1.1 !important; }
+    header .tag, header .tagline, .hero-eyebrow, header p.tagline { font-size: 10px !important; letter-spacing: 0.18em !important; }
+    header p:not(.tagline), .hero p { font-size: 13px !important; }
+    .card { padding: 24px 20px 20px !important; }
+  }
+  </style>
+<style>
+.map-wrap{background:#efece6;}
+  .live{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6b6a63;margin:0 0 1.25rem;}
+  .live b{color:#2c5f7c;}
+  .tip{position:absolute;background:#26251f;color:#f4f1ea;font-family:'IBM Plex Mono',monospace;
+       font-size:11px;padding:5px 9px;pointer-events:none;opacity:0;white-space:nowrap;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+
+<div class="page">
+  <a class="back-link" href="/examples/">&larr; Examples</a>
+  <header>
+    <div class="tag">World Bank · two indicators · linked scatter + map</div>
+    <h1>Wealth and health</h1>
+    <p>Plot income against life expectancy and you get the Preston curve: steep at the poorest end, flattening once a country is comfortable. The scatter is the chart; the map is the index. Hover a circle to find that country on the map, or hover the map to find its circle — both are coloured by the <code>continent</code> property mapjson returns, so the two views always agree.</p>
+  </header>
+  <p class="live" id="live">fetching three World Bank indicators…</p>
+  <div class="map-wrap" id="map-wrap"><div class="tip" id="tip"></div></div>
+
+  <section>
+    <h2>API Calls</h2>
+    <pre>// which World Bank codes are countries rather than aggregates
+https://api.worldbank.org/v2/country?format=json&amp;per_page=400
+
+// three indicators for 2023 — income, life expectancy, population
+https://api.worldbank.org/v2/country/all/indicator/NY.GDP.PCAP.CD?format=json&amp;per_page=400&amp;date=2023
+https://api.worldbank.org/v2/country/all/indicator/SP.DYN.LE00.IN?format=json&amp;per_page=400&amp;date=2023
+https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json&amp;per_page=400&amp;date=2023
+
+// geometry + continent — mapjson
+https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=medium&amp;properties=iso2,name,continent</pre>
+  </section>
+  <section>
+    <h2>One SVG, two views</h2>
+    <p>The map and the scatter live in a single <code>&lt;svg&gt;</code> rather than two, which keeps
+      the linked hover to one selection on each side and means the save button exports both together
+      as one image.</p>
+    <p>Colour comes from mapjson rather than a lookup table in the page: asking for
+      <code>properties=continent</code> returns the continent alongside the geometry, so a circle and
+      its country are drawn from the same value. Three island nations — Maldives, Mauritius and
+      Seychelles — come back as <em>Seven seas (open ocean)</em>, which is how Natural Earth files
+      them; they keep that value here rather than being reassigned to a landmass.</p>
+    <p>The same aggregate-code collision described on the
+      <a href="life-expectancy.html">life expectancy</a> example applies to all three indicators, and
+      is handled the same way.</p>
+  </section>
+  <section>
+    <h2>Code</h2>
+    <pre>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;title&gt;Wealth and health, 2023&lt;/title&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js&quot;&gt;&lt;/script&gt;
+&lt;style&gt;
+  body { margin: 0; background: #efece6; font: 13px &#x27;IBM Plex Mono&#x27;, ui-monospace, monospace; color: #3b3a35; }
+  #map-wrap { position: relative; }
+  #map-wrap svg { width: 100%; display: block; }
+  .tip { position: absolute; background: #26251f; color: #f4f1ea; font-size: 11px; padding: 5px 9px;
+         pointer-events: none; opacity: 0; white-space: nowrap; line-height: 1.6; }
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&quot;map-wrap&quot;&gt;&lt;div class=&quot;tip&quot; id=&quot;tip&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;script&gt;
+const YEAR = 2023;
+const wbSeries = (ind) =&gt; &quot;https://api.worldbank.org/v2/country/all/indicator/&quot; + ind
+                        + &quot;?format=json&amp;per_page=400&amp;date=&quot; + YEAR;
+const WB_COUNTRIES = &quot;https://api.worldbank.org/v2/country?format=json&amp;per_page=400&quot;;
+const GEO = &quot;https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=medium&quot;
+          + &quot;&amp;properties=iso2,name,continent&amp;format=geojson&quot;;
+
+// Continent comes from mapjson, so the scatter and the map are coloured off the
+// same field and a dot always matches its country.
+const CONTINENT = {
+  &quot;Africa&quot;: &quot;#c0562f&quot;, &quot;Asia&quot;: &quot;#2f6f8f&quot;, &quot;Europe&quot;: &quot;#4a7c3f&quot;,
+  &quot;North America&quot;: &quot;#8a5aa8&quot;, &quot;South America&quot;: &quot;#c8952f&quot;, &quot;Oceania&quot;: &quot;#3f8f85&quot;,
+  // Natural Earth files Maldives, Mauritius and Seychelles here, not under a
+  // landmass. Kept as its own key rather than reassigned, so the colour on the
+  // map always matches the field mapjson actually returns.
+  &quot;Seven seas (open ocean)&quot;: &quot;#8b8a82&quot;,
+};
+const LABEL = { &quot;Seven seas (open ocean)&quot;: &quot;Seven seas&quot; };
+
+// The World Bank returns regional and income aggregates alongside countries,
+// and eleven of their aggregate codes collide with mapjson gids for tiny
+// territories (&quot;XD&quot; = High income to them, Dhekelia to us). region.id &quot;NA&quot;
+// marks an aggregate.
+async function realCountryCodes() {
+  const [, rows] = await d3.json(WB_COUNTRIES);
+  return new Set(rows.filter(r =&gt; r.region.id !== &quot;NA&quot;).map(r =&gt; r.iso2Code));
+}
+
+const series = (json, codes) =&gt; {
+  const out = new Map();
+  for (const r of json[1]) {
+    if (r.value != null &amp;&amp; codes.has(r.country.id)) out.set(r.country.id, r.value);
+  }
+  return out;
+};
+
+(async function () {
+  const codes = await realCountryCodes();
+  const [gdpJson, lifeJson, popJson, world] = await Promise.all([
+    d3.json(wbSeries(&quot;NY.GDP.PCAP.CD&quot;)),
+    d3.json(wbSeries(&quot;SP.DYN.LE00.IN&quot;)),
+    d3.json(wbSeries(&quot;SP.POP.TOTL&quot;)),
+    d3.json(GEO),
+  ]);
+  const gdp = series(gdpJson, codes), life = series(lifeJson, codes), pop = series(popJson, codes);
+
+  const meta = new Map(world.features.map(f =&gt; [f.properties.iso2, f.properties]));
+  const points = [...gdp.keys()]
+    .filter(iso =&gt; life.has(iso) &amp;&amp; pop.has(iso) &amp;&amp; meta.has(iso))
+    .map(iso =&gt; ({
+      iso, gdp: gdp.get(iso), life: life.get(iso), pop: pop.get(iso),
+      name: meta.get(iso).name,
+      color: CONTINENT[meta.get(iso).continent] || &quot;#8b8a82&quot;,
+    }));
+
+  const W = 1200, MAP_H = 520, PLOT_H = 430, H = MAP_H + PLOT_H;
+  const M = { top: 26, right: 30, bottom: 52, left: 62 };
+
+  const svg = d3.select(&quot;#map-wrap&quot;).append(&quot;svg&quot;).attr(&quot;viewBox&quot;, &quot;0 0 &quot; + W + &quot; &quot; + H);
+  const tip = d3.select(&quot;#tip&quot;);
+
+  // ── map: a locator, not a choropleth. Fills are the continent colour held
+  // back to a wash so the scatter stays the subject.
+  const projection = d3.geoEqualEarth().rotate([-11, 0]);
+  const path = d3.geoPath(projection);
+  projection.fitExtent([[10, 10], [W - 10, MAP_H - 10]], world);
+
+  const shapes = svg.append(&quot;g&quot;).selectAll(&quot;path&quot;).data(world.features).join(&quot;path&quot;)
+    .attr(&quot;d&quot;, path)
+    .attr(&quot;fill&quot;, d =&gt; CONTINENT[d.properties.continent] || &quot;#c9c6bd&quot;)
+    .attr(&quot;fill-opacity&quot;, d =&gt; (points.some(p =&gt; p.iso === d.properties.iso2) ? 0.28 : 0.1))
+    .attr(&quot;stroke&quot;, &quot;#efece6&quot;).attr(&quot;stroke-width&quot;, 0.4)
+    .style(&quot;cursor&quot;, &quot;default&quot;);
+
+  // ── scatter
+  const g = svg.append(&quot;g&quot;).attr(&quot;transform&quot;, &quot;translate(0,&quot; + MAP_H + &quot;)&quot;);
+  const x = d3.scaleLog().domain([200, 300000]).range([M.left, W - M.right]);
+  const y = d3.scaleLinear().domain([50, 90]).range([PLOT_H - M.bottom, M.top]);
+  const r = d3.scaleSqrt().domain([0, d3.max(points, p =&gt; p.pop)]).range([2, 34]);
+
+  g.append(&quot;g&quot;).attr(&quot;transform&quot;, &quot;translate(0,&quot; + (PLOT_H - M.bottom) + &quot;)&quot;)
+    .call(d3.axisBottom(x).tickValues([500, 1000, 5000, 10000, 50000, 100000])
+      .tickFormat(d3.format(&quot;$,.0f&quot;)));
+  g.append(&quot;g&quot;).attr(&quot;transform&quot;, &quot;translate(&quot; + M.left + &quot;,0)&quot;)
+    .call(d3.axisLeft(y).ticks(5).tickFormat(d =&gt; d + &quot; yrs&quot;));
+  g.selectAll(&quot;.domain, .tick line&quot;).attr(&quot;stroke&quot;, &quot;#b9b6ad&quot;);
+  g.selectAll(&quot;.tick text&quot;).attr(&quot;fill&quot;, &quot;#6b6a63&quot;)
+    .attr(&quot;font-family&quot;, &quot;&#x27;IBM Plex Mono&#x27;, ui-monospace, monospace&quot;).attr(&quot;font-size&quot;, 11);
+
+  g.append(&quot;text&quot;).attr(&quot;x&quot;, W / 2).attr(&quot;y&quot;, PLOT_H - 12).attr(&quot;text-anchor&quot;, &quot;middle&quot;)
+    .attr(&quot;font-size&quot;, 12).attr(&quot;fill&quot;, &quot;#6b6a63&quot;)
+    .attr(&quot;font-family&quot;, &quot;&#x27;IBM Plex Mono&#x27;, ui-monospace, monospace&quot;)
+    .text(&quot;GDP per capita, current US$ (log scale) — circle area is population&quot;);
+
+  const dots = g.append(&quot;g&quot;).selectAll(&quot;circle&quot;).data(points).join(&quot;circle&quot;)
+    .attr(&quot;cx&quot;, p =&gt; x(p.gdp)).attr(&quot;cy&quot;, p =&gt; y(p.life)).attr(&quot;r&quot;, p =&gt; r(p.pop))
+    .attr(&quot;fill&quot;, p =&gt; p.color).attr(&quot;fill-opacity&quot;, 0.55)
+    .attr(&quot;stroke&quot;, p =&gt; p.color).attr(&quot;stroke-width&quot;, 1);
+
+  // ── linked hover, both directions
+  const byIso = new Map(points.map(p =&gt; [p.iso, p]));
+
+  function show(iso, ev) {
+    dots.attr(&quot;fill-opacity&quot;, p =&gt; (p.iso === iso ? 0.95 : 0.16))
+        .attr(&quot;stroke-width&quot;, p =&gt; (p.iso === iso ? 2 : 1));
+    shapes.attr(&quot;fill-opacity&quot;, d =&gt; {
+      if (d.properties.iso2 === iso) return 0.95;
+      return byIso.has(d.properties.iso2) ? 0.14 : 0.06;
+    });
+    const p = byIso.get(iso);
+    if (p &amp;&amp; ev) {
+      tip.style(&quot;opacity&quot;, 1)
+         .style(&quot;left&quot;, (ev.offsetX + 14) + &quot;px&quot;)
+         .style(&quot;top&quot;, (ev.offsetY - 6) + &quot;px&quot;)
+         .html(&quot;&lt;b&gt;&quot; + p.name + &quot;&lt;/b&gt;&lt;br&gt;&quot; + d3.format(&quot;$,.0f&quot;)(p.gdp) + &quot; per capita&lt;br&gt;&quot;
+             + p.life.toFixed(1) + &quot; years&lt;br&gt;&quot; + d3.format(&quot;,.3~s&quot;)(p.pop) + &quot; people&quot;);
+    }
+  }
+
+  function clear() {
+    dots.attr(&quot;fill-opacity&quot;, 0.55).attr(&quot;stroke-width&quot;, 1);
+    shapes.attr(&quot;fill-opacity&quot;, d =&gt; (byIso.has(d.properties.iso2) ? 0.28 : 0.1));
+    tip.style(&quot;opacity&quot;, 0);
+  }
+
+  dots.on(&quot;mousemove&quot;, (e, p) =&gt; show(p.iso, e)).on(&quot;mouseout&quot;, clear);
+  shapes.on(&quot;mousemove&quot;, (e, d) =&gt; (byIso.has(d.properties.iso2) ? show(d.properties.iso2, e) : clear()))
+        .on(&quot;mouseout&quot;, clear);
+
+  // ── continent key
+  const key = svg.append(&quot;g&quot;).attr(&quot;transform&quot;, &quot;translate(16,22)&quot;);
+  key.selectAll(&quot;g&quot;).data(Object.entries(CONTINENT)).join(&quot;g&quot;)
+    .attr(&quot;transform&quot;, (d, i) =&gt; &quot;translate(0,&quot; + i * 18 + &quot;)&quot;)
+    .each(function ([label, col]) {
+      const row = d3.select(this);
+      row.append(&quot;circle&quot;).attr(&quot;r&quot;, 5).attr(&quot;cx&quot;, 6).attr(&quot;cy&quot;, -4).attr(&quot;fill&quot;, col).attr(&quot;fill-opacity&quot;, 0.75);
+      row.append(&quot;text&quot;).attr(&quot;x&quot;, 18).attr(&quot;font-size&quot;, 11).attr(&quot;fill&quot;, &quot;#5a5952&quot;)
+         .attr(&quot;font-family&quot;, &quot;&#x27;IBM Plex Mono&#x27;, ui-monospace, monospace&quot;).text(LABEL[label] || label);
+    });
+
+  // The example page on mapjson.com has a status line; the standalone does not.
+  const live = document.getElementById(&quot;live&quot;);
+  if (live) live.innerHTML = &quot;&lt;b&gt;&quot; + points.length + &quot;&lt;/b&gt; countries carry all three indicators for &quot;
+    + YEAR + &quot;, joined to mapjson geometry on ISO2 — hover either view.&quot;;
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+const YEAR = 2023;
+const wbSeries = (ind) => "https://api.worldbank.org/v2/country/all/indicator/" + ind
+                        + "?format=json&per_page=400&date=" + YEAR;
+const WB_COUNTRIES = "https://api.worldbank.org/v2/country?format=json&per_page=400";
+const GEO = "https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=medium"
+          + "&properties=iso2,name,continent&format=geojson";
+
+// Continent comes from mapjson, so the scatter and the map are coloured off the
+// same field and a dot always matches its country.
+const CONTINENT = {
+  "Africa": "#c0562f", "Asia": "#2f6f8f", "Europe": "#4a7c3f",
+  "North America": "#8a5aa8", "South America": "#c8952f", "Oceania": "#3f8f85",
+  // Natural Earth files Maldives, Mauritius and Seychelles here, not under a
+  // landmass. Kept as its own key rather than reassigned, so the colour on the
+  // map always matches the field mapjson actually returns.
+  "Seven seas (open ocean)": "#8b8a82",
+};
+const LABEL = { "Seven seas (open ocean)": "Seven seas" };
+
+// The World Bank returns regional and income aggregates alongside countries,
+// and eleven of their aggregate codes collide with mapjson gids for tiny
+// territories ("XD" = High income to them, Dhekelia to us). region.id "NA"
+// marks an aggregate.
+async function realCountryCodes() {
+  const [, rows] = await d3.json(WB_COUNTRIES);
+  return new Set(rows.filter(r => r.region.id !== "NA").map(r => r.iso2Code));
+}
+
+const series = (json, codes) => {
+  const out = new Map();
+  for (const r of json[1]) {
+    if (r.value != null && codes.has(r.country.id)) out.set(r.country.id, r.value);
+  }
+  return out;
+};
+
+(async function () {
+  const codes = await realCountryCodes();
+  const [gdpJson, lifeJson, popJson, world] = await Promise.all([
+    d3.json(wbSeries("NY.GDP.PCAP.CD")),
+    d3.json(wbSeries("SP.DYN.LE00.IN")),
+    d3.json(wbSeries("SP.POP.TOTL")),
+    d3.json(GEO),
+  ]);
+  const gdp = series(gdpJson, codes), life = series(lifeJson, codes), pop = series(popJson, codes);
+
+  const meta = new Map(world.features.map(f => [f.properties.iso2, f.properties]));
+  const points = [...gdp.keys()]
+    .filter(iso => life.has(iso) && pop.has(iso) && meta.has(iso))
+    .map(iso => ({
+      iso, gdp: gdp.get(iso), life: life.get(iso), pop: pop.get(iso),
+      name: meta.get(iso).name,
+      color: CONTINENT[meta.get(iso).continent] || "#8b8a82",
+    }));
+
+  const W = 1200, MAP_H = 520, PLOT_H = 430, H = MAP_H + PLOT_H;
+  const M = { top: 26, right: 30, bottom: 52, left: 62 };
+
+  const svg = d3.select("#map-wrap").append("svg").attr("viewBox", "0 0 " + W + " " + H);
+  const tip = d3.select("#tip");
+
+  // ── map: a locator, not a choropleth. Fills are the continent colour held
+  // back to a wash so the scatter stays the subject.
+  const projection = d3.geoEqualEarth().rotate([-11, 0]);
+  const path = d3.geoPath(projection);
+  projection.fitExtent([[10, 10], [W - 10, MAP_H - 10]], world);
+
+  const shapes = svg.append("g").selectAll("path").data(world.features).join("path")
+    .attr("d", path)
+    .attr("fill", d => CONTINENT[d.properties.continent] || "#c9c6bd")
+    .attr("fill-opacity", d => (points.some(p => p.iso === d.properties.iso2) ? 0.28 : 0.1))
+    .attr("stroke", "#efece6").attr("stroke-width", 0.4)
+    .style("cursor", "default");
+
+  // ── scatter
+  const g = svg.append("g").attr("transform", "translate(0," + MAP_H + ")");
+  const x = d3.scaleLog().domain([200, 300000]).range([M.left, W - M.right]);
+  const y = d3.scaleLinear().domain([50, 90]).range([PLOT_H - M.bottom, M.top]);
+  const r = d3.scaleSqrt().domain([0, d3.max(points, p => p.pop)]).range([2, 34]);
+
+  g.append("g").attr("transform", "translate(0," + (PLOT_H - M.bottom) + ")")
+    .call(d3.axisBottom(x).tickValues([500, 1000, 5000, 10000, 50000, 100000])
+      .tickFormat(d3.format("$,.0f")));
+  g.append("g").attr("transform", "translate(" + M.left + ",0)")
+    .call(d3.axisLeft(y).ticks(5).tickFormat(d => d + " yrs"));
+  g.selectAll(".domain, .tick line").attr("stroke", "#b9b6ad");
+  g.selectAll(".tick text").attr("fill", "#6b6a63")
+    .attr("font-family", "'IBM Plex Mono', ui-monospace, monospace").attr("font-size", 11);
+
+  g.append("text").attr("x", W / 2).attr("y", PLOT_H - 12).attr("text-anchor", "middle")
+    .attr("font-size", 12).attr("fill", "#6b6a63")
+    .attr("font-family", "'IBM Plex Mono', ui-monospace, monospace")
+    .text("GDP per capita, current US$ (log scale) — circle area is population");
+
+  const dots = g.append("g").selectAll("circle").data(points).join("circle")
+    .attr("cx", p => x(p.gdp)).attr("cy", p => y(p.life)).attr("r", p => r(p.pop))
+    .attr("fill", p => p.color).attr("fill-opacity", 0.55)
+    .attr("stroke", p => p.color).attr("stroke-width", 1);
+
+  // ── linked hover, both directions
+  const byIso = new Map(points.map(p => [p.iso, p]));
+
+  function show(iso, ev) {
+    dots.attr("fill-opacity", p => (p.iso === iso ? 0.95 : 0.16))
+        .attr("stroke-width", p => (p.iso === iso ? 2 : 1));
+    shapes.attr("fill-opacity", d => {
+      if (d.properties.iso2 === iso) return 0.95;
+      return byIso.has(d.properties.iso2) ? 0.14 : 0.06;
+    });
+    const p = byIso.get(iso);
+    if (p && ev) {
+      tip.style("opacity", 1)
+         .style("left", (ev.offsetX + 14) + "px")
+         .style("top", (ev.offsetY - 6) + "px")
+         .html("<b>" + p.name + "</b><br>" + d3.format("$,.0f")(p.gdp) + " per capita<br>"
+             + p.life.toFixed(1) + " years<br>" + d3.format(",.3~s")(p.pop) + " people");
+    }
+  }
+
+  function clear() {
+    dots.attr("fill-opacity", 0.55).attr("stroke-width", 1);
+    shapes.attr("fill-opacity", d => (byIso.has(d.properties.iso2) ? 0.28 : 0.1));
+    tip.style("opacity", 0);
+  }
+
+  dots.on("mousemove", (e, p) => show(p.iso, e)).on("mouseout", clear);
+  shapes.on("mousemove", (e, d) => (byIso.has(d.properties.iso2) ? show(d.properties.iso2, e) : clear()))
+        .on("mouseout", clear);
+
+  // ── continent key
+  const key = svg.append("g").attr("transform", "translate(16,22)");
+  key.selectAll("g").data(Object.entries(CONTINENT)).join("g")
+    .attr("transform", (d, i) => "translate(0," + i * 18 + ")")
+    .each(function ([label, col]) {
+      const row = d3.select(this);
+      row.append("circle").attr("r", 5).attr("cx", 6).attr("cy", -4).attr("fill", col).attr("fill-opacity", 0.75);
+      row.append("text").attr("x", 18).attr("font-size", 11).attr("fill", "#5a5952")
+         .attr("font-family", "'IBM Plex Mono', ui-monospace, monospace").text(LABEL[label] || label);
+    });
+
+  // The example page on mapjson.com has a status line; the standalone does not.
+  const live = document.getElementById("live");
+  if (live) live.innerHTML = "<b>" + points.length + "</b> countries carry all three indicators for "
+    + YEAR + ", joined to mapjson geometry on ISO2 — hover either view.";
+})();
+</script>
+<script src="example-widgets.js" defer></script>
+</body>
+</html>

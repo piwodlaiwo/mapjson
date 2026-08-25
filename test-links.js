@@ -40,6 +40,14 @@ const URL_PATTERNS = [
 const EXTRA_URLS = [
   { url: 'https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,weather_code,wind_speed_10m',
     where: 'capital-temps.html, radar.html' },
+  // The World Bank pages build indicator URLs from a helper, so only the bare
+  // indicator path is scannable. These pin the exact queries the pages issue.
+  { url: 'https://api.worldbank.org/v2/country/all/indicator/NY.GDP.PCAP.CD?format=json&per_page=400&date=2023',
+    where: 'wealth-and-health.html' },
+  { url: 'https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json&per_page=400&date=2023',
+    where: 'wealth-and-health.html' },
+  { url: 'https://api.worldbank.org/v2/country/all/indicator/SP.DYN.LE00.IN?format=json&per_page=20000&date=1960:2023',
+    where: 'life-expectancy.html, wealth-and-health.html' },
   { url: 'https://flagpedia.net/data/flags/h240/ua.png', where: 'flag-guess.html', cors: false },
   { url: 'https://tile.openstreetmap.org/3/4/2.png', where: 'radar.html, spotlight.html, hormuz.html', cors: false },
   { url: 'https://a.basemaps.cartocdn.com/light_all/3/4/2.png', where: 'radar.html, spotlight.html, hormuz.html', cors: false },

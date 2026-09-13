@@ -148,25 +148,12 @@
     .chips button { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 10px; background: transparent; border: 1px solid var(--border); color: var(--muted); cursor: pointer; border-radius: 999px; }
     .chips button:hover { border-color: var(--ink); color: var(--ink); }
     .chips button.on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
-    .ex-count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: var(--muted); white-space: nowrap; padding-top: 5px; }
-    /* date-filter row, under the tag chips */
-    .chip-rows { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-    .dates { align-items: center; }
-    .chips .row-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
-    /* sort-by-date control, right of the tag chips */
-    .filter-meta { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding-top: 1px; }
-    .filter-meta .ex-count { padding-top: 0; }
-    .sorts { flex-wrap: nowrap; }
-    .sorts .row-label { align-self: center; }
-    /* each card's date, revealed only while a date sort is active */
+    /* each card's date, shown only while the "latest" chip is on */
     .card-date { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #a7a6a0; white-space: nowrap; margin-left: 12px; display: none; }
     .grid.by-date .card-date { display: inline; }
     .grid.by-date .card-url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    @media (max-width: 640px) {
-      .filter-bar { flex-direction: column; }
-      .ex-count { padding-top: 0; }
-      .filter-meta { flex-direction: row-reverse; align-items: flex-start; justify-content: space-between; width: 100%; gap: 8px; }
-    }
+    .ex-count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: var(--muted); white-space: nowrap; padding-top: 5px; }
+    @media (max-width: 640px) { .filter-bar { flex-direction: column; } .ex-count { padding-top: 0; } }
     header h1 { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 500; font-size: clamp(3rem, 6vw, 4rem); letter-spacing: -0.03em; line-height: 0.98; }
     header p { font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.2em; color: #9b9a94; }
     .card { padding: 40px 44px 34px; min-height: 280px; }
@@ -236,14 +223,8 @@
     <h1>Examples</h1>
     <p class="tagline">D3.js maps built with the mapjson API</p>
     <div class="filter-bar">
-      <div class="chip-rows">
-        <div class="chips" id="chips" role="group" aria-label="Filter examples by tag"></div>
-        <div class="chips dates" id="dates" role="group" aria-label="Filter examples by date"></div>
-      </div>
-      <div class="filter-meta">
-        <div class="chips sorts" id="sorts" role="group" aria-label="Sort examples by date"></div>
-        <div class="ex-count" id="ex-count"></div>
-      </div>
+      <div class="chips" id="chips" role="group" aria-label="Filter examples by tag"></div>
+      <div class="ex-count" id="ex-count"></div>
     </div>
   </header>
 
@@ -795,9 +776,8 @@
 </div>
 
 <script>
-  // Counter + client-side tag filter + sort by date. Chips are derived from each card's own
-  // tag line (the "countries · high detail · …" strings), so new examples pick up filtering
-  // for free; the date comes from each card's data-date (the day the example was committed).
+  // Counter + client-side tag filter. Chips are derived from each card's own tag line
+  // (the "countries · high detail · …" strings), so new examples pick up filtering for free.
   (function () {
     const grid = document.querySelector(".grid");
     const cards = Array.from(document.querySelectorAll(".grid .card"));
@@ -812,26 +792,19 @@
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
     const chipsEl = document.getElementById("chips");
-    const datesEl = document.getElementById("dates");
-    const sortsEl = document.getElementById("sorts");
     const countEl = document.getElementById("ex-count");
-    let active = null;       // tag filter, or null for all
-    let month = null;        // date filter as "YYYY-MM", or null for all
-    let sort = "";           // "" = the curated order in the markup, else "new" | "old"
+    let active = null;       // a tag, "latest" for newest-first, or null for all
 
-    // Parse as plain numbers: new Date("2026-07-03") is UTC midnight, which is the
-    // previous day in the Americas and would print the wrong month at the boundary.
+    // Each card's date (data-date = the day the example landed) rides along in the
+    // footer, hidden until "latest" is on. Parsed as plain numbers because
+    // new Date("2026-07-03") is UTC midnight — the previous day in the Americas.
     const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    function stamp(iso) {
-      const [y, m, d] = (iso || "").split("-").map(Number);
-      return y ? `${MONTHS[m - 1]} ${d}, ${y}` : "";
-    }
-    // Cards keep their source order as the tiebreak, so equal-dated examples stay grouped.
     cards.forEach((c, i) => {
-      c.dataset.order = i;
+      c.dataset.order = i;   // curated order, restored when "latest" is off
+      const [y, m, d] = (c.dataset.date || "").split("-").map(Number);
       const el = document.createElement("span");
       el.className = "card-date";
-      el.textContent = stamp(c.dataset.date);
+      el.textContent = y ? `${MONTHS[m - 1]} ${d}, ${y}` : "";
       c.querySelector(".card-footer").insertBefore(el, c.querySelector(".card-arrow"));
     });
 
@@ -841,68 +814,30 @@
       chipsEl.appendChild(b);
     }
     chip("all", "");
+    chip("latest", "latest");
     tags.forEach(([t, n]) => chip(`${t} (${n})`, t));
 
-    // Date chips are one per month present, newest first — derived from the cards
-    // themselves, so a month appears the day its first example does.
-    const months = new Map();
-    cards.forEach((c) => {
-      const m = (c.dataset.date || "").slice(0, 7);
-      if (m) months.set(m, (months.get(m) || 0) + 1);
-    });
-    datesEl.insertAdjacentHTML("beforeend", '<span class="row-label">date</span>');
-    function dateChip(label, key) {
-      const b = document.createElement("button");
-      b.type = "button"; b.textContent = label; b.dataset.month = key;
-      datesEl.appendChild(b);
-    }
-    dateChip("all", "");
-    [...months.entries()].sort((a, b) => b[0].localeCompare(a[0]))
-      .forEach(([m, n]) => dateChip(`${MONTHS[+m.slice(5) - 1]} ${m.slice(0, 4)} (${n})`, m));
-
-    sortsEl.insertAdjacentHTML("beforeend", '<span class="row-label">sort</span>');
-    [["featured", ""], ["newest", "new"], ["oldest", "old"]].forEach(([label, key]) => {
-      const b = document.createElement("button");
-      b.type = "button"; b.textContent = label; b.dataset.sort = key;
-      sortsEl.appendChild(b);
-    });
-
     function render() {
+      const latest = active === "latest";
       let shown = 0;
       cards.forEach((c) => {
-        const on = (!active || tagsOf(c).includes(active))
-                && (!month || (c.dataset.date || "").startsWith(month));
+        const on = !active || latest || tagsOf(c).includes(active);
         c.style.display = on ? "" : "none";
         if (on) shown++;
       });
-      countEl.textContent = (active || month) ? `${shown} of ${cards.length} examples` : `${cards.length} examples`;
+      countEl.textContent = active && !latest
+        ? `${shown} of ${cards.length} examples`
+        : `${cards.length} examples`;
       chipsEl.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.tag === (active || "")));
-      datesEl.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.month === (month || "")));
 
-      // Reorder with CSS `order` rather than moving nodes, so the curated order is
-      // never lost and "featured" is just order:0 everywhere again.
-      const dir = sort === "new" ? -1 : 1;
+      // Newest first, curated order as the tiebreak. Setting CSS `order` rather
+      // than moving nodes means turning "latest" off just clears it again.
       const seq = cards.slice().sort((a, b) =>
-        (sort ? dir * (a.dataset.date < b.dataset.date ? -1 : a.dataset.date > b.dataset.date ? 1 : 0) : 0)
+        (b.dataset.date < a.dataset.date ? -1 : b.dataset.date > a.dataset.date ? 1 : 0)
         || a.dataset.order - b.dataset.order);
-      seq.forEach((c, i) => { c.style.order = sort ? i : ""; });
-      grid.classList.toggle("by-date", !!sort || !!month);
-      sortsEl.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.sort === sort));
+      seq.forEach((c, i) => { c.style.order = latest ? i : ""; });
+      grid.classList.toggle("by-date", latest);
     }
-
-    datesEl.addEventListener("click", (e) => {
-      const b = e.target.closest("button");
-      if (!b) return;
-      month = b.dataset.month || null;
-      render();
-    });
-
-    sortsEl.addEventListener("click", (e) => {
-      const b = e.target.closest("button");
-      if (!b) return;
-      sort = b.dataset.sort;
-      render();
-    });
 
     chipsEl.addEventListener("click", (e) => {
       const b = e.target.closest("button");

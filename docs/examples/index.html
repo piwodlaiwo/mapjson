@@ -149,7 +149,20 @@
     .chips button:hover { border-color: var(--ink); color: var(--ink); }
     .chips button.on { background: var(--ink); border-color: var(--ink); color: var(--bg); }
     .ex-count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: var(--muted); white-space: nowrap; padding-top: 5px; }
-    @media (max-width: 640px) { .filter-bar { flex-direction: column; } .ex-count { padding-top: 0; } }
+    /* sort-by-date control, right of the tag chips */
+    .filter-meta { display: flex; align-items: center; gap: 12px; flex-shrink: 0; padding-top: 1px; }
+    .filter-meta .ex-count { padding-top: 0; }
+    .sorts { flex-wrap: nowrap; }
+    .sorts .sort-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); align-self: center; margin-right: 2px; }
+    /* each card's date, revealed only while a date sort is active */
+    .card-date { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #a7a6a0; white-space: nowrap; margin-left: 12px; display: none; }
+    .grid.by-date .card-date { display: inline; }
+    .grid.by-date .card-url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    @media (max-width: 640px) {
+      .filter-bar { flex-direction: column; }
+      .ex-count { padding-top: 0; }
+      .filter-meta { flex-direction: row-reverse; align-items: flex-start; justify-content: space-between; width: 100%; gap: 8px; }
+    }
     header h1 { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 500; font-size: clamp(3rem, 6vw, 4rem); letter-spacing: -0.03em; line-height: 0.98; }
     header p { font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.2em; color: #9b9a94; }
     .card { padding: 40px 44px 34px; min-height: 280px; }
@@ -220,13 +233,16 @@
     <p class="tagline">D3.js maps built with the mapjson API</p>
     <div class="filter-bar">
       <div class="chips" id="chips" role="group" aria-label="Filter examples by tag"></div>
-      <div class="ex-count" id="ex-count"></div>
+      <div class="filter-meta">
+        <div class="chips sorts" id="sorts" role="group" aria-label="Sort examples by date"></div>
+        <div class="ex-count" id="ex-count"></div>
+      </div>
     </div>
   </header>
 
   <div class="grid">
 
-    <a class="card" href="world-countries.html">
+    <a class="card" href="world-countries.html" data-date="2026-06-30">
       <div class="card-tag">countries</div>
       <div class="card-title">World Countries</div>
       <div class="card-desc">A world map in Equal Earth projection with dark ocean, graticule, hover tooltips, and zoom + pan. Uses <code>properties=name</code> to attach country names.</div>
@@ -236,7 +252,7 @@
       </div>
     </a>
 
-    <a class="card" href="world.html">
+    <a class="card" href="world.html" data-date="2026-06-30">
       <div class="card-tag">countries</div>
       <div class="card-title">Simple World</div>
       <div class="card-desc">The minimal mapjson call — no parameters needed. Returns 110m world countries as geometry-only topojson. The fastest starting point for any world map.</div>
@@ -246,7 +262,7 @@
       </div>
     </a>
 
-    <a class="card" href="europe.html">
+    <a class="card" href="europe.html" data-date="2026-06-30">
       <div class="card-tag">countries</div>
       <div class="card-title">Europe with Hover</div>
       <div class="card-desc">Filtered to European countries at medium resolution with country names as properties. Hover to inspect each country.</div>
@@ -256,7 +272,7 @@
       </div>
     </a>
 
-    <a class="card" href="caribbean.html">
+    <a class="card" href="caribbean.html" data-date="2026-06-30">
       <div class="card-tag">countries</div>
       <div class="card-title">Caribbean Islands</div>
       <div class="card-desc">The Caribbean zoomed in at medium detail — each territory appears as its own polygon. Aruba, Martinique, Guadeloupe, Bonaire and others all hover correctly with their own ISO codes.</div>
@@ -266,7 +282,7 @@
       </div>
     </a>
 
-    <a class="card" href="usa-states.html">
+    <a class="card" href="usa-states.html" data-date="2026-06-30">
       <div class="card-tag">regions</div>
       <div class="card-title">USA States</div>
       <div class="card-desc">US administrative regions using the regions layer filtered to a single country. AlbersUsa projection for clean continental rendering.</div>
@@ -276,7 +292,7 @@
       </div>
     </a>
 
-    <a class="card" href="globe.html">
+    <a class="card" href="globe.html" data-date="2026-06-30">
       <div class="card-tag">countries · globe</div>
       <div class="card-title">Globe</div>
       <div class="card-desc">World countries on an orthographic (perspective) projection — the view from space. Land in sage green, ocean in slate blue, 30° graticule in white. Drag to rotate.</div>
@@ -286,7 +302,7 @@
       </div>
     </a>
 
-    <a class="card" href="capitals-globe.html">
+    <a class="card" href="capitals-globe.html" data-date="2026-07-20">
       <div class="card-tag">globe · cities</div>
       <div class="card-title">Capitals on the Globe</div>
       <div class="card-desc">Every national capital on a large orthographic globe — drag to spin, scroll to zoom. Each dot is coloured coastal or inland, measured against the coastlines layer.</div>
@@ -296,7 +312,7 @@
       </div>
     </a>
 
-    <a class="card" href="physical.html">
+    <a class="card" href="physical.html" data-date="2026-06-30">
       <div class="card-tag">physical</div>
       <div class="card-title">Physical Features</div>
       <div class="card-desc">Three API calls composed into one map — countries as the base layer, overlaid with rivers and lakes. Shows how to build up a richer world map from independent layers.</div>
@@ -306,7 +322,7 @@
       </div>
     </a>
 
-    <a class="card" href="rivers.html">
+    <a class="card" href="rivers.html" data-date="2026-07-03">
       <div class="card-tag">physical</div>
       <div class="card-title">Earth's Rivers</div>
       <div class="card-desc">Every river and lake on the planet on a dark canvas — no borders, no labels. A glowing river network over a faint coastline, so the continents read as their own circulatory system.</div>
@@ -316,7 +332,7 @@
       </div>
     </a>
 
-    <a class="card" href="art-mandala.html">
+    <a class="card" href="art-mandala.html" data-date="2026-06-30">
       <div class="card-tag">art</div>
       <div class="card-title">World Mandala</div>
       <div class="card-desc">Every country's outline drawn ten times, each copy rotated further around the centre and lit with additive colour — the borders you know spin into a symmetrical kaleidoscope.</div>
@@ -326,7 +342,7 @@
       </div>
     </a>
 
-    <a class="card" href="art-engraving.html">
+    <a class="card" href="art-engraving.html" data-date="2026-07-03">
       <div class="card-tag">art</div>
       <div class="card-title">The World, Engraved</div>
       <div class="card-desc">The continents filled with fine directional hatching, a different line angle and ink tone per continent, like an old banknote or copperplate map. Pure line, no fills.</div>
@@ -336,7 +352,7 @@
       </div>
     </a>
 
-    <a class="card" href="art-halftone.html">
+    <a class="card" href="art-halftone.html" data-date="2026-07-03">
       <div class="card-tag">art</div>
       <div class="card-title">Halftone Earth</div>
       <div class="card-desc">The continents as a printer's halftone screen — solid ink inland, dissolving into a scatter of fine dots along every coast.</div>
@@ -346,7 +362,7 @@
       </div>
     </a>
 
-    <a class="card" href="art-crystal.html">
+    <a class="card" href="art-crystal.html" data-date="2026-07-03">
       <div class="card-tag">art</div>
       <div class="card-title">Crystalline Earth</div>
       <div class="card-desc">Points scattered over the land and Delaunay-triangulated into a glowing low-poly wireframe, each facet tinted by its continent — the continents crystallised into faceted constellations.</div>
@@ -356,7 +372,7 @@
       </div>
     </a>
 
-    <a class="card" href="stacked-bloom.html">
+    <a class="card" href="stacked-bloom.html" data-date="2026-07-03">
       <div class="card-tag">art</div>
       <div class="card-title">Every Country, One Bloom</div>
       <div class="card-desc">All ~195 national outlines scaled to the same size and stacked on one point, tinted by continent and drawn in ink that darkens where the lines overlap — a composite of every shape on Earth at once.</div>
@@ -366,7 +382,7 @@
       </div>
     </a>
 
-    <a class="card" href="riley-world.html">
+    <a class="card" href="riley-world.html" data-date="2026-07-28">
       <div class="card-tag">art</div>
       <div class="card-title">Op-Art Earth</div>
       <div class="card-desc">Parallel black lines that ripple into optical waves wherever there's land, in the spirit of Bridget Riley. No coastline is ever drawn.</div>
@@ -376,7 +392,7 @@
       </div>
     </a>
 
-    <a class="card" href="riley-rings.html">
+    <a class="card" href="riley-rings.html" data-date="2026-07-28">
       <div class="card-tag">art</div>
       <div class="card-title">Op-Art Earth: Rings</div>
       <div class="card-desc">Every landmass drawn as nested topographic contour rings — a distance transform plus <code>d3.contours</code> steps each ring inward from the coast, so big continents fill with rings and the map reads as relief.</div>
@@ -386,7 +402,7 @@
       </div>
     </a>
 
-    <a class="card" href="riley-spectrum.html">
+    <a class="card" href="riley-spectrum.html" data-date="2026-07-28">
       <div class="card-tag">art</div>
       <div class="card-title">Op-Art Earth: Spectrum</div>
       <div class="card-desc">The optical idea in color — flowing spectral bands that lie flat over ocean and swell over land, so the continents rise as bands of chromatic turbulence. Riley's later mode, on a map.</div>
@@ -396,7 +412,7 @@
       </div>
     </a>
 
-    <a class="card" href="type-earth.html">
+    <a class="card" href="type-earth.html" data-date="2026-07-28">
       <div class="card-tag">art</div>
       <div class="card-title">Typographic Earth</div>
       <div class="card-desc">No borders at all — every country is filled with its own name, tiled to its exact shape. Russia a slab of RUSSIA, Chile a ribbon of CHILE. Read the planet, literally.</div>
@@ -406,7 +422,7 @@
       </div>
     </a>
 
-    <a class="card" href="dorling-earth.html">
+    <a class="card" href="dorling-earth.html" data-date="2026-07-28">
       <div class="card-tag">art</div>
       <div class="card-title">Dorling Earth</div>
       <div class="card-desc">Throw away the shapes — every nation a bubble sized by land area (<code>areakm2</code>), force-packed near its real position. A world map you read by weight, not by outline.</div>
@@ -416,7 +432,7 @@
       </div>
     </a>
 
-    <a class="card" href="constellation-earth.html">
+    <a class="card" href="constellation-earth.html" data-date="2026-07-28">
       <div class="card-tag">art</div>
       <div class="card-title">Constellation Earth</div>
       <div class="card-desc">Countries as stars on a see-through, graticuled globe you can spin — each joined to its nearest neighbours by great-circle arcs, far-side stars glimmering through the grid.</div>
@@ -426,7 +442,7 @@
       </div>
     </a>
 
-    <a class="card" href="stained-glass-earth.html">
+    <a class="card" href="stained-glass-earth.html" data-date="2026-07-28">
       <div class="card-tag">art</div>
       <div class="card-title">Stained-Glass Earth</div>
       <div class="card-desc">The continents as luminous Voronoi panels held in thick black leading, clipped to the real coastlines and lit like a cathedral window over a dark sea.</div>
@@ -437,7 +453,7 @@
     </a>
 
 
-    <a class="card" href="mondrian-world.html">
+    <a class="card" href="mondrian-world.html" data-date="2026-07-28">
       <div class="card-tag">art</div>
       <div class="card-title">Composition with Continents</div>
       <div class="card-desc">The world reduced to Mondrian's grammar — the plane split into rectangles with thick black rules, red/blue/yellow pooling only where the land is, ocean cells left white. Squint and the continents hide inside a De Stijl composition. Recompose for a new one.</div>
@@ -447,7 +463,7 @@
       </div>
     </a>
 
-    <a class="card" href="mondrian-world-b.html">
+    <a class="card" href="mondrian-world-b.html" data-date="2026-07-28">
       <div class="card-tag">art</div>
       <div class="card-title">The World in Red, Blue and Yellow</div>
       <div class="card-desc">The Mondrian idea, but readable — and the color means something: real countries ruled in heavy black and filled by land area (giants red, large blue, mid yellow, small white), using mapjson's <code>areakm2</code>. A De Stijl painting that's also a size atlas.</div>
@@ -457,7 +473,7 @@
       </div>
     </a>
 
-    <a class="card" href="earthquakes.html">
+    <a class="card" href="earthquakes.html" data-date="2026-07-03">
       <div class="card-tag">live data</div>
       <div class="card-title">30 Days of Earthquakes</div>
       <div class="card-desc">Every magnitude-4.5+ earthquake of the past month, pulled live from the USGS feed and plotted on a mapjson world basemap — sized by magnitude, coloured by depth. The Ring of Fire draws itself.</div>
@@ -467,7 +483,7 @@
       </div>
     </a>
 
-    <a class="card" href="capital-temps.html">
+    <a class="card" href="capital-temps.html" data-date="2026-07-03">
       <div class="card-tag">live data · cities</div>
       <div class="card-title">Live Capital Temperatures</div>
       <div class="card-desc">The current temperature in every national capital, fetched from Open-Meteo in a single call and joined to mapjson capital coordinates — a different map every hour, from freezing blue to scorching red.</div>
@@ -477,7 +493,7 @@
       </div>
     </a>
 
-    <a class="card" href="renewable-electricity.html">
+    <a class="card" href="renewable-electricity.html" data-date="2026-07-03">
       <div class="card-tag">choropleth · live data</div>
       <div class="card-title">Renewable Electricity</div>
       <div class="card-desc">An Our World in Data choropleth joined to the map by the dataset's plain country names via <code>/v1/resolve</code> — which quietly fixes Turkey→Türkiye, East Timor→Timor-Leste and others a text match would drop.</div>
@@ -487,7 +503,7 @@
       </div>
     </a>
 
-    <a class="card" href="life-expectancy.html">
+    <a class="card" href="life-expectancy.html" data-date="2026-08-24">
       <div class="card-tag">choropleth · animated · live data</div>
       <div class="card-title">Sixty Years of Life Expectancy</div>
       <div class="card-desc">64 years of World Bank life expectancy in a single call, played back a year at a time — the post-war climb, and the dips where they happened. Joins on ISO2, which is already the country <code>gid</code>.</div>
@@ -497,7 +513,7 @@
       </div>
     </a>
 
-    <a class="card" href="wealth-and-health.html">
+    <a class="card" href="wealth-and-health.html" data-date="2026-08-24">
       <div class="card-tag">scatter + map · live data</div>
       <div class="card-title">Wealth and Health</div>
       <div class="card-desc">The Preston curve: income against life expectancy, circles sized by population. Hover a circle to find the country on the map, or the map to find its circle — both coloured by the <code>continent</code> property.</div>
@@ -507,7 +523,7 @@
       </div>
     </a>
 
-    <a class="card" href="urban-income.html">
+    <a class="card" href="urban-income.html" data-date="2026-09-13">
       <div class="card-tag">bivariate choropleth · live data</div>
       <div class="card-title">Urbanisation and Income</div>
       <div class="card-desc">Two World Bank indicators on one map. A 3×3 colour matrix instead of a ramp, cut at the data's own terciles — so you can see where urbanisation and income come apart.</div>
@@ -517,7 +533,7 @@
       </div>
     </a>
 
-    <a class="card" href="driving-side.html">
+    <a class="card" href="driving-side.html" data-date="2026-09-13">
       <div class="card-tag">categorical · live data</div>
       <div class="card-title">Which Side of the Road</div>
       <div class="card-desc">A SPARQL query to Wikidata, straight from the browser, joined on ISO2. 36% of the world's people drive on the left — counted with mapjson's own <code>population</code> property.</div>
@@ -527,7 +543,7 @@
       </div>
     </a>
 
-    <a class="card" href="africa.html">
+    <a class="card" href="africa.html" data-date="2026-07-01">
       <div class="card-tag">countries</div>
       <div class="card-title">Africa</div>
       <div class="card-desc">Countries colored by subregion — Northern, Eastern, Western, Middle, and Southern Africa. Capital cities plotted from <code>capitalLat</code> and <code>capitalLng</code> properties. Labels use a force simulation to avoid overlapping.</div>
@@ -537,7 +553,7 @@
       </div>
     </a>
 
-    <a class="card" href="ma-zips.html">
+    <a class="card" href="ma-zips.html" data-date="2026-07-03">
       <div class="card-tag">postal</div>
       <div class="card-title">Massachusetts ZIP Areas</div>
       <div class="card-desc">All 539 Massachusetts ZIP code areas from the new <code>postal</code> layer, colored by 3-digit prefix. Every feature's <code>gid</code> is the bare ZIP code — join your ZIP-keyed data with a dictionary lookup.</div>
@@ -547,7 +563,7 @@
       </div>
     </a>
 
-    <a class="card" href="poland.html">
+    <a class="card" href="poland.html" data-date="2026-06-30">
       <div class="card-tag">regions</div>
       <div class="card-title">Poland Voivodeships</div>
       <div class="card-desc">Poland's 16 first-level administrative divisions at high detail. Uses <code>fitSize</code> to auto-fit the projection to the returned geometry — the same pattern works for any country.</div>
@@ -557,7 +573,7 @@
       </div>
     </a>
 
-    <a class="card" href="aruba.html">
+    <a class="card" href="aruba.html" data-date="2026-06-30">
       <div class="card-tag">countries</div>
       <div class="card-title">Aruba</div>
       <div class="card-desc">Aruba is 180 km² — invisible at standard resolutions. When <code>filter</code> is an ISO country code and <code>detail=high</code>, the API automatically serves a high-resolution file for small countries and territories.</div>
@@ -567,7 +583,7 @@
       </div>
     </a>
 
-    <a class="card" href="gibraltar.html">
+    <a class="card" href="gibraltar.html" data-date="2026-06-30">
       <div class="card-tag">countries</div>
       <div class="card-title">Strait of Gibraltar</div>
       <div class="card-desc">Gibraltar (ISO <code>GI</code>) is ~7 km² and only exists at <code>detail=high</code>. Three <code>filter</code> calls — Spain, Morocco, Gibraltar — frame the strait as separate polygons. Ceuta, a Spanish city with no ISO code, is a marker rather than a polygon.</div>
@@ -577,7 +593,7 @@
       </div>
     </a>
 
-    <a class="card" href="radar.html">
+    <a class="card" href="radar.html" data-date="2026-07-24">
       <div class="card-tag">tiles · live data</div>
       <div class="card-title">Local Weather Radar</div>
       <div class="card-desc">Asks the browser for your location, reverse-geocodes it against mapjson geometry to name and highlight the region you're standing in, then lays live open-source radar (RainViewer) and current weather (Open-Meteo) over a local map.</div>
@@ -587,7 +603,7 @@
       </div>
     </a>
 
-    <a class="card" href="spotlight.html">
+    <a class="card" href="spotlight.html" data-date="2026-07-24">
       <div class="card-tag">tiles · regions</div>
       <div class="card-title">Country Spotlight</div>
       <div class="card-desc">An OpenStreetMap basemap dimmed everywhere except one country — a vector mask with a country-shaped hole — and that country's administrative regions overlaid with hover names. Regions load at the right tier via <code>detail=auto</code>.</div>
@@ -597,7 +613,7 @@
       </div>
     </a>
 
-    <a class="card" href="hormuz.html">
+    <a class="card" href="hormuz.html" data-date="2026-07-16">
       <div class="card-tag">tiles · countries</div>
       <div class="card-title">Strait of Hormuz</div>
       <div class="card-desc">All eight Persian Gulf states, each from its own high-detail <code>filter</code> call, framed on the Strait of Hormuz. Dashed lines measure the narrows — and show that the famous “33&nbsp;km” chokepoint is measured to Great Quoin Island, an Omani islet too small for the base map to even carry.</div>
@@ -607,7 +623,7 @@
       </div>
     </a>
 
-    <a class="card" href="italy-enclaves.html">
+    <a class="card" href="italy-enclaves.html" data-date="2026-06-30">
       <div class="card-tag">countries</div>
       <div class="card-title">Italy's Enclaves</div>
       <div class="card-desc">San Marino and Vatican City — two sovereign countries entirely inside Italy, both only present at <code>detail=high</code>. Fitted to Italy the Vatican is under a pixel, so the map zooms to 400× with buttons that fly you to each enclave.</div>
@@ -617,7 +633,7 @@
       </div>
     </a>
 
-    <a class="card" href="worldcup.html">
+    <a class="card" href="worldcup.html" data-date="2026-07-09">
       <div class="card-tag">choropleth</div>
       <div class="card-title">World Cup 2022 Elimination</div>
       <div class="card-desc">The 32 nations of the 2022 World Cup shaded by how far they went — light for a group-stage exit, darkest for champions Argentina. A hardcoded result table joined to the map by ISO2 code over one <code>/v1/geo</code> call.</div>
@@ -627,7 +643,7 @@
       </div>
     </a>
 
-    <a class="card" href="atp-tour.html">
+    <a class="card" href="atp-tour.html" data-date="2026-07-24">
       <div class="card-tag">countries · cities</div>
       <div class="card-title">The 2026 Tennis Season</div>
       <div class="card-desc">Every ATP Grand Slam, Masters 1000, and ATP 500 of 2026, dropped onto the world map by host city and colored by level — with a date-sorted schedule beside it. An embedded calendar joined onto one <code>/v1/geo</code> basemap.</div>
@@ -637,7 +653,7 @@
       </div>
     </a>
 
-    <a class="card" href="cities.html">
+    <a class="card" href="cities.html" data-date="2026-07-03">
       <div class="card-tag">cities</div>
       <div class="card-title">Cities &amp; Capitals</div>
       <div class="card-desc">The <code>/v1/points?type=city</code> endpoint — major cities plus every national capital as GeoJSON points, sized by population with capitals in gold. Each point is pre-tagged with country and admin1 region, so one <code>filter</code> narrows to a continent, country, or state.</div>
@@ -647,7 +663,7 @@
       </div>
     </a>
 
-    <a class="card" href="travel-map.html">
+    <a class="card" href="travel-map.html" data-date="2026-07-08">
       <div class="card-tag">countries</div>
       <div class="card-title">Been - Visited Countries</div>
       <div class="card-desc">Pick a color and click countries (or choose from a dropdown) to mark where you've been, then download a PNG. Loads at low detail for a fast paint and upgrades to high detail on zoom — unlocking all 265 territories, marks preserved across the swap.</div>
@@ -657,7 +673,7 @@
       </div>
     </a>
 
-    <a class="card" href="flag-guess.html">
+    <a class="card" href="flag-guess.html" data-date="2026-07-08">
       <div class="card-tag">game</div>
       <div class="card-title">Flag Guess Game</div>
       <div class="card-desc">A geography game — a flag appears, you click the country it belongs to. Zoom and pan to reach the smaller countries, keep score, and skip when stumped. Only quizzes countries large enough to click (filtered by <code>areakm2</code>). Flags pulled live from flagpedia.net by ISO2 code.</div>
@@ -667,7 +683,7 @@
       </div>
     </a>
 
-    <a class="card" href="shape-guess.html">
+    <a class="card" href="shape-guess.html" data-date="2026-07-29">
       <div class="card-tag">game</div>
       <div class="card-title">Map Shape Guess Game</div>
       <div class="card-desc">A country silhouette appears — pick its name from four choices. The decoys are countries of similar area (chosen with <code>areakm2</code>) so the scale gives nothing away. Both the shape and the answer options come from a single <code>/v1/geo</code> call.</div>
@@ -677,7 +693,7 @@
       </div>
     </a>
 
-    <a class="card" href="languages.html">
+    <a class="card" href="languages.html" data-date="2026-07-03">
       <div class="card-tag">choropleth</div>
       <div class="card-title">Languages</div>
       <div class="card-desc">World countries colored by official language, using the opt-in <code>languages</code> property. One language means a solid fill; several means diagonal stripes, one band per color.</div>
@@ -687,7 +703,7 @@
       </div>
     </a>
 
-    <a class="card" href="usd-currency.html">
+    <a class="card" href="usd-currency.html" data-date="2026-07-03">
       <div class="card-tag">choropleth</div>
       <div class="card-title">USD vs Euro</div>
       <div class="card-desc">The world's two biggest currency zones from one <code>currencies</code> property — dollar users in green (Ecuador, Panama, Timor-Leste…), euro users in blue (the eurozone plus Kosovo and Montenegro), and Zimbabwe's basket counting for both.</div>
@@ -697,7 +713,7 @@
       </div>
     </a>
 
-    <a class="card" href="patterson.html">
+    <a class="card" href="patterson.html" data-date="2026-07-03">
       <div class="card-tag">countries</div>
       <div class="card-title">Country Details</div>
       <div class="card-desc">World countries on the Patterson projection. Hover any country for every opt-in property, plus its centroid and bounding box (<code>d3.geoCentroid</code>/<code>d3.geoBounds</code>) and neighboring countries (<code>topojson.neighbors</code>) — all computed client-side.</div>
@@ -707,7 +723,7 @@
       </div>
     </a>
 
-    <a class="card" href="martinique.html">
+    <a class="card" href="martinique.html" data-date="2026-06-30">
       <div class="card-tag">countries</div>
       <div class="card-title">Martinique</div>
       <div class="card-desc">A French Caribbean territory filtered by full country name — <code>filter=Martinique</code> is resolved to ISO code MQ server-side. At <code>detail=high</code> the 10m dataset resolves the island clearly.</div>
@@ -717,7 +733,7 @@
       </div>
     </a>
 
-    <a class="card" href="disputed.html">
+    <a class="card" href="disputed.html" data-date="2026-06-30">
       <div class="card-tag">countries</div>
       <div class="card-title">Disputed Territories</div>
       <div class="card-desc">World countries including disputed and partially-recognized territories — Kosovo, Western Sahara, Palestine, and others — highlighted separately.</div>
@@ -727,7 +743,7 @@
       </div>
     </a>
 
-    <a class="card" href="landlocked.html">
+    <a class="card" href="landlocked.html" data-date="2026-07-03">
       <div class="card-tag">countries</div>
       <div class="card-title">Landlocked Countries</div>
       <div class="card-desc">The 44 countries carrying the always-on <code>landlocked: true</code> flag, shaded on a world map. The two <em>doubly landlocked</em> states — every neighbour landlocked too — are found live from shared-border topology with <code>topojson.neighbors()</code>.</div>
@@ -737,7 +753,7 @@
       </div>
     </a>
 
-    <a class="card" href="massachusetts.html">
+    <a class="card" href="massachusetts.html" data-date="2026-07-03">
       <div class="card-tag">districts · choropleth</div>
       <div class="card-title">Massachusetts Counties</div>
       <div class="card-desc">14 counties fetched with <code>filter=US-MA</code> — only this state's districts, not all 3224 US counties. Population choropleth joined via 5-digit FIPS <code>gid</code> — the same code used by Census, BLS, and CDC data.</div>
@@ -747,7 +763,7 @@
       </div>
     </a>
 
-    <a class="card" href="us-counties.html">
+    <a class="card" href="us-counties.html" data-date="2026-07-01">
       <div class="card-tag">districts · live data</div>
       <div class="card-title">US Counties — Depression Rates</div>
       <div class="card-desc">Continental US counties colored by depression prevalence from the CDC PLACES 2023 dataset — joined to county geometry by FIPS code via a client-side Socrata API call. State borders drawn with <code>topojson.mesh</code>.</div>
@@ -757,7 +773,7 @@
       </div>
     </a>
 
-    <a class="card wide" href="world-capitals.html">
+    <a class="card wide" href="world-capitals.html" data-date="2026-06-30">
       <div class="card-tag">cities</div>
       <div class="card-title">World Capitals — Node.js</div>
       <div class="card-desc">Every capital city plotted from <code>capital</code>, <code>capitalLat</code> and <code>capitalLng</code> properties. The live map is client-side, but the code shown is a complete Node.js script producing the same SVG server-side — no browser, no DOM, no headless Chrome.</div>
@@ -772,9 +788,11 @@
 </div>
 
 <script>
-  // Counter + client-side tag filter. Chips are derived from each card's own tag line
-  // (the "countries · high detail · …" strings), so new examples pick up filtering for free.
+  // Counter + client-side tag filter + sort by date. Chips are derived from each card's own
+  // tag line (the "countries · high detail · …" strings), so new examples pick up filtering
+  // for free; the date comes from each card's data-date (the day the example was committed).
   (function () {
+    const grid = document.querySelector(".grid");
     const cards = Array.from(document.querySelectorAll(".grid .card"));
     const tagsOf = (c) => (c.querySelector(".card-tag")?.textContent || "")
       .split("·").map((s) => s.trim()).filter(Boolean);
@@ -787,8 +805,26 @@
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
     const chipsEl = document.getElementById("chips");
+    const sortsEl = document.getElementById("sorts");
     const countEl = document.getElementById("ex-count");
     let active = null;
+    let sort = "";           // "" = the curated order in the markup, else "new" | "old"
+
+    // Parse as plain numbers: new Date("2026-07-03") is UTC midnight, which is the
+    // previous day in the Americas and would print the wrong month at the boundary.
+    const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    function stamp(iso) {
+      const [y, m, d] = (iso || "").split("-").map(Number);
+      return y ? `${MONTHS[m - 1]} ${d}, ${y}` : "";
+    }
+    // Cards keep their source order as the tiebreak, so equal-dated examples stay grouped.
+    cards.forEach((c, i) => {
+      c.dataset.order = i;
+      const el = document.createElement("span");
+      el.className = "card-date";
+      el.textContent = stamp(c.dataset.date);
+      c.querySelector(".card-footer").insertBefore(el, c.querySelector(".card-arrow"));
+    });
 
     function chip(label, tag) {
       const b = document.createElement("button");
@@ -797,6 +833,13 @@
     }
     chip("all", "");
     tags.forEach(([t, n]) => chip(`${t} (${n})`, t));
+
+    sortsEl.insertAdjacentHTML("beforeend", '<span class="sort-label">sort</span>');
+    [["featured", ""], ["newest", "new"], ["oldest", "old"]].forEach(([label, key]) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = label; b.dataset.sort = key;
+      sortsEl.appendChild(b);
+    });
 
     function render() {
       let shown = 0;
@@ -807,7 +850,24 @@
       });
       countEl.textContent = active ? `${shown} of ${cards.length} examples` : `${cards.length} examples`;
       chipsEl.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.tag === (active || "")));
+
+      // Reorder with CSS `order` rather than moving nodes, so the curated order is
+      // never lost and "featured" is just order:0 everywhere again.
+      const dir = sort === "new" ? -1 : 1;
+      const seq = cards.slice().sort((a, b) =>
+        (sort ? dir * (a.dataset.date < b.dataset.date ? -1 : a.dataset.date > b.dataset.date ? 1 : 0) : 0)
+        || a.dataset.order - b.dataset.order);
+      seq.forEach((c, i) => { c.style.order = sort ? i : ""; });
+      grid.classList.toggle("by-date", !!sort);
+      sortsEl.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.sort === sort));
     }
+
+    sortsEl.addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      sort = b.dataset.sort;
+      render();
+    });
 
     chipsEl.addEventListener("click", (e) => {
       const b = e.target.closest("button");

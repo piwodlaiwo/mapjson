@@ -21,6 +21,9 @@ const fs = require('fs');
 const path = require('path');
 
 const ORIGIN = 'https://mapjson.com';
+// Some endpoints (Wikidata) throttle anonymous library user-agents. Identify
+// the checker the way their policy asks so we get the answer a browser gets.
+const UA = 'mapjson-link-check/1.0 (https://mapjson.com; site example checker)';
 const TIMEOUT_MS = 20000;
 const CONCURRENCY = 8;
 
@@ -48,6 +51,13 @@ const EXTRA_URLS = [
     where: 'wealth-and-health.html' },
   { url: 'https://api.worldbank.org/v2/country/all/indicator/SP.DYN.LE00.IN?format=json&per_page=20000&date=1960:2023',
     where: 'life-expectancy.html, wealth-and-health.html' },
+  // driving-side.html builds its SPARQL URL with encodeURIComponent, so the
+  // scanner cannot see it. Same query the page issues, kept short.
+  { url: 'https://query.wikidata.org/sparql?format=json&query=' +
+         encodeURIComponent('SELECT ?iso2 ?sideLabel WHERE { ?c wdt:P297 ?iso2 . ?c p:P1622 ?st . ' +
+           '?st ps:P1622 ?side . FILTER NOT EXISTS { ?st pq:P582 ?end } ' +
+           'SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } }'),
+    where: 'driving-side.html' },
   { url: 'https://flagpedia.net/data/flags/h240/ua.png', where: 'flag-guess.html', cors: false },
   { url: 'https://tile.openstreetmap.org/3/4/2.png', where: 'radar.html, spotlight.html, hormuz.html', cors: false },
   { url: 'https://a.basemaps.cartocdn.com/light_all/3/4/2.png', where: 'radar.html, spotlight.html, hormuz.html', cors: false },
@@ -79,6 +89,9 @@ function collectUrls(root) {
         const url = unescapeHtml(m[1]);
         if (!url.startsWith('http')) continue;      // relative asset
         if (url.includes('${') || url.includes('{')) continue; // templated
+        // `const BASE = "…?query=" + encodeURIComponent(q)` leaves a bare prefix
+        // behind; it is not an endpoint, so checking it just reports a fake 400.
+        if (/[?&=]$/.test(url)) continue;
         // /v1/resolve and friends are POST-only — a GET would 404 misleadingly.
         const method = /method\s*:\s*["']POST["']/i.test(src.slice(m.index, m.index + 240))
           ? 'POST' : 'GET';
@@ -95,7 +108,7 @@ function collectUrls(root) {
 
 async function probe(url) {
   const res = await fetch(url, {
-    headers: { Origin: ORIGIN },
+    headers: { Origin: ORIGIN, 'User-Agent': UA },
     redirect: 'manual',
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
@@ -113,6 +126,7 @@ async function checkPreflight(url) {
       method: 'OPTIONS',
       headers: {
         Origin: ORIGIN,
+        'User-Agent': UA,
         'Access-Control-Request-Method': 'POST',
         'Access-Control-Request-Headers': 'content-type',
       },

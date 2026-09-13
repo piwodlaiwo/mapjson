@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Which Side of the Road | MapJSON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A world map of left- and right-hand traffic, queried live from Wikidata via SPARQL and joined to mapjson geometry on ISO 3166-1 alpha-2 codes.">
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-V4HGN0GB4Z');
+  </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/icon-full.svg">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1a1a1a;
+      --bg: #fafafa;
+      --accent: #b0402f;
+      --muted: #9b9a94;
+      --border: #e5e4df;
+      --code-bg: #efeeea;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 300;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
+    .back-link {
+      display: inline-block;
+      padding: 2.5rem 0 0;
+      font-size: 11px;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .back-link:hover { color: var(--ink); }
+    header {
+      border-bottom: 1.5px solid var(--ink);
+      padding: 1rem 0 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    header .tag {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.25rem;
+      font-weight: 400;
+      line-height: 1.1;
+    }
+    header p { color: var(--muted); margin-top: 0.6rem; font-size: 12px; max-width: 640px; line-height: 1.7; }
+    h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    section { margin-bottom: 2.5rem; }
+    section p { max-width: 680px; }
+    section p + p { margin-top: 0.9rem; }
+    .map-wrap {
+      margin-bottom: 1.25rem;
+      border: 1px solid var(--border);
+      background: #1b3a4b;
+      line-height: 0;
+      position: relative;
+    }
+    .map-wrap svg { width: 100%; display: block; }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.45rem; }
+    .legend-swatch { width: 14px; height: 14px; border: 1px solid var(--border); flex-shrink: 0; }
+    pre {
+      background: var(--code-bg);
+      border-left: 3px solid var(--ink);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 12px;
+      line-height: 1.65;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 48px;
+    }
+    .nav-brand { font-weight: 400; font-size: 14px; color: var(--ink); text-decoration: none; letter-spacing: 0.04em; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); }
+    .tooltip {
+      position: absolute;
+      background: #1a1a1a;
+      color: #fafafa;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      padding: 6px 10px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.1s;
+      white-space: nowrap;
+      line-height: 1.6;
+    }
+    .nav-brand { display: inline-flex; align-items: center; gap: 5px; font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink, #1a1a1a); text-decoration: none; }
+    .nav-brand .b { font-size: 19px; font-weight: 500; color: #c8c6c0; line-height: 1; }
+    .nav-brand .pin { position: relative; display: inline-block; width: 12px; height: 12px; background: var(--ink, #1a1a1a); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .nav-brand .pin i { position: absolute; top: 50%; left: 50%; width: 4.5px; height: 4.5px; background: var(--bg, #fafafa); border-radius: 50%; transform: translate(-50%, -50%); }
+    .nav-brand .word { margin-left: 5px; }
+    /* type system: Space Grotesk display/body, IBM Plex Mono labels/params/code */
+    body { font-family: 'Space Grotesk', sans-serif; font-weight: 400; font-size: 15px; }
+    .back-link, .tag, pre, code { font-family: 'IBM Plex Mono', monospace; }
+    header h1 { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 500; font-size: 2.5rem; letter-spacing: -0.03em; line-height: 1.05; }
+    header .tag { font-size: 12px; letter-spacing: 0.16em; color: #a7a6a0; }
+    header p { font-size: 15px; line-height: 1.65; color: #4a4a45; max-width: 680px; }
+    h2 { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 1.35rem; letter-spacing: -0.02em; }
+    section .note { font-size: 13px; }
+    section p { font-size: 15px; line-height: 1.65; color: #4a4a45; }
+    :not(pre) > code { font-family: 'IBM Plex Mono', monospace; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+    /* type system: nav + lockup (TYPOGRAPHY.md) */
+    .nav-links a { font-size: 12px; letter-spacing: 0.18em; color: #9b9a94; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links a.here { color: var(--ink); font-weight: 500; }
+    .nav-brand { gap: 4px; }
+    .nav-brand .b { font-size: 21px; font-weight: 400; }
+    .nav-brand .pin { width: 14px; height: 14px; }
+    .nav-brand .pin i { width: 5px; height: 5px; }
+    .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  </style>
+<style>
+  /* nav type: definitive — IBM Plex Mono per TYPOGRAPHY.md, identical on every page */
+  .nav-links a, nav .nav-links a, .topnav .nav-links a { font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 400; letter-spacing: 0.18em; text-transform: uppercase; color: #9b9a94; }
+  .nav-links a:hover, .topnav .nav-links a:hover { color: var(--ink, #1a1a1a); }
+  .nav-links a.here, .topnav .nav-links a.here { color: var(--ink, #1a1a1a); font-weight: 500; }
+  .nav-brand, .topnav .nav-brand { display: inline-flex; align-items: center; gap: 4px; font-family: 'IBM Plex Mono', monospace; text-decoration: none; color: var(--ink, #1a1a1a); letter-spacing: -0.01em; }
+  .nav-brand .b, .topnav .nav-brand .b { font-size: 21px; font-weight: 400; color: #c8c6c0; line-height: 1; }
+  .nav-brand .pin, .topnav .nav-brand .pin { width: 14px; height: 14px; }
+  .nav-brand .pin i, .topnav .nav-brand .pin i { width: 5px; height: 5px; }
+  .nav-brand .word, .topnav .nav-brand .word { margin-left: 8px; font-size: 16px; font-weight: 600; }
+</style>
+  <style>
+  /* mobile: nav + page headers (TYPOGRAPHY.md responsive pass) */
+  @media (max-width: 640px) {
+    html, body { overflow-x: hidden; }
+    nav, .topnav { padding: 0 0.6rem; }
+    .nav-links, .topnav .nav-links { gap: 0.55rem; }
+    .nav-links a, nav .nav-links a, .topnav .nav-links a { font-size: 11px !important; letter-spacing: 0.08em !important; }
+    .nav-brand .b, .topnav .nav-brand .b { font-size: 16px; }
+    .nav-brand .pin, .topnav .nav-brand .pin { width: 9px; height: 9px; }
+    .nav-brand .pin i, .topnav .nav-brand .pin i { width: 3.2px; height: 3.2px; }
+    .nav-brand .word, .topnav .nav-brand .word { font-size: 13px; margin-left: 4px; }
+
+    header h1, .hero h1 { font-size: 2rem !important; letter-spacing: -0.02em !important; line-height: 1.1 !important; }
+    header .tag, header .tagline, .hero-eyebrow, header p.tagline { font-size: 10px !important; letter-spacing: 0.18em !important; }
+    header p:not(.tagline), .hero p { font-size: 13px !important; }
+    .card { padding: 24px 20px 20px !important; }
+  }
+  </style>
+<style>
+.map-wrap{background:#efece6;}
+  .live{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6b6a63;margin:0 0 1.25rem;}
+  .live b{color:#b0402f;}
+  .controls{display:flex;align-items:center;gap:14px;margin:0 0 2.5rem;}
+  .controls button{font-family:'IBM Plex Mono',monospace;font-size:13px;padding:5px 18px;
+                   border:1px solid #3b3a35;background:#fff;color:#3b3a35;cursor:pointer;}
+  .controls button:hover{background:#3b3a35;color:#fafafa;}
+  .controls span{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9b9a94;}
+  .tip{position:absolute;background:#26251f;color:#f4f1ea;font-family:'IBM Plex Mono',monospace;
+       font-size:11px;padding:5px 9px;pointer-events:none;opacity:0;white-space:nowrap;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="/" aria-label="mapjson home"><span class="b">{</span><span class="pin"><i></i></span><span class="b">}</span><span class="word">mapjson</span></a>
+  <div class="nav-links">
+    <a href="/docs/">Docs</a>
+    <a class="here" href="/examples/">Examples</a>
+    <a href="/clean/">Clean</a>
+    <a href="/explorer/">Explore</a>
+    <a href="/build/">Build</a>
+  </div>
+</nav>
+
+<div class="page">
+  <a class="back-link" href="/examples/">&larr; Examples</a>
+  <header>
+    <div class="tag">Wikidata · SPARQL · categorical · zoomable</div>
+    <h1>Which side of the road</h1>
+    <p>Wikidata knows which side of the road every country drives on, and will answer a SPARQL query about it from the browser. The result keys on ISO 3166-1 alpha-2 — the same code mapjson uses as its country <code>gid</code> — so the join is a lookup, and the map draws the shape of the British Empire more clearly than most maps of the British Empire.</p>
+  </header>
+  <p class="live" id="live">querying Wikidata…</p>
+  <div class="map-wrap" id="map-wrap"><div class="tip" id="tip"></div></div>
+  <div class="controls">
+    <button id="reset">reset</button>
+    <span>scroll to zoom, drag to pan — dots give way to real coastlines as you go in</span>
+  </div>
+  <section>
+    <h2>API Calls</h2>
+    <pre>// Wikidata Query Service — SPARQL over HTTP GET, CORS-enabled, no key
+https://query.wikidata.org/sparql?format=json&amp;query=…
+
+  SELECT ?iso2 ?sideLabel WHERE {
+    ?c wdt:P297 ?iso2 .                          # ISO 3166-1 alpha-2
+    ?c p:P1622 ?st . ?st ps:P1622 ?side .        # driving side
+    FILTER NOT EXISTS { ?st pq:P582 ?end }       # drop statements that have ended
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+  }
+
+// geometry + population — mapjson
+https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=medium&amp;properties=iso2,name,population</pre>
+  </section>
+  <section>
+    <h2>Counting people, not countries</h2>
+    <p>By country the split looks lopsided; by population it is much closer, because India,
+      Indonesia, Pakistan, Japan and the United Kingdom are all on the left. The share under the map
+      is computed from mapjson's own <code>population</code> property, so the page joins two sources
+      and needs no third.</p>
+    <h2>Querying Wikidata from a page</h2>
+    <p>The query service accepts a plain <code>GET</code> with <code>format=json</code> and sends
+      <code>Access-Control-Allow-Origin: *</code>, so no proxy or key is involved. Two details make
+      the difference between a clean map and a messy one. Asking for <code>p:</code>/<code>ps:</code>
+      rather than the truthy <code>wdt:</code> shortcut exposes the statement itself, so
+      <code>FILTER NOT EXISTS { ?st pq:P582 ?end }</code> can drop rules that have since been
+      repealed — otherwise Sweden appears twice, once for the left-hand traffic it abandoned in 1967.
+      And the query deliberately does not restrict to sovereign states: Greenland, Hong Kong and
+      Puerto Rico carry their own code and their own rule, and excluding them punches grey holes in
+      the map. Six features stay grey because nobody has a rule to record — Antarctica, two disputed
+      territories, and three uninhabited islands.</p>
+    <p>Keep queries cheap. The public endpoint has a timeout, and aggregate queries across large
+      classes will hit it — this one returns a couple of hundred rows and comes back in well under a
+      second.</p>
+    <h2>Islands you would otherwise lose</h2>
+    <p>An equal-area world map is brutal to small places. Martinique is about 1,100&nbsp;km², which
+      at this size projects to roughly <em>one pixel</em> — filled correctly, and invisible. So are
+      Malta, Singapore, Mauritius and most of the eastern Caribbean, which is exactly the part of the
+      map where the left-hand rule is most concentrated.</p>
+    <p>Anything whose projected area falls under six square pixels therefore gets a dot at its
+      centroid in its own colour, on top of the fill. The cut-off is measured with
+      <code>path.area()</code> on the projected shape rather than from square kilometres, so it
+      tracks whatever projection and canvas size the page happens to use — 72 territories qualify
+      here. It is the standard fix for this problem, and the alternative is a map that quietly tells
+      you the Caribbean has no opinion about which side of the road to drive on.</p>
+    <p>Zooming settles it properly. Scroll or drag and the map scales up to 60x, and each dot
+      disappears at exactly the point its own country grows big enough to see: at scale
+      <em>k</em> a shape covers its area times <em>k</em>², so the marker retires once that clears
+      the same six-pixel bar that put it there. Zoom into the eastern Caribbean and you get real
+      coastlines, each in its own colour. The zoom transforms the drawn group rather than
+      reprojecting the geometry, so panning stays smooth, and strokes and dots are divided by
+      <em>k</em> to hold their weight on screen. The legend sits outside the zoomed group and
+      stays put.</p>
+  </section>
+  <section>
+    <h2>Code</h2>
+    <pre>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;title&gt;Which side of the road&lt;/title&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js&quot;&gt;&lt;/script&gt;
+&lt;style&gt;
+  body { margin: 0; background: #efece6; font: 13px &#x27;IBM Plex Mono&#x27;, ui-monospace, monospace; color: #3b3a35; }
+  #map-wrap { position: relative; }
+  #map-wrap svg { width: 100%; display: block; }
+  .tip { position: absolute; background: #26251f; color: #f4f1ea; font-size: 11px; padding: 5px 9px;
+         pointer-events: none; opacity: 0; white-space: nowrap; line-height: 1.6; }
+  .controls { display: flex; align-items: center; gap: 14px; padding: 12px 14px; }
+  .controls button { font: inherit; padding: 5px 16px; border: 1px solid #3b3a35; background: #fff; cursor: pointer; }
+  .controls span { color: #6b6a63; }
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div id=&quot;map-wrap&quot;&gt;&lt;div class=&quot;tip&quot; id=&quot;tip&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;controls&quot;&gt;
+  &lt;button id=&quot;reset&quot;&gt;reset&lt;/button&gt;
+  &lt;span&gt;scroll to zoom, drag to pan&lt;/span&gt;
+&lt;/div&gt;
+&lt;script&gt;
+// Anything with an ISO 3166-1 alpha-2 code (P297) and a side of the road
+// (P1622). Deliberately not restricted to sovereign states: dependencies like
+// Greenland, Hong Kong and Puerto Rico have their own code and their own rule,
+// and leaving them out puts grey holes in the map. The FILTER drops statements
+// carrying an end date, so Sweden counts once — as the right-hand country it
+// became in 1967, not also as the left-hand one it stopped being.
+const SPARQL = `
+  SELECT ?iso2 ?sideLabel WHERE {
+    ?c wdt:P297 ?iso2 .
+    ?c p:P1622 ?st . ?st ps:P1622 ?side .
+    FILTER NOT EXISTS { ?st pq:P582 ?end }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language &quot;en&quot;. }
+  }`;
+const WIKIDATA = &quot;https://query.wikidata.org/sparql?format=json&amp;query=&quot; + encodeURIComponent(SPARQL);
+
+// population comes from mapjson itself, so the share below needs no third source.
+const GEO = &quot;https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=medium&quot;
+          + &quot;&amp;properties=iso2,name,population&amp;format=geojson&quot;;
+
+const COLOR = { left: &quot;#b0402f&quot;, right: &quot;#2f6f8f&quot; };
+const NO_DATA = &quot;#d9d5cc&quot;;
+// Below this projected size a country is smaller than a couple of pixels and
+// its fill is invisible, however correct it is. Martinique lands at about one.
+const MIN_AREA = 6;
+
+(async function () {
+  const [wd, world] = await Promise.all([d3.json(WIKIDATA), d3.json(GEO)]);
+  const side = new Map(wd.results.bindings.map(r =&gt; [r.iso2.value, r.sideLabel.value]));
+
+  const W = 1200, H = 620;
+  const svg = d3.select(&quot;#map-wrap&quot;).append(&quot;svg&quot;).attr(&quot;viewBox&quot;, &quot;0 0 &quot; + W + &quot; &quot; + H);
+  const projection = d3.geoEqualEarth().rotate([-11, 0]);
+  const path = d3.geoPath(projection);
+  projection.fitExtent([[10, 10], [W - 10, H - 60]], world);
+  // Tooltip coordinates are measured against #map-wrap explicitly. On SVG
+  // children Chrome reports the pointer offset relative to the hovered shape&#x27;s
+  // own box, which lands the tooltip somewhere different for every country.
+  const wrap = document.getElementById(&quot;map-wrap&quot;);
+  const tip = d3.select(&quot;#tip&quot;);
+
+  const fmtPop = d3.format(&quot;,.3~s&quot;);
+
+  const hover = (e, d) =&gt; {
+    const s = side.get(d.properties.iso2);
+    const pop = d.properties.population;
+    const [mx, my] = d3.pointer(e, wrap);
+    tip.style(&quot;opacity&quot;, 1)
+       .style(&quot;left&quot;, (mx + 14) + &quot;px&quot;)
+       .style(&quot;top&quot;, (my - 6) + &quot;px&quot;)
+       .html(&quot;&lt;b&gt;&quot; + d.properties.name + &quot;&lt;/b&gt;&lt;br&gt;&quot;
+           + (s ? &quot;drives on the &quot; + s : &quot;no data&quot;)
+           + (pop ? &quot;&lt;br&gt;&quot; + fmtPop(pop) + &quot; people&quot; : &quot;&quot;));
+  };
+  const away = () =&gt; tip.style(&quot;opacity&quot;, 0);
+
+  // Everything that should zoom goes in one group; the legend stays outside it
+  // so it keeps its size and place while the map moves underneath.
+  const gZoom = svg.append(&quot;g&quot;);
+
+  const shapes = gZoom.append(&quot;g&quot;).selectAll(&quot;path&quot;).data(world.features).join(&quot;path&quot;)
+    .attr(&quot;d&quot;, path)
+    .attr(&quot;fill&quot;, d =&gt; COLOR[side.get(d.properties.iso2)] || NO_DATA)
+    .attr(&quot;stroke&quot;, &quot;#efece6&quot;).attr(&quot;stroke-width&quot;, 0.4)
+    .on(&quot;mousemove&quot;, hover).on(&quot;mouseout&quot;, away);
+
+  // Small islands and enclaves — Martinique, Malta, Singapore, the whole
+  // eastern Caribbean — carry a rule but occupy about a pixel on a world map,
+  // so the fill alone drops them. Anything under MIN_AREA also gets a dot at
+  // its centroid, which is the only way the Caribbean reads as left-hand at
+  // this scale. path.area() measures the shape as projected, so the cut-off
+  // follows the drawing rather than a guess about square kilometres.
+  const dotted = world.features.filter(d =&gt;
+    side.has(d.properties.iso2) &amp;&amp; path.area(d) &lt; MIN_AREA);
+
+  const dotArea = new Map(dotted.map(d =&gt; [d, path.area(d)]));
+
+  const dots = gZoom.append(&quot;g&quot;).selectAll(&quot;circle&quot;).data(dotted).join(&quot;circle&quot;)
+    .attr(&quot;cx&quot;, d =&gt; path.centroid(d)[0])
+    .attr(&quot;cy&quot;, d =&gt; path.centroid(d)[1])
+    .attr(&quot;r&quot;, 2.8)
+    .attr(&quot;fill&quot;, d =&gt; COLOR[side.get(d.properties.iso2)])
+    .attr(&quot;stroke&quot;, &quot;#efece6&quot;).attr(&quot;stroke-width&quot;, 0.7)
+    .on(&quot;mousemove&quot;, hover).on(&quot;mouseout&quot;, away);
+
+  // Zoom transforms the group rather than reprojecting, so panning stays cheap.
+  // Strokes and dots are divided by k to hold their size on screen, and each
+  // dot retires the moment its own country is finally big enough to see: at
+  // scale k the shape covers area x k^2, so the marker has done its job.
+  const zoom = d3.zoom().scaleExtent([1, 60]).on(&quot;zoom&quot;, (e) =&gt; {
+    const k = e.transform.k;
+    gZoom.attr(&quot;transform&quot;, e.transform);
+    shapes.attr(&quot;stroke-width&quot;, 0.4 / k);
+    dots.attr(&quot;r&quot;, 2.8 / k).attr(&quot;stroke-width&quot;, 0.7 / k)
+        .attr(&quot;display&quot;, d =&gt; (dotArea.get(d) * k * k &gt;= MIN_AREA ? &quot;none&quot; : null));
+  });
+
+  svg.call(zoom).style(&quot;cursor&quot;, &quot;grab&quot;)
+     .on(&quot;mousedown.cursor&quot;, () =&gt; svg.style(&quot;cursor&quot;, &quot;grabbing&quot;))
+     .on(&quot;mouseup.cursor&quot;, () =&gt; svg.style(&quot;cursor&quot;, &quot;grab&quot;));
+
+  const resetBtn = document.getElementById(&quot;reset&quot;);
+  if (resetBtn) resetBtn.onclick = () =&gt; svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+
+  // Tally by people as well as by country. The country count reads as a small
+  // minority until you notice India, Indonesia, Japan and Pakistan are in it.
+  const tally = { left: { n: 0, pop: 0 }, right: { n: 0, pop: 0 } };
+  for (const f of world.features) {
+    const s = side.get(f.properties.iso2);
+    if (!s || !tally[s]) continue;
+    tally[s].n++;
+    tally[s].pop += f.properties.population || 0;
+  }
+  const totalPop = tally.left.pop + tally.right.pop;
+  const pct = (s) =&gt; Math.round((tally[s].pop / totalPop) * 100);
+
+  const key = svg.append(&quot;g&quot;).attr(&quot;transform&quot;, &quot;translate(34,&quot; + (H - 42) + &quot;)&quot;);
+  [&quot;left&quot;, &quot;right&quot;].forEach((s, i) =&gt; {
+    const row = key.append(&quot;g&quot;).attr(&quot;transform&quot;, &quot;translate(&quot; + i * 300 + &quot;,0)&quot;);
+    row.append(&quot;rect&quot;).attr(&quot;width&quot;, 14).attr(&quot;height&quot;, 14).attr(&quot;y&quot;, -11).attr(&quot;fill&quot;, COLOR[s]);
+    row.append(&quot;text&quot;).attr(&quot;x&quot;, 22).attr(&quot;font-size&quot;, 12).attr(&quot;fill&quot;, &quot;#4a4a45&quot;)
+      .attr(&quot;font-family&quot;, &quot;&#x27;IBM Plex Mono&#x27;, ui-monospace, monospace&quot;)
+      .text(&quot;drives on the &quot; + s + &quot; — &quot; + tally[s].n + &quot; countries, &quot; + pct(s) + &quot;% of people&quot;);
+  });
+
+  const live = document.getElementById(&quot;live&quot;);
+  if (live) live.innerHTML = &quot;&lt;b&gt;&quot; + tally.left.n + &quot;&lt;/b&gt; countries drive on the left — but &quot;
+    + &quot;&lt;b&gt;&quot; + pct(&quot;left&quot;) + &quot;%&lt;/b&gt; of the world&#x27;s people do, on mapjson&#x27;s population figures.&quot;;
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+// Anything with an ISO 3166-1 alpha-2 code (P297) and a side of the road
+// (P1622). Deliberately not restricted to sovereign states: dependencies like
+// Greenland, Hong Kong and Puerto Rico have their own code and their own rule,
+// and leaving them out puts grey holes in the map. The FILTER drops statements
+// carrying an end date, so Sweden counts once — as the right-hand country it
+// became in 1967, not also as the left-hand one it stopped being.
+const SPARQL = `
+  SELECT ?iso2 ?sideLabel WHERE {
+    ?c wdt:P297 ?iso2 .
+    ?c p:P1622 ?st . ?st ps:P1622 ?side .
+    FILTER NOT EXISTS { ?st pq:P582 ?end }
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+  }`;
+const WIKIDATA = "https://query.wikidata.org/sparql?format=json&query=" + encodeURIComponent(SPARQL);
+
+// population comes from mapjson itself, so the share below needs no third source.
+const GEO = "https://api.mapjson.com/v1/geo?layer=countries&filter=world&detail=medium"
+          + "&properties=iso2,name,population&format=geojson";
+
+const COLOR = { left: "#b0402f", right: "#2f6f8f" };
+const NO_DATA = "#d9d5cc";
+// Below this projected size a country is smaller than a couple of pixels and
+// its fill is invisible, however correct it is. Martinique lands at about one.
+const MIN_AREA = 6;
+
+(async function () {
+  const [wd, world] = await Promise.all([d3.json(WIKIDATA), d3.json(GEO)]);
+  const side = new Map(wd.results.bindings.map(r => [r.iso2.value, r.sideLabel.value]));
+
+  const W = 1200, H = 620;
+  const svg = d3.select("#map-wrap").append("svg").attr("viewBox", "0 0 " + W + " " + H);
+  const projection = d3.geoEqualEarth().rotate([-11, 0]);
+  const path = d3.geoPath(projection);
+  projection.fitExtent([[10, 10], [W - 10, H - 60]], world);
+  // Tooltip coordinates are measured against #map-wrap explicitly. On SVG
+  // children Chrome reports the pointer offset relative to the hovered shape's
+  // own box, which lands the tooltip somewhere different for every country.
+  const wrap = document.getElementById("map-wrap");
+  const tip = d3.select("#tip");
+
+  const fmtPop = d3.format(",.3~s");
+
+  const hover = (e, d) => {
+    const s = side.get(d.properties.iso2);
+    const pop = d.properties.population;
+    const [mx, my] = d3.pointer(e, wrap);
+    tip.style("opacity", 1)
+       .style("left", (mx + 14) + "px")
+       .style("top", (my - 6) + "px")
+       .html("<b>" + d.properties.name + "</b><br>"
+           + (s ? "drives on the " + s : "no data")
+           + (pop ? "<br>" + fmtPop(pop) + " people" : ""));
+  };
+  const away = () => tip.style("opacity", 0);
+
+  // Everything that should zoom goes in one group; the legend stays outside it
+  // so it keeps its size and place while the map moves underneath.
+  const gZoom = svg.append("g");
+
+  const shapes = gZoom.append("g").selectAll("path").data(world.features).join("path")
+    .attr("d", path)
+    .attr("fill", d => COLOR[side.get(d.properties.iso2)] || NO_DATA)
+    .attr("stroke", "#efece6").attr("stroke-width", 0.4)
+    .on("mousemove", hover).on("mouseout", away);
+
+  // Small islands and enclaves — Martinique, Malta, Singapore, the whole
+  // eastern Caribbean — carry a rule but occupy about a pixel on a world map,
+  // so the fill alone drops them. Anything under MIN_AREA also gets a dot at
+  // its centroid, which is the only way the Caribbean reads as left-hand at
+  // this scale. path.area() measures the shape as projected, so the cut-off
+  // follows the drawing rather than a guess about square kilometres.
+  const dotted = world.features.filter(d =>
+    side.has(d.properties.iso2) && path.area(d) < MIN_AREA);
+
+  const dotArea = new Map(dotted.map(d => [d, path.area(d)]));
+
+  const dots = gZoom.append("g").selectAll("circle").data(dotted).join("circle")
+    .attr("cx", d => path.centroid(d)[0])
+    .attr("cy", d => path.centroid(d)[1])
+    .attr("r", 2.8)
+    .attr("fill", d => COLOR[side.get(d.properties.iso2)])
+    .attr("stroke", "#efece6").attr("stroke-width", 0.7)
+    .on("mousemove", hover).on("mouseout", away);
+
+  // Zoom transforms the group rather than reprojecting, so panning stays cheap.
+  // Strokes and dots are divided by k to hold their size on screen, and each
+  // dot retires the moment its own country is finally big enough to see: at
+  // scale k the shape covers area x k^2, so the marker has done its job.
+  const zoom = d3.zoom().scaleExtent([1, 60]).on("zoom", (e) => {
+    const k = e.transform.k;
+    gZoom.attr("transform", e.transform);
+    shapes.attr("stroke-width", 0.4 / k);
+    dots.attr("r", 2.8 / k).attr("stroke-width", 0.7 / k)
+        .attr("display", d => (dotArea.get(d) * k * k >= MIN_AREA ? "none" : null));
+  });
+
+  svg.call(zoom).style("cursor", "grab")
+     .on("mousedown.cursor", () => svg.style("cursor", "grabbing"))
+     .on("mouseup.cursor", () => svg.style("cursor", "grab"));
+
+  const resetBtn = document.getElementById("reset");
+  if (resetBtn) resetBtn.onclick = () => svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+
+  // Tally by people as well as by country. The country count reads as a small
+  // minority until you notice India, Indonesia, Japan and Pakistan are in it.
+  const tally = { left: { n: 0, pop: 0 }, right: { n: 0, pop: 0 } };
+  for (const f of world.features) {
+    const s = side.get(f.properties.iso2);
+    if (!s || !tally[s]) continue;
+    tally[s].n++;
+    tally[s].pop += f.properties.population || 0;
+  }
+  const totalPop = tally.left.pop + tally.right.pop;
+  const pct = (s) => Math.round((tally[s].pop / totalPop) * 100);
+
+  const key = svg.append("g").attr("transform", "translate(34," + (H - 42) + ")");
+  ["left", "right"].forEach((s, i) => {
+    const row = key.append("g").attr("transform", "translate(" + i * 300 + ",0)");
+    row.append("rect").attr("width", 14).attr("height", 14).attr("y", -11).attr("fill", COLOR[s]);
+    row.append("text").attr("x", 22).attr("font-size", 12).attr("fill", "#4a4a45")
+      .attr("font-family", "'IBM Plex Mono', ui-monospace, monospace")
+      .text("drives on the " + s + " — " + tally[s].n + " countries, " + pct(s) + "% of people");
+  });
+
+  const live = document.getElementById("live");
+  if (live) live.innerHTML = "<b>" + tally.left.n + "</b> countries drive on the left — but "
+    + "<b>" + pct("left") + "%</b> of the world's people do, on mapjson's population figures.";
+})();
+</script>
+<script src="example-widgets.js" defer></script>
+</body>
+</html>

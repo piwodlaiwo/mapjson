@@ -5,6 +5,7 @@
   <title>Wealth and Health | MapJSON</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="A linked scatter and world map of GDP per capita against life expectancy, coloured by mapjson continent — hover either one to highlight the other.">
+  <link rel="canonical" href="https://mapjson.com/examples/wealth-and-health.html">
   
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-V4HGN0GB4Z"></script>
@@ -187,6 +188,11 @@
 .map-wrap{background:#efece6;}
   .live{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6b6a63;margin:0 0 1.25rem;}
   .live b{color:#2c5f7c;}
+  .controls{display:flex;align-items:center;gap:14px;margin:0 0 2.5rem;}
+  .controls button{font-family:'IBM Plex Mono',monospace;font-size:13px;padding:5px 18px;
+                   border:1px solid #3b3a35;background:#fff;color:#3b3a35;cursor:pointer;}
+  .controls button:hover{background:#3b3a35;color:#fafafa;}
+  .controls span{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9b9a94;}
   .tip{position:absolute;background:#26251f;color:#f4f1ea;font-family:'IBM Plex Mono',monospace;
        font-size:11px;padding:5px 9px;pointer-events:none;opacity:0;white-space:nowrap;line-height:1.6;}
 </style>
@@ -207,13 +213,16 @@
 <div class="page">
   <a class="back-link" href="/examples/">&larr; Examples</a>
   <header>
-    <div class="tag">World Bank · two indicators · linked scatter + map</div>
+    <div class="tag">World Bank · two indicators · linked scatter + zoomable map</div>
     <h1>Wealth and health</h1>
     <p>Plot income against life expectancy and you get the Preston curve: steep at the poorest end, flattening once a country is comfortable. The scatter is the chart; the map is the index. Hover a circle to find that country on the map, or hover the map to find its circle — both are coloured by the <code>continent</code> property mapjson returns, so the two views always agree.</p>
   </header>
   <p class="live" id="live">fetching three World Bank indicators…</p>
   <div class="map-wrap" id="map-wrap"><div class="tip" id="tip"></div></div>
-
+  <div class="controls">
+    <button id="reset">reset map</button>
+    <span>scroll to zoom the map, drag to pan — the scatter stays put</span>
+  </div>
   <section>
     <h2>API Calls</h2>
     <pre>// which World Bank codes are countries rather than aggregates
@@ -240,6 +249,17 @@ https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=mediu
     <p>The same aggregate-code collision described on the
       <a href="life-expectancy.html">life expectancy</a> example applies to all three indicators, and
       is handled the same way.</p>
+    <h2>Zooming half a drawing</h2>
+    <p>Sharing one <code>&lt;svg&gt;</code> makes zoom the interesting part: the map has to scale
+      while the chart underneath holds still. The map therefore sits in its own group with a
+      <code>clipPath</code> at its lower edge, and the zoom behaviour binds to that group rather
+      than to the svg — so a scroll over the scatter scrolls the page as usual, and zoomed
+      geometry is cut off instead of sliding across the axes. A transparent rectangle behind the
+      countries catches gestures over open ocean, and <code>translateExtent</code> stops the map
+      being dragged out of its own frame.</p>
+    <p>Countries too small to see on the locator — about 44 of them — carry a dot in their
+      continent colour that highlights with the rest of the linked hover, and gives way to the real
+      coastline as you zoom in.</p>
   </section>
   <section>
     <h2>Code</h2>
@@ -255,10 +275,17 @@ https://api.mapjson.com/v1/geo?layer=countries&amp;filter=world&amp;detail=mediu
   #map-wrap svg { width: 100%; display: block; }
   .tip { position: absolute; background: #26251f; color: #f4f1ea; font-size: 11px; padding: 5px 9px;
          pointer-events: none; opacity: 0; white-space: nowrap; line-height: 1.6; }
+  .controls { display: flex; align-items: center; gap: 14px; padding: 12px 14px; }
+  .controls button { font: inherit; padding: 5px 16px; border: 1px solid #3b3a35; background: #fff; cursor: pointer; }
+  .controls span { color: #6b6a63; }
 &lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
 &lt;div id=&quot;map-wrap&quot;&gt;&lt;div class=&quot;tip&quot; id=&quot;tip&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;div class=&quot;controls&quot;&gt;
+  &lt;button id=&quot;reset&quot;&gt;reset map&lt;/button&gt;
+  &lt;span&gt;scroll to zoom the map, drag to pan — the scatter stays put&lt;/span&gt;
+&lt;/div&gt;
 &lt;script&gt;
 const YEAR = 2023;
 const wbSeries = (ind) =&gt; &quot;https://api.worldbank.org/v2/country/all/indicator/&quot; + ind
@@ -278,6 +305,9 @@ const CONTINENT = {
   &quot;Seven seas (open ocean)&quot;: &quot;#8b8a82&quot;,
 };
 const LABEL = { &quot;Seven seas (open ocean)&quot;: &quot;Seven seas&quot; };
+// A country under this projected size is about a pixel on the locator map, so
+// it gets a dot in its continent colour until zoom makes the shape legible.
+const MIN_AREA = 6;
 
 // The World Bank returns regional and income aggregates alongside countries,
 // and eleven of their aggregate codes collide with mapjson gids for tiny
@@ -319,6 +349,10 @@ const series = (json, codes) =&gt; {
   const M = { top: 26, right: 30, bottom: 52, left: 62 };
 
   const svg = d3.select(&quot;#map-wrap&quot;).append(&quot;svg&quot;).attr(&quot;viewBox&quot;, &quot;0 0 &quot; + W + &quot; &quot; + H);
+  // Tooltip coordinates are measured against #map-wrap explicitly. On SVG
+  // children Chrome reports the pointer offset relative to the hovered shape&#x27;s
+  // own box, which lands the tooltip somewhere different for every country.
+  const wrap = document.getElementById(&quot;map-wrap&quot;);
   const tip = d3.select(&quot;#tip&quot;);
 
   // ── map: a locator, not a choropleth. Fills are the continent colour held
@@ -327,12 +361,40 @@ const series = (json, codes) =&gt; {
   const path = d3.geoPath(projection);
   projection.fitExtent([[10, 10], [W - 10, MAP_H - 10]], world);
 
-  const shapes = svg.append(&quot;g&quot;).selectAll(&quot;path&quot;).data(world.features).join(&quot;path&quot;)
+  const byIso = new Map(points.map(p =&gt; [p.iso, p]));
+
+  // The map zooms; the scatter below it must not move, so the map lives in its
+  // own clipped group and the zoom behaviour is bound to that group alone.
+  // Zoomed geometry is clipped at the map&#x27;s lower edge instead of sliding over
+  // the chart.
+  svg.append(&quot;defs&quot;).append(&quot;clipPath&quot;).attr(&quot;id&quot;, &quot;mapclip&quot;)
+    .append(&quot;rect&quot;).attr(&quot;width&quot;, W).attr(&quot;height&quot;, MAP_H);
+
+  const gMap = svg.append(&quot;g&quot;).attr(&quot;clip-path&quot;, &quot;url(#mapclip)&quot;);
+  // Transparent catcher so the gesture works over empty ocean too, not just
+  // when the pointer happens to be on a country.
+  gMap.append(&quot;rect&quot;).attr(&quot;width&quot;, W).attr(&quot;height&quot;, MAP_H)
+    .attr(&quot;fill&quot;, &quot;none&quot;).attr(&quot;pointer-events&quot;, &quot;all&quot;);
+  const gZoom = gMap.append(&quot;g&quot;);
+
+  const shapes = gZoom.append(&quot;g&quot;).selectAll(&quot;path&quot;).data(world.features).join(&quot;path&quot;)
     .attr(&quot;d&quot;, path)
     .attr(&quot;fill&quot;, d =&gt; CONTINENT[d.properties.continent] || &quot;#c9c6bd&quot;)
-    .attr(&quot;fill-opacity&quot;, d =&gt; (points.some(p =&gt; p.iso === d.properties.iso2) ? 0.28 : 0.1))
+    .attr(&quot;fill-opacity&quot;, d =&gt; (byIso.has(d.properties.iso2) ? 0.28 : 0.1))
     .attr(&quot;stroke&quot;, &quot;#efece6&quot;).attr(&quot;stroke-width&quot;, 0.4)
     .style(&quot;cursor&quot;, &quot;default&quot;);
+
+  const tiny = world.features.filter(d =&gt;
+    byIso.has(d.properties.iso2) &amp;&amp; path.area(d) &lt; MIN_AREA);
+  const tinyArea = new Map(tiny.map(d =&gt; [d, path.area(d)]));
+
+  const pins = gZoom.append(&quot;g&quot;).selectAll(&quot;circle&quot;).data(tiny).join(&quot;circle&quot;)
+    .attr(&quot;cx&quot;, d =&gt; path.centroid(d)[0])
+    .attr(&quot;cy&quot;, d =&gt; path.centroid(d)[1])
+    .attr(&quot;r&quot;, 2.8)
+    .attr(&quot;fill&quot;, d =&gt; CONTINENT[d.properties.continent] || &quot;#8b8a82&quot;)
+    .attr(&quot;fill-opacity&quot;, 0.85)
+    .attr(&quot;stroke&quot;, &quot;#efece6&quot;).attr(&quot;stroke-width&quot;, 0.7);
 
   // ── scatter
   const g = svg.append(&quot;g&quot;).attr(&quot;transform&quot;, &quot;translate(0,&quot; + MAP_H + &quot;)&quot;);
@@ -360,8 +422,6 @@ const series = (json, codes) =&gt; {
     .attr(&quot;stroke&quot;, p =&gt; p.color).attr(&quot;stroke-width&quot;, 1);
 
   // ── linked hover, both directions
-  const byIso = new Map(points.map(p =&gt; [p.iso, p]));
-
   function show(iso, ev) {
     dots.attr(&quot;fill-opacity&quot;, p =&gt; (p.iso === iso ? 0.95 : 0.16))
         .attr(&quot;stroke-width&quot;, p =&gt; (p.iso === iso ? 2 : 1));
@@ -369,11 +429,13 @@ const series = (json, codes) =&gt; {
       if (d.properties.iso2 === iso) return 0.95;
       return byIso.has(d.properties.iso2) ? 0.14 : 0.06;
     });
+    pins.attr(&quot;fill-opacity&quot;, d =&gt; (d.properties.iso2 === iso ? 1 : 0.2));
     const p = byIso.get(iso);
     if (p &amp;&amp; ev) {
+      const [mx, my] = d3.pointer(ev, wrap);
       tip.style(&quot;opacity&quot;, 1)
-         .style(&quot;left&quot;, (ev.offsetX + 14) + &quot;px&quot;)
-         .style(&quot;top&quot;, (ev.offsetY - 6) + &quot;px&quot;)
+         .style(&quot;left&quot;, (mx + 14) + &quot;px&quot;)
+         .style(&quot;top&quot;, (my - 6) + &quot;px&quot;)
          .html(&quot;&lt;b&gt;&quot; + p.name + &quot;&lt;/b&gt;&lt;br&gt;&quot; + d3.format(&quot;$,.0f&quot;)(p.gdp) + &quot; per capita&lt;br&gt;&quot;
              + p.life.toFixed(1) + &quot; years&lt;br&gt;&quot; + d3.format(&quot;,.3~s&quot;)(p.pop) + &quot; people&quot;);
     }
@@ -382,12 +444,33 @@ const series = (json, codes) =&gt; {
   function clear() {
     dots.attr(&quot;fill-opacity&quot;, 0.55).attr(&quot;stroke-width&quot;, 1);
     shapes.attr(&quot;fill-opacity&quot;, d =&gt; (byIso.has(d.properties.iso2) ? 0.28 : 0.1));
+    pins.attr(&quot;fill-opacity&quot;, 0.85);
     tip.style(&quot;opacity&quot;, 0);
   }
 
+  const onFeature = (e, d) =&gt;
+    (byIso.has(d.properties.iso2) ? show(d.properties.iso2, e) : clear());
+
   dots.on(&quot;mousemove&quot;, (e, p) =&gt; show(p.iso, e)).on(&quot;mouseout&quot;, clear);
-  shapes.on(&quot;mousemove&quot;, (e, d) =&gt; (byIso.has(d.properties.iso2) ? show(d.properties.iso2, e) : clear()))
-        .on(&quot;mouseout&quot;, clear);
+  shapes.on(&quot;mousemove&quot;, onFeature).on(&quot;mouseout&quot;, clear);
+  pins.on(&quot;mousemove&quot;, onFeature).on(&quot;mouseout&quot;, clear);
+
+  // Bound to gMap, not the svg, so the wheel over the scatter still scrolls the
+  // page. A pin disappears once its country covers MIN_AREA at this scale.
+  const zoom = d3.zoom().scaleExtent([1, 60])
+    .translateExtent([[0, 0], [W, MAP_H]])
+    .on(&quot;zoom&quot;, (e) =&gt; {
+      const k = e.transform.k;
+      gZoom.attr(&quot;transform&quot;, e.transform);
+      shapes.attr(&quot;stroke-width&quot;, 0.4 / k);
+      pins.attr(&quot;r&quot;, 2.8 / k).attr(&quot;stroke-width&quot;, 0.7 / k)
+          .attr(&quot;display&quot;, d =&gt; (tinyArea.get(d) * k * k &gt;= MIN_AREA ? &quot;none&quot; : null));
+    });
+  gMap.call(zoom).style(&quot;cursor&quot;, &quot;grab&quot;);
+
+  const resetBtn = document.getElementById(&quot;reset&quot;);
+  if (resetBtn) resetBtn.onclick = () =&gt;
+    gMap.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
 
   // ── continent key
   const key = svg.append(&quot;g&quot;).attr(&quot;transform&quot;, &quot;translate(16,22)&quot;);
@@ -431,6 +514,9 @@ const CONTINENT = {
   "Seven seas (open ocean)": "#8b8a82",
 };
 const LABEL = { "Seven seas (open ocean)": "Seven seas" };
+// A country under this projected size is about a pixel on the locator map, so
+// it gets a dot in its continent colour until zoom makes the shape legible.
+const MIN_AREA = 6;
 
 // The World Bank returns regional and income aggregates alongside countries,
 // and eleven of their aggregate codes collide with mapjson gids for tiny
@@ -472,6 +558,10 @@ const series = (json, codes) => {
   const M = { top: 26, right: 30, bottom: 52, left: 62 };
 
   const svg = d3.select("#map-wrap").append("svg").attr("viewBox", "0 0 " + W + " " + H);
+  // Tooltip coordinates are measured against #map-wrap explicitly. On SVG
+  // children Chrome reports the pointer offset relative to the hovered shape's
+  // own box, which lands the tooltip somewhere different for every country.
+  const wrap = document.getElementById("map-wrap");
   const tip = d3.select("#tip");
 
   // ── map: a locator, not a choropleth. Fills are the continent colour held
@@ -480,12 +570,40 @@ const series = (json, codes) => {
   const path = d3.geoPath(projection);
   projection.fitExtent([[10, 10], [W - 10, MAP_H - 10]], world);
 
-  const shapes = svg.append("g").selectAll("path").data(world.features).join("path")
+  const byIso = new Map(points.map(p => [p.iso, p]));
+
+  // The map zooms; the scatter below it must not move, so the map lives in its
+  // own clipped group and the zoom behaviour is bound to that group alone.
+  // Zoomed geometry is clipped at the map's lower edge instead of sliding over
+  // the chart.
+  svg.append("defs").append("clipPath").attr("id", "mapclip")
+    .append("rect").attr("width", W).attr("height", MAP_H);
+
+  const gMap = svg.append("g").attr("clip-path", "url(#mapclip)");
+  // Transparent catcher so the gesture works over empty ocean too, not just
+  // when the pointer happens to be on a country.
+  gMap.append("rect").attr("width", W).attr("height", MAP_H)
+    .attr("fill", "none").attr("pointer-events", "all");
+  const gZoom = gMap.append("g");
+
+  const shapes = gZoom.append("g").selectAll("path").data(world.features).join("path")
     .attr("d", path)
     .attr("fill", d => CONTINENT[d.properties.continent] || "#c9c6bd")
-    .attr("fill-opacity", d => (points.some(p => p.iso === d.properties.iso2) ? 0.28 : 0.1))
+    .attr("fill-opacity", d => (byIso.has(d.properties.iso2) ? 0.28 : 0.1))
     .attr("stroke", "#efece6").attr("stroke-width", 0.4)
     .style("cursor", "default");
+
+  const tiny = world.features.filter(d =>
+    byIso.has(d.properties.iso2) && path.area(d) < MIN_AREA);
+  const tinyArea = new Map(tiny.map(d => [d, path.area(d)]));
+
+  const pins = gZoom.append("g").selectAll("circle").data(tiny).join("circle")
+    .attr("cx", d => path.centroid(d)[0])
+    .attr("cy", d => path.centroid(d)[1])
+    .attr("r", 2.8)
+    .attr("fill", d => CONTINENT[d.properties.continent] || "#8b8a82")
+    .attr("fill-opacity", 0.85)
+    .attr("stroke", "#efece6").attr("stroke-width", 0.7);
 
   // ── scatter
   const g = svg.append("g").attr("transform", "translate(0," + MAP_H + ")");
@@ -513,8 +631,6 @@ const series = (json, codes) => {
     .attr("stroke", p => p.color).attr("stroke-width", 1);
 
   // ── linked hover, both directions
-  const byIso = new Map(points.map(p => [p.iso, p]));
-
   function show(iso, ev) {
     dots.attr("fill-opacity", p => (p.iso === iso ? 0.95 : 0.16))
         .attr("stroke-width", p => (p.iso === iso ? 2 : 1));
@@ -522,11 +638,13 @@ const series = (json, codes) => {
       if (d.properties.iso2 === iso) return 0.95;
       return byIso.has(d.properties.iso2) ? 0.14 : 0.06;
     });
+    pins.attr("fill-opacity", d => (d.properties.iso2 === iso ? 1 : 0.2));
     const p = byIso.get(iso);
     if (p && ev) {
+      const [mx, my] = d3.pointer(ev, wrap);
       tip.style("opacity", 1)
-         .style("left", (ev.offsetX + 14) + "px")
-         .style("top", (ev.offsetY - 6) + "px")
+         .style("left", (mx + 14) + "px")
+         .style("top", (my - 6) + "px")
          .html("<b>" + p.name + "</b><br>" + d3.format("$,.0f")(p.gdp) + " per capita<br>"
              + p.life.toFixed(1) + " years<br>" + d3.format(",.3~s")(p.pop) + " people");
     }
@@ -535,12 +653,33 @@ const series = (json, codes) => {
   function clear() {
     dots.attr("fill-opacity", 0.55).attr("stroke-width", 1);
     shapes.attr("fill-opacity", d => (byIso.has(d.properties.iso2) ? 0.28 : 0.1));
+    pins.attr("fill-opacity", 0.85);
     tip.style("opacity", 0);
   }
 
+  const onFeature = (e, d) =>
+    (byIso.has(d.properties.iso2) ? show(d.properties.iso2, e) : clear());
+
   dots.on("mousemove", (e, p) => show(p.iso, e)).on("mouseout", clear);
-  shapes.on("mousemove", (e, d) => (byIso.has(d.properties.iso2) ? show(d.properties.iso2, e) : clear()))
-        .on("mouseout", clear);
+  shapes.on("mousemove", onFeature).on("mouseout", clear);
+  pins.on("mousemove", onFeature).on("mouseout", clear);
+
+  // Bound to gMap, not the svg, so the wheel over the scatter still scrolls the
+  // page. A pin disappears once its country covers MIN_AREA at this scale.
+  const zoom = d3.zoom().scaleExtent([1, 60])
+    .translateExtent([[0, 0], [W, MAP_H]])
+    .on("zoom", (e) => {
+      const k = e.transform.k;
+      gZoom.attr("transform", e.transform);
+      shapes.attr("stroke-width", 0.4 / k);
+      pins.attr("r", 2.8 / k).attr("stroke-width", 0.7 / k)
+          .attr("display", d => (tinyArea.get(d) * k * k >= MIN_AREA ? "none" : null));
+    });
+  gMap.call(zoom).style("cursor", "grab");
+
+  const resetBtn = document.getElementById("reset");
+  if (resetBtn) resetBtn.onclick = () =>
+    gMap.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
 
   // ── continent key
   const key = svg.append("g").attr("transform", "translate(16,22)");
